@@ -1,0 +1,107 @@
+/*
+  variables.css
+  -------------
+  Every color, size, and timing value used across the project lives here.
+  If a designer ever wants to re-theme the island, this is the only file
+  they should need to touch.
+*/
+
+:root {
+  /* ================= PALETTE ================= */
+  /* One warm tropical-evening world. Every new element should pull its
+     colors from here, grouped by material — nothing "random" gets added
+     outside these categories. */
+
+  /* ---- Sky & Light ---- */
+  --color-sky-top: #FFD9A8;
+  --color-sky-bottom: #FFF3DE;
+  --color-sun: #FFB25E;
+  --color-sun-glow: #FFE3B0;
+  --color-light-ray: #FFF3D0;
+  --color-vignette: #6B3A1E;
+
+  /* ---- Sea ---- */
+  --color-sea-far: #0F5D6E;    /* distant water, muted and almost still */
+  --color-sea-deep: #157A8C;
+  --color-sea-mid: #2FA0AE;
+  --color-sea-light: #6FD0D6;
+  --color-foam: #EAFBFA;
+
+  /* ---- Sand ---- */
+  --color-sand-wet: #D9AF6E;   /* darker, damp band between foam and dry sand */
+  --color-sand: #F3D9A4;
+  --color-sand-dark: #E3C083;
+
+  /* ---- Rock ---- */
+  --color-rock-far: #8FA79E;   /* distant mountains, hazy */
+  --color-rock-mid: #5E8B7E;
+  --color-rock-near: #3E6B5C;  /* closest ridge, most saturated */
+  --color-rock-fog: #EAF6EF;
+  --color-rock-stone: #9B9184; /* boulders and pebbles on the beach */
+
+  /* ---- Palm & Plant ---- */
+  --color-palm-dark: #245B4F;
+  --color-palm-light: #3A8067;
+  --color-trunk: #8A5A3B;
+  --color-flower-1: #FF9F8A;
+  --color-flower-2: #FFB25E;
+  --color-flower-3: #F2A0C4;
+
+  /* ---- Wood ---- */
+  --color-wood-light: #C98A4B;
+  --color-wood-dark: #A5692F;
+  --color-wood-plank: #B07A3E;
+
+  /* ---- Shadow ---- */
+  --color-shadow-soft: rgba(0,0,0,0.12);
+  --color-shadow-strong: rgba(0,0,0,0.22);
+
+  /* ---- Characters ---- */
+  --color-mickey-body: #4A3F6B;
+  --color-mickey-skin: #F6C9A0;
+  --color-mickey-cheek: #FF9F8A;
+
+  /* ---- Text ---- */
+  --color-text-dark: #2A2A2A;
+  --color-text-light: #FFF8ED;
+
+  /* ---- Boxes (generic fallback; themed per-adventure colors live in
+     chestSprite.js since each chest has its own material) ---- */
+  --color-box-wood: #C98A4B;
+  --color-box-wood-dark: #A5692F;
+  --color-box-glow: #FFE9A8;
+
+  /* ---- Type ----
+     Rounded and friendly, never the browser default. The fallbacks matter:
+     if the web fonts don't load, the game should still look deliberate. */
+  --font-display: 'Comfortaa', 'Trebuchet MS', 'Segoe UI', sans-serif;
+  --font-body: 'Nunito', 'Trebuchet MS', 'Segoe UI', sans-serif;
+  --font-hand: 'Caveat', 'Segoe Script', 'Bradley Hand', cursive;
+
+  /* ---- Spacing scale ---- */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 40px;
+
+  /* ---- Motion: slow and gentle, never sharp ---- */
+  --ease-soft: cubic-bezier(0.45, 0, 0.2, 1);
+  --duration-fast: 0.3s;
+  --duration-medium: 0.8s;
+  --duration-slow: 2.4s;
+  --duration-ambient: 6s;
+  /* How long Mickey takes to walk somewhere. This MUST match the wait in
+     IslandScene._runToBoxThenGo and IntroSequence, or he'll start doing the
+     next thing before his feet arrive. */
+  --duration-walk: 1.4s;
+
+  /* ---- Layout ---- */
+  --radius-md: 14px;
+  --radius-lg: 28px;
+  --z-sky: 1;
+  --z-sea: 2;
+  --z-land: 3;
+  --z-mickey: 4;
+  --z-dialog: 10;
+}

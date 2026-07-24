@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Secret Island</title>
+  <link rel="stylesheet" href="css/fonts.css" />
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/scenes.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+</head>
+<body>
+
+  <!-- The single root element. All scenes live inside this "island" -->
+  <!-- so that transitions feel like moving around one place, not swapping screens. -->
+  <div id="app" class="app">
+
+    <!-- ================= ISLAND SCENE ================= -->
+    <!-- The island is a place, not a menu. Five layers, back to front: -->
+    <!-- far background -> mid-ground (sea) -> island -> foreground -> UI. -->
+    <section id="scene-island" class="scene scene--island is-active" aria-label="Острів">
+
+      <!-- LAYER 1: far background — almost still, sets the mood -->
+      <div class="layer layer--far-bg">
+        <div class="sky">
+          <div class="sun"></div>
+
+          <!-- Soft warm light rays, low behind the clouds -->
+          <svg class="light-rays" viewBox="0 0 300 200" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M 210 0 L 300 0 L 250 200 L 190 200 Z" fill="var(--color-light-ray)" opacity="0.14" />
+            <path d="M 240 0 L 300 40 L 270 200 L 230 200 Z" fill="var(--color-light-ray)" opacity="0.1" />
+          </svg>
+
+          <!-- Clouds in three sizes, all drifting at their own slow pace -->
+          <div class="cloud cloud--1"></div>
+          <div class="cloud cloud--2"></div>
+          <div class="cloud cloud--3"></div>
+          <div class="cloud cloud--4"></div>
+          <div class="cloud cloud--5"></div>
+        </div>
+
+        <!-- The sea's furthest band: almost still, muted, just enough
+             shimmer to read as water rather than a flat horizon line. -->
+        <div class="sea-far">
+          <span class="sea-far__shimmer"></span>
+        </div>
+
+        <div class="distant-island distant-island--1"></div>
+        <div class="distant-island distant-island--2"></div>
+      </div>
+
+      <!-- LAYER 2: mid-ground — sea, waves, boat, gulls -->
+      <div class="layer layer--mid">
+        <div class="sea">
+          <div class="wave wave--back"></div>
+          <div class="wave wave--mid"></div>
+          <div class="wave wave--front"></div>
+          <!-- Sunlight glinting on the water: thin highlights that drift
+               across and fade, never in the same place twice in a row. -->
+          <span class="water-glint water-glint--1"></span>
+          <span class="water-glint water-glint--2"></span>
+        </div>
+        <div class="boat" id="boat">
+          <svg class="boat__svg" viewBox="0 0 50 46" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M 6 32 Q 25 40, 44 32 L 38 40 Q 25 44, 12 40 Z" fill="#C98A4B" stroke="#A5692F" stroke-width="1.5" />
+            <line x1="25" y1="32" x2="25" y2="4" stroke="#8A5A3B" stroke-width="2" stroke-linecap="round" />
+            <path d="M 25 6 L 25 28 L 6 28 Z" fill="#FFF8ED" stroke="#E3C083" stroke-width="1" />
+            <path d="M 25 10 L 25 28 L 40 26 Z" fill="#FF9F6B" opacity="0.9" />
+          </svg>
+        </div>
+        <svg class="gull gull--1" viewBox="0 0 24 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M 0 8 Q 6 0, 12 8 Q 18 0, 24 8" fill="none" stroke="#3A3A3A" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+        <svg class="gull gull--2" viewBox="0 0 24 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M 0 8 Q 6 0, 12 8 Q 18 0, 24 8" fill="none" stroke="#3A3A3A" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+
+        <!-- The island's own mountain range — the ridge the Mountain
+             adventure climbs, visible from the beach. Three depth tiers:
+             far peaks (hazy), mid ridge, and a rocky near ridge in front. -->
+        <svg class="mountains" viewBox="0 0 400 130" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+          <!-- far: hazy, low-contrast, sets the horizon -->
+          <path d="M0 130 L58 46 L104 130 Z" fill="var(--color-rock-far)" opacity="0.55" />
+          <path d="M250 130 L316 52 L378 130 Z" fill="var(--color-rock-far)" opacity="0.55" />
+
+          <!-- mid: the main ridge, most of the visual weight -->
+          <path d="M78 130 L150 30 L222 130 Z" fill="var(--color-rock-mid)" opacity="0.75" />
+          <path d="M120 130 L196 18 L272 130 Z" fill="var(--color-palm-dark)" />
+          <path d="M196 18 L232 70 L196 60 L172 78 Z" fill="var(--color-rock-fog)" opacity="0.85" />
+
+          <!-- fog: a soft band sitting in the saddle between peaks -->
+          <path d="M40 100 Q 140 80, 240 96 T 400 92 L400 118 L0 118 Z" fill="var(--color-rock-fog)" opacity="0.3" />
+
+          <!-- near: a low rocky ridge closest to the beach, most saturated -->
+          <path d="M196 18 L272 130 L228 130 Z" fill="var(--color-rock-near)" opacity="0.6" />
+          <path d="M0 130 L40 108 L86 128 L20 130 Z" fill="var(--color-rock-near)" opacity="0.5" />
+          <path d="M340 130 L380 104 L400 118 L400 130 Z" fill="var(--color-rock-near)" opacity="0.5" />
+        </svg>
+      </div>
+
+      <!-- LAYER 3: the island itself — where the adventure lives -->
+      <div class="layer layer--island">
+        <div class="land">
+
+          <!-- Shoreline transition: foam right at the water's edge, then
+               wet sand, then dry sand further up the beach. -->
+          <svg class="foam-edge" viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 6 Q 50 0, 100 7 T 200 5 T 300 8 T 400 4 L400 20 Q 300 26, 200 20 T 100 22 T 0 18 Z"
+                  fill="var(--color-foam)" opacity="0.8" />
+          </svg>
+
+          <!-- Dunes: the shoreline isn't a clean arc, and the sand has
+               a little shape to it rather than being one flat colour.
+               Wet sand near the water, dry sand further inland. -->
+          <svg class="dunes" viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 26 Q 60 8, 130 20 T 260 14 T 400 24 L400 120 L0 120 Z" fill="var(--color-sand-wet)" />
+            <path d="M0 52 Q 90 36, 180 50 T 400 44 L400 120 L0 120 Z" fill="var(--color-sand)" opacity="0.9" />
+            <path d="M0 86 Q 120 72, 240 84 T 400 78 L400 120 L0 120 Z" fill="var(--color-sand-dark)" opacity="0.6" />
+          </svg>
+
+          <!-- Pebbles and shells scattered on the beach -->
+          <svg class="pebbles" viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true">
+            <ellipse cx="46" cy="72" rx="7" ry="4" fill="#D9B77C" />
+            <ellipse cx="118" cy="96" rx="5" ry="3" fill="#CFA96C" />
+            <ellipse cx="212" cy="66" rx="6" ry="3.5" fill="#D9B77C" />
+            <ellipse cx="300" cy="100" rx="8" ry="4" fill="#CFA96C" />
+            <ellipse cx="356" cy="70" rx="5" ry="3" fill="#D9B77C" />
+            <ellipse cx="168" cy="110" rx="6" ry="3" fill="#CFA96C" />
+          </svg>
+
+          <!-- Baseline decoration: small props that are always here, not
+               tied to progress (see .growth below for the ones that are).
+               These are what make the island feel lived-in rather than
+               empty — none of them do anything when tapped. -->
+
+          <!-- Rock cluster -->
+          <svg class="prop prop--rocks" viewBox="0 0 70 34" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <ellipse cx="20" cy="26" rx="18" ry="11" fill="var(--color-rock-stone)" stroke="var(--color-rock-near)" stroke-width="2" />
+            <ellipse cx="46" cy="22" rx="13" ry="9" fill="var(--color-rock-stone)" stroke="var(--color-rock-near)" stroke-width="2" opacity="0.9" />
+            <ellipse cx="58" cy="28" rx="9" ry="6" fill="var(--color-rock-stone)" stroke="var(--color-rock-near)" stroke-width="1.5" opacity="0.85" />
+          </svg>
+
+          <!-- Tree stump, with a couple of rings showing on top -->
+          <svg class="prop prop--stump" viewBox="0 0 44 38" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <ellipse cx="22" cy="34" rx="20" ry="6" fill="var(--color-shadow-soft)" />
+            <rect x="8" y="10" width="28" height="22" rx="3" fill="var(--color-wood-dark)" />
+            <ellipse cx="22" cy="10" rx="14" ry="6" fill="var(--color-wood-light)" stroke="var(--color-wood-dark)" stroke-width="2" />
+            <ellipse cx="22" cy="10" rx="8" ry="3.4" fill="none" stroke="var(--color-wood-dark)" stroke-width="1.4" opacity="0.7" />
+          </svg>
+
+          <!-- Shell cluster: purely decorative, distinct from the tappable secret shell -->
+          <svg class="prop prop--shells" viewBox="0 0 50 26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M12 22c6 0 10-6 10-11S18 2 12 2 2 6 2 11s4 11 10 11z" fill="var(--color-foam)" stroke="var(--color-sand-dark)" stroke-width="1.5" />
+            <path d="M12 4v18M6 6l2 15M18 6l-2 15" stroke="var(--color-sand-dark)" stroke-width="1" />
+            <path d="M34 24c5 0 8-4 8-8s-3-8-8-8-8 4-8 8 3 8 8 8z" fill="#FFE3C7" stroke="var(--color-sand-dark)" stroke-width="1.5" />
+            <path d="M34 9v15M29 11l2 12M39 11l-2 12" stroke="var(--color-sand-dark)" stroke-width="0.8" />
+          </svg>
+
+          <!-- A small barrel, washed up or just left behind -->
+          <svg class="prop prop--barrel" viewBox="0 0 36 42" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <ellipse cx="18" cy="39" rx="15" ry="4" fill="var(--color-shadow-soft)" />
+            <path d="M4 10 Q18 2 32 10 L29 34 Q18 40 7 34 Z" fill="var(--color-wood-light)" stroke="var(--color-wood-dark)" stroke-width="2" />
+            <path d="M4 10 Q18 16 32 10" fill="none" stroke="var(--color-wood-dark)" stroke-width="2.5" />
+            <path d="M5.5 20 Q18 26 30.5 20" fill="none" stroke="var(--color-wood-dark)" stroke-width="2.5" />
+            <path d="M7 30 Q18 35 29 30" fill="none" stroke="var(--color-wood-dark)" stroke-width="2.5" />
+          </svg>
+
+          <!-- A standing lantern, unlit but warm-toned to match the world -->
+          <svg class="prop prop--lantern" viewBox="0 0 30 50" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <ellipse cx="15" cy="48" rx="10" ry="2.5" fill="var(--color-shadow-soft)" />
+            <rect x="13" y="20" width="4" height="26" fill="var(--color-wood-dark)" />
+            <path d="M8 8h14l-2 14H10z" fill="var(--color-box-glow)" stroke="var(--color-wood-dark)" stroke-width="2" opacity="0.9" />
+            <path d="M6 8h18l-2-4H8z" fill="var(--color-wood-dark)" />
+            <circle cx="15" cy="4" r="2" fill="var(--color-wood-dark)" />
+          </svg>
+
+          <!-- A nautical life ring, propped against nothing in particular -->
+          <svg class="prop prop--life-ring" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="20" cy="20" r="17" fill="none" stroke="var(--color-text-light)" stroke-width="7" />
+            <circle cx="20" cy="20" r="17" fill="none" stroke="var(--color-sun)" stroke-width="7" stroke-dasharray="13 13" />
+            <circle cx="20" cy="20" r="17" fill="none" stroke="var(--color-wood-dark)" stroke-width="1.5" />
+          </svg>
+
+          <!-- A blank wooden signpost — decoration, not a real UI sign -->
+          <svg class="prop prop--signpost" viewBox="0 0 40 56" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <ellipse cx="20" cy="53" rx="8" ry="2.5" fill="var(--color-shadow-soft)" />
+            <rect x="17" y="14" width="6" height="40" fill="var(--color-wood-dark)" />
+            <rect x="2" y="8" width="26" height="12" rx="2" fill="var(--color-wood-light)" stroke="var(--color-wood-dark)" stroke-width="2" transform="rotate(-4 15 14)" />
+          </svg>
+
+          <!-- Small flower cluster, always here (separate from the flowers
+               that appear with progress in .growth) -->
+          <svg class="prop prop--flowers" viewBox="0 0 46 26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M8 24V14 M22 24V10 M35 24V16" stroke="var(--color-palm-dark)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+            <circle cx="8" cy="10" r="5" fill="var(--color-flower-1)" />
+            <circle cx="22" cy="6" r="5.5" fill="var(--color-flower-2)" />
+            <circle cx="35" cy="12" r="4.5" fill="var(--color-flower-3)" />
+          </svg>
+
+          <!-- An old, closed map — decoration, not the real intro scroll -->
+          <svg class="prop prop--old-map" viewBox="0 0 50 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <ellipse cx="25" cy="29" rx="20" ry="3" fill="var(--color-shadow-soft)" />
+            <rect x="4" y="8" width="42" height="16" rx="8" fill="#EBD5A6" stroke="var(--color-wood-dark)" stroke-width="1.5" transform="rotate(-3 25 16)" />
+            <path d="M10 16h30M14 12l2 8M36 12l-2 8" stroke="var(--color-wood-dark)" stroke-width="1" opacity="0.6" transform="rotate(-3 25 16)" />
+          </svg>
+
+          <!-- Fallen palm fronds, resting on the sand -->
+          <svg class="prop prop--frond prop--frond-1" viewBox="0 0 60 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M2 14 Q 30 2, 58 10" fill="none" stroke="var(--color-palm-dark)" stroke-width="5" stroke-linecap="round" />
+            <path d="M10 13 L 8 6 M20 10 L 19 4 M30 8 L 30 2 M40 8 L 42 3" stroke="var(--color-palm-light)" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          <svg class="prop prop--frond prop--frond-2" viewBox="0 0 60 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M2 8 Q 30 18, 58 12" fill="none" stroke="var(--color-palm-light)" stroke-width="5" stroke-linecap="round" />
+            <path d="M10 9 L 7 16 M22 13 L 21 19 M34 15 L 36 20" stroke="var(--color-palm-dark)" stroke-width="2" stroke-linecap="round" />
+          </svg>
+
+          <!-- Vegetation that appears as adventures are finished: the island
+               gets greener the further the player gets. Hidden until then. -->
+          <div class="growth growth--1">
+            <svg viewBox="0 0 60 44" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <ellipse cx="30" cy="36" rx="24" ry="9" fill="#3A8067" />
+              <ellipse cx="17" cy="27" rx="13" ry="11" fill="#4A9478" />
+              <ellipse cx="38" cy="24" rx="15" ry="13" fill="#3A8067" />
+              <circle cx="12" cy="21" r="3" fill="#FF9F8A" />
+              <circle cx="44" cy="16" r="3" fill="#FFB25E" />
+            </svg>
+          </div>
+
+          <div class="growth growth--2">
+            <svg viewBox="0 0 50 46" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M25 44 V22" stroke="#3A8067" stroke-width="3.5" stroke-linecap="round" fill="none" />
+              <path d="M13 42 V26 M37 42 V28" stroke="#3A8067" stroke-width="3" stroke-linecap="round" fill="none" />
+              <circle cx="25" cy="16" r="7" fill="#FF9F8A" />
+              <circle cx="25" cy="16" r="3" fill="#FFE3B0" />
+              <circle cx="13" cy="21" r="5.5" fill="#FFB25E" />
+              <circle cx="37" cy="23" r="5.5" fill="#F2A0C4" />
+            </svg>
+          </div>
+
+          <div class="growth growth--3">
+            <svg viewBox="0 0 56 60" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M28 58 Q 26 40, 28 28" stroke="#8A5A3B" stroke-width="5" stroke-linecap="round" fill="none" />
+              <path d="M28 28 Q 10 22, 2 32" stroke="#245B4F" stroke-width="5" stroke-linecap="round" fill="none" />
+              <path d="M28 28 Q 46 22, 54 32" stroke="#3A8067" stroke-width="5" stroke-linecap="round" fill="none" />
+              <path d="M28 28 Q 24 12, 14 6" stroke="#3A8067" stroke-width="5" stroke-linecap="round" fill="none" />
+              <path d="M28 28 Q 34 12, 44 8" stroke="#245B4F" stroke-width="5" stroke-linecap="round" fill="none" />
+            </svg>
+          </div>
+
+          <!-- Paths connecting the boxes, drawn under everything else on land -->
+          <svg class="paths" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M 22 78 Q 40 55, 50 62 T 78 50" />
+          </svg>
+
+          <!-- A short wooden boardwalk laid over a soft patch of the path -->
+          <svg class="prop prop--boardwalk" viewBox="0 0 70 26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="0" y="4" width="70" height="18" rx="2" fill="var(--color-wood-light)" />
+            <line x1="8" y1="4" x2="8" y2="22" stroke="var(--color-wood-dark)" stroke-width="2" />
+            <line x1="20" y1="4" x2="20" y2="22" stroke="var(--color-wood-dark)" stroke-width="2" />
+            <line x1="32" y1="4" x2="32" y2="22" stroke="var(--color-wood-dark)" stroke-width="2" />
+            <line x1="44" y1="4" x2="44" y2="22" stroke="var(--color-wood-dark)" stroke-width="2" />
+            <line x1="56" y1="4" x2="56" y2="22" stroke="var(--color-wood-dark)" stroke-width="2" />
+            <line x1="68" y1="4" x2="68" y2="22" stroke="var(--color-wood-dark)" stroke-width="2" />
+            <rect x="0" y="4" width="70" height="18" rx="2" fill="none" stroke="var(--color-wood-dark)" stroke-width="2" />
+          </svg>
+
+          <div class="palm palm--left">
+            <svg class="palm__svg" viewBox="0 0 60 130" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path class="palm__trunk-svg" d="M 32 128 Q 24 90, 30 60 Q 33 40, 26 18" fill="none" stroke="#8A5A3B" stroke-width="9" stroke-linecap="round" />
+              <g class="palm__leaves-svg">
+                <path d="M 26 18 Q 4 8, -10 24" fill="none" stroke="#245B4F" stroke-width="7" stroke-linecap="round" />
+                <path d="M 26 18 Q 8 26, 0 46" fill="none" stroke="#3A8067" stroke-width="7" stroke-linecap="round" />
+                <path d="M 26 18 Q 26 2, 16 -10" fill="none" stroke="#245B4F" stroke-width="7" stroke-linecap="round" />
+                <path d="M 26 18 Q 40 4, 60 4" fill="none" stroke="#3A8067" stroke-width="7" stroke-linecap="round" />
+                <path d="M 26 18 Q 46 20, 58 38" fill="none" stroke="#245B4F" stroke-width="7" stroke-linecap="round" />
+              </g>
+              <circle cx="20" cy="26" r="5" fill="#8A5A3B" />
+              <circle cx="30" cy="30" r="5" fill="#6B4429" />
+              <!-- a vine winding down the trunk -->
+              <path d="M 34 30 Q 24 50, 32 70 Q 38 88, 28 108" fill="none" stroke="var(--color-palm-light)" stroke-width="2.5" stroke-linecap="round" opacity="0.85" />
+              <circle cx="30" cy="52" r="2.5" fill="var(--color-flower-1)" />
+              <circle cx="30" cy="78" r="2.5" fill="var(--color-flower-3)" />
+            </svg>
+          </div>
+
+          <div class="palm palm--right">
+            <svg class="palm__svg" viewBox="0 0 60 130" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path class="palm__trunk-svg" d="M 28 128 Q 36 90, 30 60 Q 27 40, 34 18" fill="none" stroke="#8A5A3B" stroke-width="9" stroke-linecap="round" />
+              <g class="palm__leaves-svg">
+                <path d="M 34 18 Q 56 8, 70 24" fill="none" stroke="#245B4F" stroke-width="7" stroke-linecap="round" />
+                <path d="M 34 18 Q 52 26, 60 46" fill="none" stroke="#3A8067" stroke-width="7" stroke-linecap="round" />
+                <path d="M 34 18 Q 34 2, 44 -10" fill="none" stroke="#245B4F" stroke-width="7" stroke-linecap="round" />
+                <path d="M 34 18 Q 20 4, 0 4" fill="none" stroke="#3A8067" stroke-width="7" stroke-linecap="round" />
+                <path d="M 34 18 Q 14 20, 2 38" fill="none" stroke="#245B4F" stroke-width="7" stroke-linecap="round" />
+              </g>
+              <circle cx="40" cy="26" r="5" fill="#8A5A3B" />
+              <circle cx="30" cy="30" r="5" fill="#6B4429" />
+              <!-- a vine winding down the trunk -->
+              <path d="M 26 30 Q 36 50, 28 70 Q 22 88, 32 108" fill="none" stroke="var(--color-palm-light)" stroke-width="2.5" stroke-linecap="round" opacity="0.85" />
+              <circle cx="30" cy="55" r="2.5" fill="var(--color-flower-2)" />
+              <circle cx="30" cy="80" r="2.5" fill="var(--color-flower-1)" />
+            </svg>
+          </div>
+
+          <!-- Mickey: the island's guide. His artwork is injected from
+               js/components/mickeySprite.js so there's only one copy of it. -->
+          <div id="mickey" class="mickey mickey--idle">
+            <div class="mickey__shadow"></div>
+          </div>
+
+          <!-- Gift boxes, scattered around the island, not lined up -->
+          <div class="boxes">
+            <button class="box box--available box--pos-1" data-adventure="lagoon" aria-label="Лагуна">
+              <span class="box__pedestal"></span>
+              <span class="box__shadow"></span>
+              <span class="box__art"></span>
+              <span class="box__glow"></span>
+              <span class="box__flag"></span>
+            </button>
+            <button class="box box--locked box--pos-2" data-adventure="mountain" aria-label="Гора" disabled>
+              <span class="box__pedestal"></span>
+              <span class="box__shadow"></span>
+              <span class="box__art"></span>
+              <span class="box__flag"></span>
+            </button>
+            <button class="box box--locked box--pos-3" data-adventure="bazaar" aria-label="Базар" disabled>
+              <span class="box__pedestal"></span>
+              <span class="box__shadow"></span>
+              <span class="box__art"></span>
+              <span class="box__flag"></span>
+            </button>
+          </div>
+
+          <!-- Appears only once all three adventures are complete; leads to the Album -->
+          <button class="lighthouse" id="lighthouse" aria-label="Альбом пригод" hidden>
+            <span class="lighthouse__tower"></span>
+            <span class="lighthouse__light"></span>
+          </button>
+
+          <!-- Ambient critters: decorative, timed, no effect on the game -->
+          <svg class="critter crab" id="crab" viewBox="0 0 40 26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <ellipse cx="20" cy="14" rx="12" ry="8" fill="#E8734A" />
+            <circle cx="14" cy="8" r="3" fill="#E8734A" /><circle cx="14" cy="7" r="1.4" fill="#2A2A2A" />
+            <circle cx="26" cy="8" r="3" fill="#E8734A" /><circle cx="26" cy="7" r="1.4" fill="#2A2A2A" />
+            <path d="M 4 12 L -2 6 M 6 16 L -2 16 M 36 12 L 42 6 M 34 16 L 42 16" stroke="#C85A32" stroke-width="2.5" stroke-linecap="round" fill="none" />
+            <path d="M 8 20 L 4 24 M 8 20 L 12 24 M 32 20 L 28 24 M 32 20 L 36 24" stroke="#C85A32" stroke-width="2" stroke-linecap="round" fill="none" />
+          </svg>
+
+          <svg class="critter butterfly" id="butterfly" viewBox="0 0 30 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <ellipse cx="9" cy="10" rx="8" ry="9" fill="#FF9F6B" />
+            <ellipse cx="21" cy="10" rx="8" ry="9" fill="#FFB25E" />
+            <ellipse cx="9" cy="16" rx="5" ry="6" fill="#FF9F6B" opacity="0.85" />
+            <ellipse cx="21" cy="16" rx="5" ry="6" fill="#FFB25E" opacity="0.85" />
+            <line x1="15" y1="4" x2="15" y2="20" stroke="#2A2A2A" stroke-width="1.6" stroke-linecap="round" />
+          </svg>
+
+          <svg class="critter fish-jump" id="fish-jump" viewBox="0 0 34 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <ellipse cx="16" cy="10" rx="14" ry="8" fill="#6FD0D6" />
+            <path d="M 30 10 L 34 4 L 34 16 Z" fill="#2FA0AE" />
+            <circle cx="8" cy="8" r="1.6" fill="#2A2A2A" />
+            <path d="M 4 14 Q 10 18, 16 14" stroke="#2FA0AE" stroke-width="1.5" fill="none" stroke-linecap="round" />
+          </svg>
+
+          <svg class="critter parrot" id="parrot" viewBox="0 0 34 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <ellipse cx="16" cy="16" rx="10" ry="8" fill="#E8734A" />
+            <path d="M 8 12 Q -2 8, 4 20 Q 10 22, 14 16 Z" fill="#3A8067" />
+            <circle cx="24" cy="12" r="6" fill="#FFB25E" />
+            <path d="M 30 12 L 34 14 L 30 16 Z" fill="#3A3A3A" />
+            <circle cx="25" cy="10" r="1.3" fill="#2A2A2A" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- LAYER 4: foreground — grass, shells, coconuts, tappable secrets -->
+      <div class="layer layer--fg">
+        <div class="grass-tuft grass-tuft--1"></div>
+        <div class="grass-tuft grass-tuft--2"></div>
+        <div class="grass-tuft grass-tuft--3"></div>
+
+        <button class="secret shell" id="secret-shell" aria-label="Мушля">
+          <svg viewBox="0 0 30 26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M 15 2 C 22 2, 28 10, 28 18 Q 28 24, 15 24 Q 2 24, 2 18 C 2 10, 8 2, 15 2 Z" fill="#FFE3C7" stroke="#E3A97E" stroke-width="1.2" />
+            <path d="M 15 4 L 15 22 M 10 6 L 11 21 M 20 6 L 19 21 M 6 11 L 8 21 M 24 11 L 22 21" stroke="#E3A97E" stroke-width="1" fill="none" />
+          </svg>
+        </button>
+        <button class="secret coconut" id="secret-coconut" aria-label="Кокос">
+          <svg viewBox="0 0 28 26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="14" cy="14" r="11" fill="#6B4429" />
+            <circle cx="14" cy="14" r="7" fill="#8A5A3B" />
+            <circle cx="10" cy="11" r="1.4" fill="#3A2818" /><circle cx="17" cy="10" r="1.4" fill="#3A2818" /><circle cx="14" cy="16" r="1.4" fill="#3A2818" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- LAYER 5: UI — dialog sits above every layer -->
+      <div class="vignette"></div>
+
+    </section>
+
+    <!-- ================= LAGOON SCENE ================= -->
+    <section id="scene-lagoon" class="scene scene--lagoon" aria-label="Лагуна">
+      <div class="sky sky--lagoon">
+        <div class="sun"></div>
+        <div class="cloud cloud--1"></div>
+        <div class="cloud cloud--2"></div>
+      </div>
+
+      <div class="sea sea--full">
+        <div class="wave wave--back"></div>
+        <div class="wave wave--mid"></div>
+        <div class="wave wave--front"></div>
+      </div>
+
+      <div class="lagoon-intro" id="lagoon-intro">
+        <p id="lagoon-intro-text"></p>
+      </div>
+
+      <!-- Treasure spots are generated by LagoonScene.js at runtime -->
+      <div class="lagoon-spots" id="lagoon-spots"></div>
+
+      <button class="back-hint" id="lagoon-back" aria-label="Назад на острів">← Острів</button>
+    </section>
+
+    <!-- ================= MOUNTAIN SCENE ================= -->
+    <section id="scene-mountain" class="scene scene--mountain" aria-label="Гора">
+      <div class="sky sky--mountain">
+        <div class="sun"></div>
+        <div class="cloud cloud--1"></div>
+        <div class="cloud cloud--2"></div>
+      </div>
+
+      <div class="mountain-backdrop"></div>
+
+      <div class="mountain-intro" id="mountain-intro">
+        <p id="mountain-intro-text"></p>
+      </div>
+
+      <!-- Stepping stones are generated by MountainScene.js at runtime -->
+      <div class="mountain-stones" id="mountain-stones"></div>
+
+      <button class="back-hint" id="mountain-back" aria-label="Назад на острів">← Острів</button>
+    </section>
+
+    <!-- ================= BAZAAR SCENE ================= -->
+    <section id="scene-bazaar" class="scene scene--bazaar" aria-label="Базар">
+      <div class="sky sky--bazaar">
+        <div class="sun"></div>
+        <div class="cloud cloud--1"></div>
+        <div class="cloud cloud--2"></div>
+      </div>
+
+      <div class="bazaar-intro" id="bazaar-intro">
+        <p id="bazaar-intro-text"></p>
+      </div>
+
+      <!-- Stalls are generated by BazaarScene.js at runtime -->
+      <div class="bazaar-stalls" id="bazaar-stalls"></div>
+
+      <button class="back-hint" id="bazaar-back" aria-label="Назад на острів">← Острів</button>
+    </section>
+
+    <!-- ================= REWARD SCENE (universal) ================= -->
+    <section id="scene-reward" class="scene scene--reward" aria-label="Подарунок">
+      <div class="reward-stage">
+
+        <!-- Step 1: countdown -->
+        <div class="reward-countdown" id="reward-countdown"></div>
+
+        <!-- Step 2: the chest — the same one they tapped on the island -->
+        <button class="reward-box" id="reward-box" aria-label="Відкрити скриню">
+          <span class="reward-beam" id="reward-beam"></span>
+          <span class="reward-box__art"></span>
+          <span class="reward-sparkles" id="reward-sparkles"></span>
+        </button>
+
+        <!-- Step 3: three face-down cards to choose from -->
+        <div class="reward-cards" id="reward-cards"></div>
+
+        <!-- Step 4: the reveal of the chosen gift -->
+        <div class="reward-reveal" id="reward-reveal">
+          <div class="reward-reveal__icon" id="reward-reveal-icon"></div>
+          <h2 id="reward-reveal-title"></h2>
+          <p id="reward-reveal-message"></p>
+          <button class="wooden-button is-visible" id="reward-continue">Далі →</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= ALBUM SCENE ================= -->
+    <section id="scene-album" class="scene scene--album" aria-label="Альбом пригод">
+      <div class="album-stage">
+        <p class="album-intro" id="album-intro"></p>
+
+        <!-- One card per completed adventure's gift, filled in at runtime -->
+        <div class="album-grid" id="album-grid"></div>
+
+        <!-- Only shown if the player found the decorative secrets -->
+        <div class="album-bonus" id="album-bonus" hidden>
+          <span class="album-bonus__icon" id="album-bonus-icon"></span>
+          <div>
+            <p class="album-bonus__title" id="album-bonus-title"></p>
+            <p class="album-bonus__message" id="album-bonus-message"></p>
+          </div>
+        </div>
+
+        <button class="wooden-button is-visible" id="album-continue">До фіналу →</button>
+      </div>
+    </section>
+
+    <!-- ================= FINALE SCENE ================= -->
+    <section id="scene-finale" class="scene scene--finale" aria-label="Фінал">
+      <div class="finale-sunset">
+        <div class="finale-sun"></div>
+      </div>
+
+      <div class="finale-content">
+        <div id="finale-mickey" class="mickey mickey--celebrate finale-mickey"></div>
+
+        <div class="finale-card">
+          <h2 id="finale-title"></h2>
+          <p id="finale-message"></p>
+        </div>
+      </div>
+
+      <canvas id="confetti-canvas" class="confetti-canvas" aria-hidden="true"></canvas>
+    </section>
+
+    <!-- ============ OPENING SEQUENCE OVERLAY ============ -->
+    <!-- Not a scene: the intro plays ON the island (real camera, real Mickey, -->
+    <!-- real boxes growing). This layer only holds what sits on top of it. -->
+    <div id="intro" class="intro">
+
+      <!-- Dawn veil: starts almost black, lifts as the world "wakes up" -->
+      <div class="intro__veil" id="intro-veil"></div>
+
+      <p class="intro__caption" id="intro-caption"></p>
+
+      <!-- The title card: a proper "movie title" beat before anything is
+           interactive. Tapping the button is also the deliberate first
+           gesture that unlocks audio — cleaner than listening for just
+           any tap on the page. -->
+      <div class="intro__titlecard" id="intro-titlecard">
+        <div class="titlecard">
+          <h1 class="titlecard__logo">Secret Island</h1>
+          <svg class="titlecard__flourish" viewBox="0 0 160 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M4 10 Q 40 2, 80 10 T 156 10" fill="none" stroke="#FFE9A8" stroke-width="2.5" stroke-linecap="round" />
+          </svg>
+          <p class="titlecard__tagline">Маленька пригода з Mickey</p>
+          <button class="wooden-button is-visible" id="intro-start-btn">Почати</button>
+        </div>
+      </div>
+
+      <!-- Explorer registration, on a parchment scroll -->
+      <div class="intro__scroll" id="intro-scroll">
+        <div class="scroll">
+          <span class="scroll__roll scroll__roll--top"></span>
+
+          <div class="scroll__body">
+            <h2 class="scroll__title" id="scroll-title"></h2>
+
+            <input
+              class="scroll__input"
+              id="team-name-input"
+              type="text"
+              maxlength="22"
+              autocomplete="off"
+              aria-label="Назва команди" />
+
+            <p class="scroll__registered" id="scroll-registered"></p>
+
+            <!-- Gold stamp, thumped down once the name is confirmed -->
+            <div class="stamp" id="stamp">
+              <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <circle cx="60" cy="60" r="54" fill="none" stroke="#C9A227" stroke-width="5" />
+                <circle cx="60" cy="60" r="45" fill="none" stroke="#C9A227" stroke-width="2" />
+                <text id="stamp-text" x="60" y="66" text-anchor="middle" font-size="13" font-weight="700" letter-spacing="0.5" fill="#C9A227"></text>
+              </svg>
+            </div>
+          </div>
+
+          <span class="scroll__roll scroll__roll--bottom"></span>
+        </div>
+
+        <!-- Wooden sign button; only appears once a name has been typed -->
+        <button class="wooden-button" id="start-adventure">
+          <span id="start-adventure-label"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Sound toggle. Sits above every scene, like the speech bubble. -->
+    <button id="mute-toggle" class="mute-toggle" aria-label="Звук">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M4 9h4l5-4v14l-5-4H4z" fill="#5A3A22" />
+        <path class="mute-toggle__waves" d="M16 9.5a4 4 0 010 5M18.5 7a7.5 7.5 0 010 10"
+              fill="none" stroke="#5A3A22" stroke-width="2" stroke-linecap="round" />
+        <path class="mute-toggle__cross" d="M16 9.5l6 5M22 9.5l-6 5"
+              fill="none" stroke="#5A3A22" stroke-width="2" stroke-linecap="round" />
+      </svg>
+    </button>
+
+    <!-- Mickey's speech bubble: global, sits above every scene so his lines -->
+    <!-- stay visible no matter which scene is currently active. -->
+    <div id="mickey-dialog" class="dialog dialog--hidden">
+      <p id="mickey-dialog-text"></p>
+    </div>
+
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+
+</body>
+</html>

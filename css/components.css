@@ -1,0 +1,474 @@
+/*
+  components.css
+  --------------
+  Reusable characters/UI pieces. Mickey's artwork is injected from
+  js/components/mickeySprite.js — this file only sizes the wrapper and
+  drives state animations on the sprite's named parts.
+*/
+
+.mickey {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  /* matches the sprite's 100x140 viewBox so nothing gets squashed */
+  width: 86px;
+  height: 120px;
+  z-index: var(--z-mickey);
+  /* left/top are set inline by JS when Mickey wanders; transition makes it a walk, not a teleport */
+  /* Walking, not gliding: this pairs with the leg cycle below. Easing in
+     and out means he sets off and arrives instead of moving at one speed. */
+  transition: left var(--duration-walk) ease-in-out,
+              top var(--duration-walk) ease-in-out;
+}
+
+.mickey__shadow {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 58px;
+  height: 11px;
+  background: rgba(0,0,0,0.18);
+  border-radius: 50%;
+  filter: blur(1px);
+}
+
+.mickey__svg {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Transform origins: set once here so every state animation below
+   rotates/scales around a point that looks natural. */
+.mickey__body-shape {
+  transform-box: fill-box;
+  transform-origin: 50% 100%; /* squashes from the feet up, keeping weight */
+}
+
+.mickey__arm {
+  transform-box: fill-box;
+  transform-origin: 50% 8%; /* pivots at the shoulder, not mid-arm */
+}
+
+.mickey__leg {
+  transform-box: fill-box;
+  transform-origin: 50% 0%; /* swings from the hip */
+}
+
+.mickey__tail {
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+}
+
+.mickey__head {
+  transform-box: fill-box;
+  transform-origin: 50% 90%; /* tilts on the neck */
+}
+
+.mickey__eyes {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+.mickey__ear {
+  transform-box: fill-box;
+  transform-origin: 50% 90%;
+}
+
+/* ---- Always-on life ---- */
+/* He blinks no matter what state he's in, so he never looks frozen. */
+.mickey__eyes {
+  animation: mickey-blink 5.5s var(--ease-soft) infinite;
+}
+
+/* ---- Mickey states ---- */
+
+/* idle: a breathing bob, plus a tail that drifts on its own timing. Two
+   motions at different speeds is what stops it looking like a looping GIF. */
+.mickey--idle .mickey__svg {
+  animation: mickey-bob 3.4s var(--ease-soft) infinite;
+}
+
+.mickey--idle .mickey__tail {
+  animation: mickey-tail-sway 4.6s var(--ease-soft) infinite;
+}
+
+.mickey--idle .mickey__ear--right {
+  animation: mickey-ear-twitch 7s var(--ease-soft) infinite;
+}
+
+.mickey--wave .mickey__arm--right {
+  animation: mickey-wave-arm 0.6s var(--ease-soft) infinite;
+}
+
+.mickey--happy .mickey__svg {
+  animation: mickey-happy 0.5s var(--ease-soft) infinite;
+}
+
+.mickey--celebrate .mickey__svg {
+  animation: mickey-celebrate 0.6s var(--ease-soft) infinite;
+}
+
+.mickey--celebrate .mickey__arm--left {
+  animation: mickey-wave-arm 0.5s var(--ease-soft) infinite;
+}
+
+.mickey--celebrate .mickey__arm--right {
+  animation: mickey-wave-arm-mirror 0.5s var(--ease-soft) infinite;
+}
+
+/* think: head tilts and he scratches it — a distinct silhouette, not just
+   the same pose with different timing. Used while the Mountain path plays. */
+.mickey--think .mickey__head {
+  animation: mickey-think-tilt 1.8s var(--ease-soft) infinite;
+}
+
+.mickey--think .mickey__arm--right {
+  animation: mickey-scratch 1.8s var(--ease-soft) infinite;
+}
+
+/* walking: body bounce, arms and legs swinging in opposition. The timing is
+   tied to --duration-walk so his stride matches the distance he covers. */
+.mickey--run .mickey__svg {
+  animation: mickey-step 0.42s ease-in-out infinite;
+}
+
+.mickey--run .mickey__arm--left,
+.mickey--run .mickey__leg--right {
+  animation: mickey-swing-forward 0.42s ease-in-out infinite;
+}
+
+.mickey--run .mickey__arm--right,
+.mickey--run .mickey__leg--left {
+  animation: mickey-swing-back 0.42s ease-in-out infinite;
+}
+
+/* point: used when he gestures toward the adventures. He keeps breathing
+   while he does it — a held pose with no movement reads as a frozen bug. */
+.mickey--point .mickey__arm--right {
+  transform: rotate(-72deg);
+}
+
+.mickey--point .mickey__svg {
+  animation: mickey-bob var(--duration-ambient) var(--ease-soft) infinite;
+}
+
+/* surprise: eyes widen, ears perk up */
+.mickey--surprise .mickey__eyes {
+  animation: none;
+  transform: scale(1.35);
+}
+
+.mickey--surprise .mickey__ear {
+  animation: mickey-ear-perk 0.4s var(--ease-soft) forwards;
+}
+
+.mickey--diving .mickey__svg {
+  animation: mickey-dive 0.5s var(--ease-soft) forwards;
+}
+
+/* A brief glance to one side, layered on top of idle. --glance-dir (set
+   from JS, -1 or 1) picks which way, so left and right reuse one keyframe. */
+.mickey.is-glancing .mickey__head {
+  --glance-dir: 1;
+  animation: mickey-glance 1.4s var(--ease-soft);
+}
+
+/* Finale scene: Mickey stands on the sunset stage, no wandering transitions */
+.finale-mickey {
+  position: relative;
+  bottom: auto;
+  left: auto;
+  transform: none;
+  transition: none;
+}
+
+/* ---- Drawn icons (components/icons.js) ---- */
+/* Sized by whatever is showing them; this is just the sane default. */
+.icon {
+  display: block;
+  width: 40px;
+  height: 40px;
+  margin: 0 auto;
+}
+
+/* ================= OPENING SEQUENCE UI ================= */
+/* The intro isn't a scene — it plays over the real island. These are the
+   pieces that sit on top of it: the dawn veil, loading captions, the
+   registration scroll, the stamp and the wooden button. */
+
+.intro {
+  position: absolute;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+}
+
+.intro.is-done {
+  display: none;
+}
+
+/* Dawn veil: the island starts almost dark and the light comes up slowly,
+   so it feels like arriving at sunrise rather than a page loading. */
+.intro__veil {
+  position: absolute;
+  inset: 0;
+  background: #0B1A24;
+  opacity: 1;
+  transition: opacity 3.2s var(--ease-soft);
+}
+
+.intro__veil.is-lifting {
+  opacity: 0;
+}
+
+.intro__caption {
+  position: absolute;
+  font-family: var(--font-display);
+  bottom: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--color-text-light);
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity var(--duration-medium) var(--ease-soft);
+}
+
+.intro__caption.is-visible {
+  opacity: 0.9;
+}
+
+/* ---- Registration scroll ---- */
+
+.intro__scroll {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  opacity: 0;
+  transition: opacity var(--duration-medium) var(--ease-soft);
+}
+
+.intro__scroll.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.scroll {
+  width: 84%;
+  max-width: 320px;
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.28));
+}
+
+/* The rolled-up ends of the parchment, top and bottom */
+.scroll__roll {
+  display: block;
+  height: 16px;
+  border-radius: 8px;
+  background: linear-gradient(to bottom, #D9B67C 0%, #C09A5E 100%);
+  border: 2px solid #A8813F;
+}
+
+.scroll__body {
+  position: relative;
+  background: linear-gradient(to bottom, #F7E6C4 0%, #EFD9AE 100%);
+  border-left: 2px solid #D9B67C;
+  border-right: 2px solid #D9B67C;
+  padding: var(--space-lg) var(--space-md);
+  text-align: center;
+  /* unrolls downward when the scroll appears */
+  transform-origin: top center;
+}
+
+.intro__scroll.is-visible .scroll__body {
+  animation: scroll-unroll 0.7s var(--ease-soft);
+}
+
+.scroll__title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  color: #6B4A22;
+  margin-bottom: var(--space-md);
+  letter-spacing: 0.03em;
+}
+
+/* Not a standard-looking input: a line on parchment, written in ink */
+.scroll__input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 2px dashed #C09A5E;
+  padding: var(--space-xs) var(--space-sm);
+  font-family: var(--font-hand);
+  font-size: 26px;
+  color: #3A2A14;
+  text-align: center;
+  outline: none;
+}
+
+.scroll__input::placeholder {
+  color: #B49463;
+  font-size: 16px;
+}
+
+.scroll__registered {
+  font-size: 13px;
+  color: #6B4A22;
+  opacity: 0;
+  margin-top: var(--space-sm);
+  transition: opacity var(--duration-medium) var(--ease-soft);
+}
+
+.scroll__registered.is-visible {
+  opacity: 0.85;
+}
+
+/* ---- Gold stamp ---- */
+
+.stamp {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  width: 108px;
+  height: 108px;
+  transform: translate(-50%, -50%) scale(2.6) rotate(-18deg);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.stamp svg {
+  width: 100%;
+  height: 100%;
+}
+
+.stamp.is-stamped {
+  animation: stamp-thump 0.45s cubic-bezier(0.3, 1.4, 0.5, 1) forwards;
+}
+
+/* ---- Wooden sign button ---- */
+/* Part of the world, not a browser button. */
+
+.wooden-button {
+  position: relative;
+  font-family: var(--font-display);
+  background: linear-gradient(to bottom, #C98A4B 0%, #A5692F 100%);
+  border: 3px solid #8A5A3B;
+  border-radius: 10px;
+  color: var(--color-text-light);
+  font-size: 17px;
+  font-weight: 700;
+  padding: var(--space-sm) var(--space-xl);
+  box-shadow: 0 5px 0 #7A4A2B, 0 8px 14px rgba(0,0,0,0.25);
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity var(--duration-medium) var(--ease-soft),
+              transform var(--duration-medium) var(--ease-soft);
+}
+
+.wooden-button.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.wooden-button:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 #7A4A2B, 0 3px 8px rgba(0,0,0,0.25);
+}
+
+/* ---- Title card ---- */
+/* The game's own opening title, shown once Mickey has arrived and before
+   anything else becomes interactive. Tapping the button is the deliberate
+   first gesture — it's what unlocks audio, so it earns being a real beat
+   rather than a background listener. */
+
+.intro__titlecard {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--duration-medium) var(--ease-soft);
+}
+
+.intro__titlecard.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.titlecard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  text-align: center;
+  animation: titlecard-rise 0.9s var(--ease-soft);
+}
+
+.titlecard__logo {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--color-text-light);
+  text-shadow: 0 3px 12px rgba(0,0,0,0.35);
+  letter-spacing: 0.02em;
+}
+
+.titlecard__flourish {
+  width: 140px;
+  height: 18px;
+  opacity: 0.85;
+}
+
+.titlecard__tagline {
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--color-text-light);
+  opacity: 0.85;
+  margin-bottom: var(--space-sm);
+}
+
+
+/* ---- Sound toggle ---- */
+/* A small wooden tag in the corner. Off by default it shows a crossed-out
+   speaker, so the state is obvious without a label. */
+
+.mute-toggle {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  z-index: 300;
+  width: 40px;
+  height: 40px;
+  padding: 7px;
+  background: linear-gradient(to bottom, #F7E6C4 0%, #EBD5A6 100%);
+  border: 2.5px solid #B0894C;
+  border-radius: 10px;
+  box-shadow: 0 3px 0 #93703B;
+  opacity: 0.85;
+}
+
+.mute-toggle:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #93703B;
+}
+
+.mute-toggle svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* sound on: show the waves, hide the cross */
+.mute-toggle .mute-toggle__cross { display: none; }
+.mute-toggle.is-muted .mute-toggle__waves { display: none; }
+.mute-toggle.is-muted .mute-toggle__cross { display: block; }

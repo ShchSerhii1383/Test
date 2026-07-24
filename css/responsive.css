@@ -1,0 +1,20 @@
+/*
+  responsive.css
+  --------------
+  Mobile-first: base styles above already target small phones (~390px).
+  These breakpoints only adjust scale for larger phones and tablets/desktop.
+*/
+
+/* Slightly larger phones */
+@media (min-width: 430px) {
+  .mickey { width: 96px; height: 134px; }
+  .sun { width: 100px; height: 100px; }
+}
+
+/* Tablets and up */
+@media (min-width: 768px) {
+  .scene--island .land { height: 26%; }
+  .mickey { width: 112px; height: 157px; bottom: 40px; }
+  .box { width: 68px; height: 60px; }
+  .dialog { font-size: 17px; max-width: 320px; }
+}

@@ -1,0 +1,357 @@
+/*
+  animations.css
+  --------------
+  Every @keyframes definition lives here, so nobody has to hunt through
+  five files to find out how something moves. Keep motion slow and soft —
+  when in doubt, fewer effects done smoothly beats many done quickly.
+*/
+
+/* ---- Ambient world: always running, none of it needs the player to do anything ---- */
+
+@keyframes cloud-drift {
+  from { transform: translateX(0); }
+  to { transform: translateX(160vw); }
+}
+
+@keyframes wave-sway {
+  0%, 100% { transform: translateX(0) scaleY(1); }
+  50% { transform: translateX(2%) scaleY(1.08); }
+}
+
+@keyframes palm-sway {
+  0%, 100% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
+}
+
+@keyframes sun-glow {
+  0%, 100% { box-shadow: 0 0 60px 20px var(--color-sun-glow); }
+  50% { box-shadow: 0 0 80px 30px var(--color-sun-glow); }
+}
+
+@keyframes box-pulse {
+  0%, 100% { opacity: 0; transform: scale(0.9); }
+  50% { opacity: 0.6; transform: scale(1.1); }
+}
+
+@keyframes box-hover-bounce {
+  0%, 85%, 100% { transform: translateY(0); }
+  90% { transform: translateY(-4px); }
+  95% { transform: translateY(0); }
+}
+
+@keyframes boat-rock {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
+}
+
+@keyframes gull-pass {
+  0% { opacity: 0; transform: translateX(0) translateY(0); }
+  5% { opacity: 0.6; }
+  45% { opacity: 0.6; transform: translateX(60vw) translateY(-10px); }
+  50% { opacity: 0; transform: translateX(70vw) translateY(-10px); }
+  100% { opacity: 0; transform: translateX(70vw) translateY(-10px); }
+}
+
+@keyframes grass-sway {
+  0%, 100% { transform: rotate(-6deg); }
+  50% { transform: rotate(6deg); }
+}
+
+/* ---- Ambient critters: mostly invisible, appear briefly on their own timer ---- */
+
+@keyframes crab-scurry {
+  0%, 96%, 100% { opacity: 0; transform: translateX(0); }
+  4% { opacity: 1; }
+  20% { opacity: 1; transform: translateX(45vw); }
+  24% { opacity: 0; transform: translateX(50vw); }
+}
+
+@keyframes butterfly-flit {
+  0%, 90%, 100% { opacity: 0; transform: translate(0, 0); }
+  5% { opacity: 0.9; }
+  30% { opacity: 0.9; transform: translate(20px, -30px); }
+  55% { transform: translate(-10px, -50px); }
+  80% { opacity: 0.9; transform: translate(15px, -20px); }
+  85% { opacity: 0; }
+}
+
+@keyframes fish-jump {
+  0%, 92%, 100% { opacity: 0; transform: translateY(0) scale(1); }
+  94% { opacity: 1; transform: translateY(-24px) scale(1.1); }
+  97% { opacity: 1; transform: translateY(0) scale(1); }
+  98% { opacity: 0; }
+}
+
+@keyframes parrot-fly {
+  0%, 92%, 100% { opacity: 0; transform: translate(0, 0); }
+  3% { opacity: 0.95; }
+  40% { opacity: 0.95; transform: translate(70vw, 8vh); }
+  45% { opacity: 0; transform: translate(78vw, 8vh); }
+}
+
+/* ---- Foreground secrets: tapped once, purely for delight ---- */
+
+@keyframes shell-sing {
+  0% { transform: scale(1) rotate(0deg); }
+  40% { transform: scale(1.25) rotate(-8deg); }
+  70% { transform: scale(1.1) rotate(6deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes coconut-wobble {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-12deg); }
+  75% { transform: rotate(12deg); }
+}
+
+/* ---- Mickey states ---- */
+/* These animate the <svg> wrapper and its named parts (see index.html:   */
+/* mickey__svg, mickey__arm--left/right, mickey__body-shape, mickey__tail). */
+
+@keyframes mickey-bob {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50% { transform: translateY(-4px) scaleY(1.015); }
+}
+
+@keyframes mickey-wave-arm {
+  0%, 100% { transform: rotate(20deg); }
+  50% { transform: rotate(-45deg); }
+}
+
+@keyframes mickey-wave-arm-mirror {
+  0%, 100% { transform: rotate(-20deg); }
+  50% { transform: rotate(45deg); }
+}
+
+@keyframes mickey-happy {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.04); }
+}
+
+@keyframes mickey-celebrate {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-9px) rotate(-4deg); }
+  75% { transform: translateY(-9px) rotate(4deg); }
+}
+
+@keyframes mickey-dive {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  60% { transform: translateY(8px) scale(0.82); opacity: 1; }
+  100% { transform: translateY(18px) scale(0.35); opacity: 0; }
+}
+
+@keyframes mickey-think-tilt {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-7deg); }
+}
+
+/* Blink: eyes squash shut for a couple of frames, then open. The long
+   gap between blinks is what makes it read as natural rather than twitchy. */
+@keyframes mickey-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95%, 97% { transform: scaleY(0.1); }
+}
+
+@keyframes mickey-scratch {
+  0%, 100% { transform: rotate(18deg); }
+  50% { transform: rotate(-115deg); }
+}
+
+/* Walk cycle. The body rises on each step and the limbs swing in
+   opposition — left arm with right leg — which is what makes it read as
+   walking rather than a figure vibrating in place. */
+@keyframes mickey-step {
+  0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+  50% { transform: translateY(-5px) rotate(1.5deg); }
+}
+
+@keyframes mickey-swing-forward {
+  0%, 100% { transform: rotate(-26deg); }
+  50% { transform: rotate(24deg); }
+}
+
+@keyframes mickey-swing-back {
+  0%, 100% { transform: rotate(26deg); }
+  50% { transform: rotate(-24deg); }
+}
+
+/* Secondary motion for idle: slower than the breathing bob and on its own
+   cycle, so the two never line up and it stops looking like a loop. */
+@keyframes mickey-tail-sway {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-12deg); }
+}
+
+@keyframes mickey-ear-twitch {
+  0%, 88%, 100% { transform: rotate(0deg); }
+  92% { transform: rotate(-9deg); }
+  96% { transform: rotate(4deg); }
+}
+
+@keyframes mickey-ear-perk {
+  from { transform: scale(1) translateY(0); }
+  to { transform: scale(1.12) translateY(-3px); }
+}
+
+/* ---- Apply ambient animations to the elements that need them ---- */
+
+.cloud--1 { animation: cloud-drift 55s linear infinite; }
+.cloud--2 { animation: cloud-drift 70s linear infinite 8s; }
+.cloud--3 { animation: cloud-drift 40s linear infinite 20s; }
+.cloud--4 { animation: cloud-drift 95s linear infinite 3s; }  /* large: slowest of the set */
+.cloud--5 { animation: cloud-drift 30s linear infinite 14s; } /* small: quickest of the set */
+
+@keyframes sea-far-shimmer {
+  0%, 100% { transform: translateX(-10%); opacity: 0.5; }
+  50% { transform: translateX(10%); opacity: 0.8; }
+}
+
+.wave--back { animation: wave-sway 5s var(--ease-soft) infinite; }
+.wave--mid { animation: wave-sway 4s var(--ease-soft) infinite 0.5s; }
+.wave--front { animation: wave-sway 3.5s var(--ease-soft) infinite 1s; }
+
+.palm--left { animation: palm-sway 4.5s var(--ease-soft) infinite; }
+.palm--right { animation: palm-sway 5.2s var(--ease-soft) infinite 0.8s; }
+
+.sun { animation: sun-glow 4s var(--ease-soft) infinite; }
+
+/* ---- Lagoon: found spot ---- */
+
+@keyframes spot-win {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  60% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+}
+
+/* ---- Reward sequence ---- */
+
+@keyframes countdown-pulse {
+  0% { transform: scale(0.5); opacity: 0; }
+  30% { transform: scale(1.1); opacity: 1; }
+  70% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0; }
+}
+
+/* ---- Mountain: memory-path stones ---- */
+
+@keyframes stone-flash {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.15); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes stone-shake {
+  0%, 100% { transform: translate(-50%, -50%) translateX(0); }
+  25% { transform: translate(-50%, -50%) translateX(-6px); }
+  75% { transform: translate(-50%, -50%) translateX(6px); }
+}
+
+/* ---- Bazaar: correct stall pick ---- */
+
+@keyframes stall-win {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* ---- Lighthouse: invites a tap once every adventure is done ---- */
+
+@keyframes lighthouse-invite {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes lighthouse-glow {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* ---- Album: cards appear one after another ---- */
+
+@keyframes album-card-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Opening sequence ---- */
+
+/* The scroll unrolls downward, like parchment being let go at the top. */
+@keyframes scroll-unroll {
+  0% { transform: scaleY(0.05); opacity: 0.4; }
+  70% { transform: scaleY(1.04); opacity: 1; }
+  100% { transform: scaleY(1); opacity: 1; }
+}
+
+/* The stamp comes down big and fast, then settles — squash & stretch,
+   so it lands with weight instead of just fading in. */
+@keyframes stamp-thump {
+  0% { transform: translate(-50%, -50%) scale(2.6) rotate(-18deg); opacity: 0; }
+  60% { transform: translate(-50%, -50%) scale(0.9) rotate(-12deg); opacity: 0.95; }
+  100% { transform: translate(-50%, -50%) scale(1) rotate(-12deg); opacity: 0.9; }
+}
+
+/* Boxes push up out of the sand at the end of the intro. */
+@keyframes box-grow {
+  0% { transform: scale(0.1) translateY(26px); opacity: 0; }
+  60% { transform: scale(1.12) translateY(-4px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* ---- Reward scene ---- */
+
+/* The closed chest breathes slightly, so it reads as "tap me" without
+   needing a label telling you to. */
+@keyframes chest-invite {
+  0%, 100% { transform: scale(1) translateY(0); }
+  50% { transform: scale(1.03) translateY(-5px); }
+}
+
+/* Light opens upward out of the lid rather than fading in on the spot. */
+@keyframes beam-open {
+  0% { opacity: 0; transform: translateX(-50%) scaleY(0); }
+  40% { opacity: 1; }
+  100% { opacity: 0.75; transform: translateX(-50%) scaleY(1); }
+}
+
+@keyframes sparkle-float {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.4); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--drift), calc(var(--rise) * -1)) scale(1.1); }
+}
+
+@keyframes card-rise {
+  from { opacity: 0; transform: translateY(26px) scale(0.92); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* The gift lands with a little overshoot — squash & stretch, so it arrives
+   with weight instead of simply becoming visible. */
+@keyframes gift-appear {
+  0% { transform: scale(0.3); opacity: 0; }
+  60% { transform: scale(1.18); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* A quick look to one side and back — --glance-dir flips the direction. */
+@keyframes mickey-glance {
+  0%, 100% { transform: rotate(0deg); }
+  30%, 65% { transform: rotate(calc(10deg * var(--glance-dir))); }
+}
+
+/* ---- Water glint: a couple of soft highlights drifting across the sea ---- */
+@keyframes water-glint {
+  0% { opacity: 0; transform: translateX(-30%); }
+  40% { opacity: 0.5; }
+  100% { opacity: 0; transform: translateX(130%); }
+}
+
+/* ---- Title card ---- */
+@keyframes titlecard-rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ---- Decorative props: fallen fronds get the faintest sway ---- */
+@keyframes frond-sway {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(2deg); }
+}

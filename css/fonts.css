@@ -1,0 +1,58 @@
+/*
+  fonts.css
+  ---------
+  Local web fonts. Nothing here is fetched from the internet, so the game
+  looks the same offline as online.
+
+  The font files themselves are NOT in the repository — see
+  assets/fonts/README.md for where to put them.
+
+  If a file is missing the browser just falls back to the stack defined in
+  variables.css, so the game still looks deliberate rather than broken.
+
+  `font-display: swap` means text is readable immediately and simply
+  restyles once the font arrives — no invisible text on a slow phone.
+*/
+
+/* Comfortaa — rounded and friendly. Mickey's signs, buttons, headings. */
+@font-face {
+  font-family: 'Comfortaa';
+  src: url('../assets/fonts/comfortaa-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Comfortaa';
+  src: url('../assets/fonts/comfortaa-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Nunito — body text. Plain, warm, easy for a ten-year-old to read. */
+@font-face {
+  font-family: 'Nunito';
+  src: url('../assets/fonts/nunito-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Nunito';
+  src: url('../assets/fonts/nunito-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Caveat — handwriting, used only for the team name on the parchment. */
+@font-face {
+  font-family: 'Caveat';
+  src: url('../assets/fonts/caveat-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
