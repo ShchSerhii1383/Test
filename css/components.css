@@ -8,18 +8,25 @@
 
 .mickey {
   position: absolute;
-  bottom: 30px;
   left: 50%;
+  bottom: 6%;
   transform: translateX(-50%);
-  /* matches the sprite's 100x140 viewBox so nothing gets squashed */
-  width: 86px;
-  height: 120px;
+  /* Sized as a fraction of .land's own height (his real positioning
+     container) rather than fixed pixels — on a short/wide laptop window
+     the island band can be much shorter in px than on a phone, and a
+     fixed-height Mickey could poke past .land's edge and get clipped by
+     its overflow:hidden. Percentage height + aspect-ratio scales with
+     whatever height .land actually ends up with, on any device. */
+  height: 46%;
+  aspect-ratio: 100 / 140; /* matches the sprite's viewBox; width follows height */
+  width: auto;
+  max-width: 140px; /* keeps him from getting comically large on a tall, narrow phone */
   z-index: var(--z-mickey);
-  /* left/top are set inline by JS when Mickey wanders; transition makes it a walk, not a teleport */
-  /* Walking, not gliding: this pairs with the leg cycle below. Easing in
-     and out means he sets off and arrives instead of moving at one speed. */
+  /* left/bottom are set inline by JS when Mickey wanders — always bottom,
+     never top, so "how far up from the sand" is the only thing that can
+     ever push him out of frame, and that's capped in JS (see IslandScene). */
   transition: left var(--duration-walk) ease-in-out,
-              top var(--duration-walk) ease-in-out;
+              bottom var(--duration-walk) ease-in-out;
 }
 
 .mickey__shadow {
@@ -177,13 +184,18 @@
   animation: mickey-glance 1.4s var(--ease-soft);
 }
 
-/* Finale scene: Mickey stands on the sunset stage, no wandering transitions */
+/* Finale scene: Mickey stands on the sunset stage, not inside .land, so
+   he needs his own fixed-ish size here — left on the base rule's 46%, he'd
+   compute against .finale-content's full-scene height instead of a beach
+   band, and turn into a giant. */
 .finale-mickey {
   position: relative;
   bottom: auto;
   left: auto;
   transform: none;
   transition: none;
+  height: 140px;
+  max-width: none;
 }
 
 /* ---- Drawn icons (components/icons.js) ---- */

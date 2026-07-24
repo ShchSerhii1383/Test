@@ -50,14 +50,18 @@ export class IslandScene {
     });
 
     this.camera = new Camera(sceneEl);
+    this.landEl = sceneEl.querySelector('.land');
 
     // Loose spots for Mickey to wander to between boxes — kept inside the
-    // island's safe area, away from the very edges of the screen.
+    // island's safe area. Bottom-anchored (not top): combined with his
+    // percentage-based height, that guarantees he's never taller than the
+    // remaining room above him, so he can't get clipped by .land's
+    // overflow:hidden on any screen shape.
     this._wanderSpots = [
-      { left: '30%', top: '68%' },
-      { left: '55%', top: '72%' },
-      { left: '65%', top: '60%' },
-      { left: '40%', top: '75%' },
+      { left: '30%', bottom: '8%' },
+      { left: '55%', bottom: '5%' },
+      { left: '65%', bottom: '14%' },
+      { left: '40%', bottom: '4%' },
     ];
     this._wanderTimer = null;
 
@@ -195,21 +199,33 @@ export class IslandScene {
   async _runToBoxThenGo(box, sceneName) {
     clearTimeout(this._wanderTimer);
 
-    const spot = this._positionRelativeToIsland(box.el);
+    // Two different coordinate spaces on purpose: the camera transforms the
+    // whole scene, so its pan amount needs scene-relative percentages. But
+    // Mickey is positioned inside .land (only the bottom slice of the
+    // scene), so his walk target needs percentages relative to .land
+    // instead — using the scene-relative numbers for his inline style was
+    // the actual bug behind him ending up in the wrong spot.
+    const sceneSpot = this._percentOf(box.el, this.sceneEl);
+    const landSpot = this._percentOf(box.el, this.landEl);
 
     // The camera drifts in toward the box, the same way it does during the
     // intro's tour — so stepping into an adventure feels like moving
     // through the island rather than a screen being swapped out.
     this.camera.focus({
       scale: 1.2,
-      x: `${(50 - spot.left) * 0.4}%`,
-      y: `${(50 - spot.top) * 0.25}%`,
+      x: `${(50 - sceneSpot.left) * 0.4}%`,
+      y: `${(50 - sceneSpot.top) * 0.25}%`,
     });
 
+    // Bottom-anchored, and capped: even if a box sits unusually high
+    // within .land, Mickey (46% of .land's height) can never be pushed
+    // past its top edge and clipped by overflow:hidden.
+    const bottomTarget = Math.min(100 - landSpot.top, 50);
+
     this.mickey.play(MICKEY_STATES.HAPPY);
-    this.mickey.el.style.left = `${spot.left}%`;
-    this.mickey.el.style.top = `${spot.top}%`;
-    this.mickey.el.style.bottom = 'auto';
+    this.mickey.el.style.left = `${landSpot.left}%`;
+    this.mickey.el.style.bottom = `${bottomTarget}%`;
+    this.mickey.el.style.top = 'auto';
 
     // Wait for his feet to actually get there. Must stay in step with
     // --duration-walk in variables.css, or he dives before he arrives.
@@ -225,17 +241,23 @@ export class IslandScene {
     this.mickey.el.classList.remove('mickey--diving');
   }
 
-  /** Convert a box's pixel position into percentages relative to the island layer, for Mickey to walk to. */
-  _positionRelativeToIsland(boxEl) {
-    const islandRect = this.sceneEl.getBoundingClientRect();
-    const boxRect = boxEl.getBoundingClientRect();
+  /**
+   * Convert an element's on-screen position into percentages relative to
+   * some other element's box — e.g. "where is this box, as a percentage of
+   * .land's own width/height". Used both for the camera (relative to the
+   * whole scene) and for Mickey's walk target (relative to .land), which
+   * are two different reference frames and must not be mixed up.
+   */
+  _percentOf(targetEl, referenceEl) {
+    const refRect = referenceEl.getBoundingClientRect();
+    const targetRect = targetEl.getBoundingClientRect();
 
-    const centerX = boxRect.left + boxRect.width / 2 - islandRect.left;
-    const centerY = boxRect.top + boxRect.height / 2 - islandRect.top;
+    const centerX = targetRect.left + targetRect.width / 2 - refRect.left;
+    const centerY = targetRect.top + targetRect.height / 2 - refRect.top;
 
     return {
-      left: (centerX / islandRect.width) * 100,
-      top: (centerY / islandRect.height) * 100,
+      left: (centerX / refRect.width) * 100,
+      top: (centerY / refRect.height) * 100,
     };
   }
 
@@ -249,8 +271,8 @@ export class IslandScene {
     const wander = () => {
       const spot = this._wanderSpots[Math.floor(Math.random() * this._wanderSpots.length)];
       this.mickey.el.style.left = spot.left;
-      this.mickey.el.style.top = spot.top;
-      this.mickey.el.style.bottom = 'auto';
+      this.mickey.el.style.bottom = spot.bottom;
+      this.mickey.el.style.top = 'auto';
 
       this._wanderTimer = setTimeout(wander, 6000 + Math.random() * 4000);
     };

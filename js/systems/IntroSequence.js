@@ -72,7 +72,6 @@ export class IntroSequence {
     await this._stageGreeting();
     await this._stageRegistration();
     await this._stageTour();
-    await this._stageBoxesGrow();
 
     this._finish();
   }
@@ -86,8 +85,8 @@ export class IntroSequence {
     this.mickey.el.style.transition = 'none';
     this.mickey.el.style.opacity = '0';
     this.mickey.el.style.left = '-15%';
-    this.mickey.el.style.top = '70%';
-    this.mickey.el.style.bottom = 'auto';
+    this.mickey.el.style.bottom = '8%';
+    this.mickey.el.style.top = 'auto';
     void this.mickey.el.offsetWidth; // force the jump to apply now
     this.mickey.el.style.transition = '';
     this.camera.focus({ scale: 1.15, x: '0%', y: '2%' });
@@ -239,11 +238,17 @@ export class IntroSequence {
   }
 
   /**
-   * Stage 7 — the tour. Mickey points, and the camera drifts across the
-   * island: lagoon on the left, mountain in the middle, bazaar on the right.
+   * Stage 7 — the tour. Boxes grow out of the sand right as Mickey points
+   * and the camera begins moving — not held back until afterward, so the
+   * camera and the boxes read as one living moment instead of "camera
+   * moves, nothing happens, then boxes suddenly appear" (which looked like
+   * something had broken).
    */
   async _stageTour() {
     this.mickey.play(MICKEY_STATES.POINT);
+
+    this.boxesEl.classList.remove('is-hidden');
+    this.boxesEl.classList.add('is-revealing');
     await wait(500);
 
     this.camera.focus({ scale: 1.35, x: '16%', y: '-4%' }); // lagoon side
@@ -255,16 +260,10 @@ export class IntroSequence {
     this.camera.focus({ scale: 1.35, x: '-16%', y: '-4%' }); // bazaar side
     await wait(2000);
 
-    this.camera.reset(); // back to the clearing
-    await wait(1800);
-  }
+    this.camera.reset(); // back to the clearing — every box already grown in
+    await wait(600);
 
-  /** Stage 8 — the boxes push up out of the sand, one after another. */
-  async _stageBoxesGrow() {
     this.mickey.play(MICKEY_STATES.HAPPY);
-    this.boxesEl.classList.remove('is-hidden');
-    this.boxesEl.classList.add('is-revealing');
-
     await this.mickey.sayTyped(INTRO_FINISH, 1200);
     this.mickey.hush();
     this.mickey.play(MICKEY_STATES.IDLE);
