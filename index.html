@@ -376,9 +376,48 @@
 
       <!-- LAYER 4: foreground — grass, shells, coconuts, tappable secrets -->
       <div class="layer layer--fg">
-        <div class="grass-tuft grass-tuft--1"></div>
-        <div class="grass-tuft grass-tuft--2"></div>
-        <div class="grass-tuft grass-tuft--3"></div>
+        <!-- Grass blade clusters, swaying in the wind — replaces the old
+             plain CSS blobs with real linework matching the rest of the island -->
+        <svg class="grass-tuft grass-tuft--1" viewBox="0 0 30 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M4 24 Q2 10, 6 0" fill="none" stroke="var(--color-palm-dark)" stroke-width="2.2" stroke-linecap="round" />
+          <path d="M11 24 Q11 8, 14 -2" fill="none" stroke="var(--color-palm-light)" stroke-width="2.2" stroke-linecap="round" />
+          <path d="M18 24 Q20 12, 17 2" fill="none" stroke="var(--color-palm-dark)" stroke-width="2.2" stroke-linecap="round" />
+          <path d="M24 24 Q27 14, 25 4" fill="none" stroke="var(--color-palm-light)" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        <svg class="grass-tuft grass-tuft--2" viewBox="0 0 30 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M4 24 Q2 10, 6 0" fill="none" stroke="var(--color-palm-dark)" stroke-width="2.2" stroke-linecap="round" />
+          <path d="M11 24 Q11 8, 14 -2" fill="none" stroke="var(--color-palm-light)" stroke-width="2.2" stroke-linecap="round" />
+          <path d="M18 24 Q20 12, 17 2" fill="none" stroke="var(--color-palm-dark)" stroke-width="2.2" stroke-linecap="round" />
+          <path d="M24 24 Q27 14, 25 4" fill="none" stroke="var(--color-palm-light)" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        <svg class="grass-tuft grass-tuft--3" viewBox="0 0 30 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M4 24 Q2 10, 6 0" fill="none" stroke="var(--color-palm-dark)" stroke-width="2.2" stroke-linecap="round" />
+          <path d="M11 24 Q11 8, 14 -2" fill="none" stroke="var(--color-palm-light)" stroke-width="2.2" stroke-linecap="round" />
+          <path d="M18 24 Q20 12, 17 2" fill="none" stroke="var(--color-palm-dark)" stroke-width="2.2" stroke-linecap="round" />
+          <path d="M24 24 Q27 14, 25 4" fill="none" stroke="var(--color-palm-light)" stroke-width="2" stroke-linecap="round" />
+        </svg>
+
+        <!-- Seaweed washed up near the waterline -->
+        <svg class="prop prop--seaweed" viewBox="0 0 36 30" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M4 28 Q10 14, 4 2" fill="none" stroke="var(--color-palm-dark)" stroke-width="3" stroke-linecap="round" />
+          <path d="M14 28 Q22 16, 14 0" fill="none" stroke="var(--color-palm-light)" stroke-width="3" stroke-linecap="round" />
+          <path d="M24 28 Q30 18, 22 6" fill="none" stroke="var(--color-palm-dark)" stroke-width="2.5" stroke-linecap="round" />
+        </svg>
+
+        <!-- A small tide pool, pebbles resting in it -->
+        <svg class="prop prop--tide-pool" viewBox="0 0 60 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <ellipse cx="30" cy="14" rx="28" ry="9" fill="var(--color-sea-light)" opacity="0.55" stroke="var(--color-sea-mid)" stroke-width="1.5" />
+          <ellipse cx="22" cy="14" rx="4" ry="2.6" fill="var(--color-rock-stone)" />
+          <ellipse cx="36" cy="16" rx="3" ry="2" fill="var(--color-rock-stone)" opacity="0.85" />
+        </svg>
+
+        <!-- Wind-blown petals drifting across the island, decorative and looping -->
+        <svg class="critter petal petal--1" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M8 1c4 2 6 5 6 7s-2 5-6 7c-4-2-6-5-6-7s2-5 6-7z" fill="var(--color-flower-1)" />
+        </svg>
+        <svg class="critter petal petal--2" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M8 1c4 2 6 5 6 7s-2 5-6 7c-4-2-6-5-6-7s2-5 6-7z" fill="var(--color-flower-3)" />
+        </svg>
 
         <button class="secret shell" id="secret-shell" aria-label="Мушля">
           <svg viewBox="0 0 30 26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -401,63 +440,433 @@
     </section>
 
     <!-- ================= LAGOON SCENE ================= -->
-    <section id="scene-lagoon" class="scene scene--lagoon" aria-label="Лагуна">
-      <div class="sky sky--lagoon">
+    <section id="scene-lagoon" class="scene scene--lagoon" aria-label="Секретна лагуна">
+
+      <!-- LAYER 1: sky — sun, clouds -->
+      <div class="lagoon-layer lagoon-layer--sky">
         <div class="sun"></div>
         <div class="cloud cloud--1"></div>
         <div class="cloud cloud--2"></div>
+        <div class="cloud cloud--3"></div>
       </div>
 
-      <div class="sea sea--full">
+      <!-- LAYER 2: distant horizon, small far islands -->
+      <div class="lagoon-layer lagoon-layer--horizon">
+        <div class="sea-far"><span class="sea-far__shimmer"></span></div>
+        <div class="distant-island distant-island--1"></div>
+        <div class="distant-island distant-island--2"></div>
+      </div>
+
+      <!-- LAYER 3: the turquoise sea itself — three wave bands, sunlight glints -->
+      <div class="lagoon-layer lagoon-layer--sea">
         <div class="wave wave--back"></div>
         <div class="wave wave--mid"></div>
         <div class="wave wave--front"></div>
+        <span class="water-glint water-glint--1"></span>
+        <span class="water-glint water-glint--2"></span>
+
+        <!-- The little boat Mickey arrived in -->
+        <div class="lagoon-boat">
+          <svg viewBox="0 0 50 46" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M 6 32 Q 25 40, 44 32 L 38 40 Q 25 44, 12 40 Z" fill="var(--color-wood-light)" stroke="var(--color-wood-dark)" stroke-width="1.5" />
+            <line x1="25" y1="32" x2="25" y2="4" stroke="var(--color-trunk)" stroke-width="2" stroke-linecap="round" />
+            <path d="M 25 6 L 25 28 L 6 28 Z" fill="var(--color-text-light)" stroke="var(--color-sand-dark)" stroke-width="1" />
+            <path d="M 25 10 L 25 28 L 40 26 Z" fill="var(--color-sun)" opacity="0.9" />
+          </svg>
+        </div>
+
+        <svg class="gull gull--1" viewBox="0 0 24 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M 0 8 Q 6 0, 12 8 Q 18 0, 24 8" fill="none" stroke="#3A3A3A" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+
+        <svg class="critter fish-jump" id="lagoon-fish" viewBox="0 0 34 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <ellipse cx="16" cy="10" rx="14" ry="8" fill="var(--color-sea-light)" />
+          <path d="M 30 10 L 34 4 L 34 16 Z" fill="var(--color-sea-mid)" />
+          <circle cx="8" cy="8" r="1.6" fill="#2A2A2A" />
+        </svg>
       </div>
 
-      <div class="lagoon-intro" id="lagoon-intro">
-        <p id="lagoon-intro-text"></p>
-      </div>
+      <!-- LAYER 4: the beach — where the whole adventure plays out -->
+      <div class="lagoon-layer lagoon-layer--beach">
 
-      <!-- Treasure spots are generated by LagoonScene.js at runtime -->
-      <div class="lagoon-spots" id="lagoon-spots"></div>
+        <svg class="foam-edge" viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 6 Q 50 0, 100 7 T 200 5 T 300 8 T 400 4 L400 20 Q 300 26, 200 20 T 100 22 T 0 18 Z"
+                fill="var(--color-foam)" opacity="0.8" />
+        </svg>
+
+        <svg class="dunes" viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 26 Q 60 8, 130 20 T 260 14 T 400 24 L400 120 L0 120 Z" fill="var(--color-sand-wet)" />
+          <path d="M0 52 Q 90 36, 180 50 T 400 44 L400 120 L0 120 Z" fill="var(--color-sand)" opacity="0.9" />
+          <path d="M0 86 Q 120 72, 240 84 T 400 78 L400 120 L0 120 Z" fill="var(--color-sand-dark)" opacity="0.6" />
+        </svg>
+
+        <!-- Decorative props: none of these are tappable, they're just the world -->
+        <div class="palm palm--left">
+          <svg class="palm__svg" viewBox="0 0 60 130" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M 32 128 Q 24 90, 30 60 Q 33 40, 26 18" fill="none" stroke="var(--color-trunk)" stroke-width="9" stroke-linecap="round" />
+            <g>
+              <path d="M 26 18 Q 4 8, -10 24" fill="none" stroke="var(--color-palm-dark)" stroke-width="7" stroke-linecap="round" />
+              <path d="M 26 18 Q 8 26, 0 46" fill="none" stroke="var(--color-palm-light)" stroke-width="7" stroke-linecap="round" />
+              <path d="M 26 18 Q 26 2, 16 -10" fill="none" stroke="var(--color-palm-dark)" stroke-width="7" stroke-linecap="round" />
+              <path d="M 26 18 Q 40 4, 60 4" fill="none" stroke="var(--color-palm-light)" stroke-width="7" stroke-linecap="round" />
+              <path d="M 26 18 Q 46 20, 58 38" fill="none" stroke="var(--color-palm-dark)" stroke-width="7" stroke-linecap="round" />
+            </g>
+            <circle cx="20" cy="26" r="5" fill="var(--color-trunk)" />
+            <circle cx="30" cy="30" r="5" fill="#6B4429" />
+          </svg>
+        </div>
+
+        <div class="palm palm--right">
+          <svg class="palm__svg" viewBox="0 0 60 130" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M 28 128 Q 36 90, 30 60 Q 27 40, 34 18" fill="none" stroke="var(--color-trunk)" stroke-width="9" stroke-linecap="round" />
+            <g>
+              <path d="M 34 18 Q 56 8, 70 24" fill="none" stroke="var(--color-palm-dark)" stroke-width="7" stroke-linecap="round" />
+              <path d="M 34 18 Q 52 26, 60 46" fill="none" stroke="var(--color-palm-light)" stroke-width="7" stroke-linecap="round" />
+              <path d="M 34 18 Q 34 2, 44 -10" fill="none" stroke="var(--color-palm-dark)" stroke-width="7" stroke-linecap="round" />
+              <path d="M 34 18 Q 20 4, 0 4" fill="none" stroke="var(--color-palm-light)" stroke-width="7" stroke-linecap="round" />
+              <path d="M 34 18 Q 14 20, 2 38" fill="none" stroke="var(--color-palm-dark)" stroke-width="7" stroke-linecap="round" />
+            </g>
+            <circle cx="40" cy="26" r="5" fill="var(--color-trunk)" />
+            <circle cx="30" cy="30" r="5" fill="#6B4429" />
+          </svg>
+        </div>
+
+        <!-- Wooden jetty leading into the water -->
+        <svg class="lagoon-jetty" viewBox="0 0 100 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="0" y="6" width="100" height="16" rx="2" fill="var(--color-wood-light)" />
+          <line x1="10" y1="6" x2="10" y2="22" stroke="var(--color-wood-dark)" stroke-width="2" />
+          <line x1="30" y1="6" x2="30" y2="22" stroke="var(--color-wood-dark)" stroke-width="2" />
+          <line x1="50" y1="6" x2="50" y2="22" stroke="var(--color-wood-dark)" stroke-width="2" />
+          <line x1="70" y1="6" x2="70" y2="22" stroke="var(--color-wood-dark)" stroke-width="2" />
+          <line x1="90" y1="6" x2="90" y2="22" stroke="var(--color-wood-dark)" stroke-width="2" />
+          <rect x="0" y="22" width="6" height="18" fill="var(--color-wood-dark)" />
+          <rect x="94" y="22" width="6" height="18" fill="var(--color-wood-dark)" />
+        </svg>
+
+        <!-- An old anchor, half-buried in the sand -->
+        <svg class="lagoon-prop lagoon-prop--anchor" viewBox="0 0 40 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="20" cy="8" r="5" fill="none" stroke="var(--color-rock-stone)" stroke-width="3" />
+          <line x1="20" y1="12" x2="20" y2="38" stroke="var(--color-rock-stone)" stroke-width="4" stroke-linecap="round" />
+          <path d="M6 38 Q20 48 34 38" fill="none" stroke="var(--color-rock-stone)" stroke-width="4" stroke-linecap="round" />
+          <line x1="6" y1="22" x2="34" y2="22" stroke="var(--color-rock-stone)" stroke-width="3" stroke-linecap="round" />
+        </svg>
+
+        <!-- Rock cluster, shell cluster, coconuts, flowers, seaweed — same
+             decorative vocabulary as the island hub, tuned for the lagoon -->
+        <svg class="lagoon-prop lagoon-prop--rocks" viewBox="0 0 70 34" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <ellipse cx="20" cy="26" rx="18" ry="11" fill="var(--color-rock-stone)" stroke="var(--color-rock-near)" stroke-width="2" />
+          <ellipse cx="46" cy="22" rx="13" ry="9" fill="var(--color-rock-stone)" stroke="var(--color-rock-near)" stroke-width="2" opacity="0.9" />
+        </svg>
+
+        <svg class="lagoon-prop lagoon-prop--shells" viewBox="0 0 50 26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M12 22c6 0 10-6 10-11S18 2 12 2 2 6 2 11s4 11 10 11z" fill="var(--color-foam)" stroke="var(--color-sand-dark)" stroke-width="1.5" />
+          <path d="M12 4v18M6 6l2 15M18 6l-2 15" stroke="var(--color-sand-dark)" stroke-width="1" />
+        </svg>
+
+        <svg class="lagoon-prop lagoon-prop--coconuts" viewBox="0 0 50 26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="16" cy="16" r="13" fill="#6B4429" /><circle cx="16" cy="16" r="8" fill="var(--color-trunk)" />
+          <circle cx="36" cy="19" r="10" fill="#6B4429" opacity="0.9" /><circle cx="36" cy="19" r="6" fill="var(--color-trunk)" opacity="0.9" />
+        </svg>
+
+        <svg class="lagoon-prop lagoon-prop--flowers" viewBox="0 0 46 26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M8 24V14 M22 24V10 M35 24V16" stroke="var(--color-palm-dark)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+          <circle cx="8" cy="10" r="5" fill="var(--color-flower-1)" />
+          <circle cx="22" cy="6" r="5.5" fill="var(--color-flower-2)" />
+          <circle cx="35" cy="12" r="4.5" fill="var(--color-flower-3)" />
+        </svg>
+
+        <svg class="lagoon-prop lagoon-prop--seaweed" viewBox="0 0 36 30" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M4 28 Q10 14, 4 2" fill="none" stroke="var(--color-palm-dark)" stroke-width="3" stroke-linecap="round" />
+          <path d="M14 28 Q22 16, 14 0" fill="none" stroke="var(--color-palm-light)" stroke-width="3" stroke-linecap="round" />
+        </svg>
+
+        <!-- An old, closed map, half-buried — flavor only, not the intro scroll -->
+        <svg class="lagoon-prop lagoon-prop--old-map" viewBox="0 0 50 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="4" y="8" width="42" height="16" rx="8" fill="#EBD5A6" stroke="var(--color-wood-dark)" stroke-width="1.5" transform="rotate(-3 25 16)" />
+        </svg>
+
+        <!-- Ambient crab, wandering the sand on its own timer -->
+        <svg class="critter crab" id="lagoon-crab" viewBox="0 0 40 26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <ellipse cx="20" cy="14" rx="12" ry="8" fill="#E8734A" />
+          <circle cx="14" cy="8" r="3" fill="#E8734A" /><circle cx="14" cy="7" r="1.4" fill="#2A2A2A" />
+          <circle cx="26" cy="8" r="3" fill="#E8734A" /><circle cx="26" cy="7" r="1.4" fill="#2A2A2A" />
+          <path d="M4 12 L -2 6 M6 16 L -2 16 M36 12 L 42 6 M34 16 L 42 16" stroke="#C85A32" stroke-width="2.5" stroke-linecap="round" fill="none" />
+        </svg>
+
+        <!-- Mickey's spot: he stands here holding half the compass, next to
+             the little table the found pieces fly toward -->
+        <div class="lagoon-mickey-spot">
+          <div id="lagoon-mickey" class="mickey mickey--idle"></div>
+          <svg class="lagoon-half-compass" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M20 4a16 16 0 010 32z" fill="var(--color-wood-light)" stroke="var(--color-wood-dark)" stroke-width="2" />
+            <path d="M20 10a10 10 0 010 20z" fill="#FFF8ED" stroke="var(--color-wood-dark)" stroke-width="1" />
+          </svg>
+        </div>
+
+        <!-- The little table where found compass pieces land -->
+        <div class="lagoon-table" id="lagoon-table">
+          <svg viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="4" y="10" width="52" height="8" rx="2" fill="var(--color-wood-light)" stroke="var(--color-wood-dark)" stroke-width="2" />
+            <rect x="8" y="18" width="6" height="10" fill="var(--color-wood-dark)" />
+            <rect x="46" y="18" width="6" height="10" fill="var(--color-wood-dark)" />
+          </svg>
+          <div class="lagoon-table__slots" id="lagoon-table-slots"></div>
+        </div>
+
+        <!-- Mickey's story, on the same wooden sign used everywhere else -->
+        <div class="lagoon-dialog dialog dialog--hidden" id="lagoon-dialog">
+          <p id="lagoon-dialog-text"></p>
+        </div>
+
+        <!-- Rules demo: shows once, a silent little animation teaching the
+             tap-to-collect interaction before the real countdown -->
+        <div class="lagoon-rules" id="lagoon-rules">
+          <p class="lagoon-rules__text" id="lagoon-rules-text"></p>
+          <div class="lagoon-rules__demo">
+            <svg class="lagoon-rules__demo-item" id="lagoon-rules-demo-item" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
+          </div>
+        </div>
+
+        <div class="lagoon-countdown" id="lagoon-countdown"></div>
+
+        <!-- Search items — clutter and the three hidden targets — are
+             generated by LagoonScene.js at runtime -->
+        <div class="lagoon-field" id="lagoon-field"></div>
+
+        <!-- The assembled compass and its golden ray, played on winning —
+             these were missing from the markup even though the CSS and JS
+             for them already existed, which broke the scene from the very
+             first line of enter(). -->
+        <div class="lagoon-compass-ray"></div>
+        <div class="lagoon-compass-final"></div>
+      </div>
 
       <button class="back-hint" id="lagoon-back" aria-label="Назад на острів">← Острів</button>
     </section>
 
     <!-- ================= MOUNTAIN SCENE ================= -->
-    <section id="scene-mountain" class="scene scene--mountain" aria-label="Гора">
-      <div class="sky sky--mountain">
+    <section id="scene-mountain" class="scene scene--mountain" aria-label="Гора кристалів">
+
+      <!-- LAYER 1: cold sky, thin clouds -->
+      <div class="mtn-layer mtn-layer--sky">
         <div class="sun"></div>
         <div class="cloud cloud--1"></div>
         <div class="cloud cloud--2"></div>
       </div>
 
-      <div class="mountain-backdrop"></div>
-
-      <div class="mountain-intro" id="mountain-intro">
-        <p id="mountain-intro-text"></p>
+      <!-- LAYER 2: far peaks + fog -->
+      <div class="mtn-layer mtn-layer--far">
+        <svg class="mtn-peaks" viewBox="0 0 400 160" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+          <path d="M0 160 L60 60 L110 160 Z" fill="var(--color-rock-far)" opacity="0.5" />
+          <path d="M90 160 L160 40 L230 160 Z" fill="var(--color-rock-far)" opacity="0.6" />
+          <path d="M270 160 L340 55 L400 160 Z" fill="var(--color-rock-far)" opacity="0.5" />
+        </svg>
+        <div class="mtn-fog mtn-fog--1"></div>
+        <div class="mtn-fog mtn-fog--2"></div>
+        <svg class="critter mtn-eagle" id="mtn-eagle" viewBox="0 0 30 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M15 8 Q6 0 0 4 Q7 8 15 8 Q23 8 30 4 Q24 0 15 8Z" fill="#4A3F6B" opacity="0.85" />
+        </svg>
       </div>
 
-      <!-- Stepping stones are generated by MountainScene.js at runtime -->
-      <div class="mountain-stones" id="mountain-stones"></div>
+      <!-- LAYER 3: the mid ridge, waterfall, cave mouth -->
+      <div class="mtn-layer mtn-layer--mid">
+        <svg class="mtn-ridge" viewBox="0 0 400 200" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+          <path d="M0 200 L70 70 L150 130 L230 40 L310 120 L400 60 L400 200 Z" fill="var(--color-rock-mid)" />
+          <path d="M230 40 L270 100 L230 90 L200 110 Z" fill="var(--color-rock-near)" opacity="0.7" />
+        </svg>
+
+        <!-- Waterfall, always moving -->
+        <div class="mtn-waterfall">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="mtn-waterfall-mist"></div>
+
+        <!-- Cave mouth, glowing from within -->
+        <div class="mtn-cave">
+          <div class="mtn-cave__glow"></div>
+        </div>
+
+        <!-- Rope bridge crossing to the puzzle area -->
+        <svg class="mtn-bridge" viewBox="0 0 200 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M0 20 Q100 34 200 20" fill="none" stroke="var(--color-wood-dark)" stroke-width="3" />
+          <path d="M0 12 Q100 26 200 12" fill="none" stroke="var(--color-wood-dark)" stroke-width="3" />
+          <line x1="10" y1="13" x2="10" y2="21" stroke="var(--color-wood-light)" stroke-width="3" />
+          <line x1="50" y1="17" x2="50" y2="25" stroke="var(--color-wood-light)" stroke-width="3" />
+          <line x1="100" y1="19" x2="100" y2="27" stroke="var(--color-wood-light)" stroke-width="3" />
+          <line x1="150" y1="17" x2="150" y2="25" stroke="var(--color-wood-light)" stroke-width="3" />
+          <line x1="190" y1="13" x2="190" y2="21" stroke="var(--color-wood-light)" stroke-width="3" />
+        </svg>
+      </div>
+
+      <!-- LAYER 4: ruins, flags, and the puzzle itself -->
+      <div class="mtn-layer mtn-layer--near">
+
+        <!-- Ancient ruins: columns, steps, a worn statue -->
+        <svg class="mtn-ruins" viewBox="0 0 200 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="4" y="20" width="14" height="60" fill="var(--color-rock-stone)" opacity="0.8" />
+          <rect x="0" y="14" width="22" height="8" fill="var(--color-rock-stone)" opacity="0.9" />
+          <rect x="180" y="26" width="14" height="54" fill="var(--color-rock-stone)" opacity="0.75" />
+          <rect x="176" y="20" width="22" height="8" fill="var(--color-rock-stone)" opacity="0.85" />
+          <path d="M60 80 h30 v-8 h-24 v-8 h18 v-8 h-12" fill="none" stroke="var(--color-rock-stone)" stroke-width="4" />
+          <circle cx="130" cy="52" r="10" fill="var(--color-rock-stone)" opacity="0.7" />
+          <rect x="122" y="60" width="16" height="20" fill="var(--color-rock-stone)" opacity="0.7" />
+        </svg>
+
+        <!-- Flags, fluttering in the mountain wind -->
+        <svg class="mtn-flag mtn-flag--1" viewBox="0 0 20 30" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <line x1="2" y1="0" x2="2" y2="30" stroke="var(--color-wood-dark)" stroke-width="2" />
+          <path d="M2 4 L18 8 L2 14 Z" fill="#E8734A" />
+        </svg>
+        <svg class="mtn-flag mtn-flag--2" viewBox="0 0 20 30" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <line x1="2" y1="0" x2="2" y2="30" stroke="var(--color-wood-dark)" stroke-width="2" />
+          <path d="M2 4 L18 8 L2 14 Z" fill="#2FA0AE" />
+        </svg>
+
+        <!-- Mickey, standing by the ancient mechanism with an old scroll -->
+        <div class="mtn-mickey-spot">
+          <div id="mountain-mickey" class="mickey mickey--idle"></div>
+        </div>
+
+        <!-- Mickey's story -->
+        <div class="mtn-dialog dialog dialog--hidden" id="mountain-dialog">
+          <p id="mountain-dialog-text"></p>
+        </div>
+
+        <!-- Rules demo -->
+        <div class="mtn-rules" id="mountain-rules">
+          <p class="lagoon-rules__text" id="mountain-rules-text"></p>
+          <div class="mtn-rules__demo">
+            <div class="mtn-rules__crystal" id="mountain-rules-crystal"></div>
+            <div class="mtn-rules__crystal" id="mountain-rules-crystal-2"></div>
+          </div>
+        </div>
+
+        <div class="lagoon-countdown" id="mountain-countdown"></div>
+
+        <!-- Round indicator: three small dots showing progress through the three rounds -->
+        <div class="adventure-round-dots" id="mountain-round-dots">
+          <span class="adventure-round-dot"></span>
+          <span class="adventure-round-dot"></span>
+          <span class="adventure-round-dot"></span>
+        </div>
+
+        <!-- The crystal grid — generated by MountainScene.js -->
+        <div class="mtn-grid" id="mountain-grid"></div>
+
+        <!-- Final flash of light when the mountain wakes up -->
+        <div class="mtn-light-wave" id="mountain-light-wave"></div>
+      </div>
 
       <button class="back-hint" id="mountain-back" aria-label="Назад на острів">← Острів</button>
     </section>
 
     <!-- ================= BAZAAR SCENE ================= -->
-    <section id="scene-bazaar" class="scene scene--bazaar" aria-label="Базар">
-      <div class="sky sky--bazaar">
+    <section id="scene-bazaar" class="scene scene--bazaar" aria-label="Базар див">
+
+      <!-- LAYER 1: warm sky -->
+      <div class="bzr-layer bzr-layer--sky">
         <div class="sun"></div>
         <div class="cloud cloud--1"></div>
         <div class="cloud cloud--2"></div>
       </div>
 
-      <div class="bazaar-intro" id="bazaar-intro">
-        <p id="bazaar-intro-text"></p>
+      <!-- LAYER 2: rooftops, awnings, flags, hanging lanterns -->
+      <div class="bzr-layer bzr-layer--roofs">
+        <svg class="bzr-roofline" viewBox="0 0 400 60" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 60 L0 30 L40 10 L80 30 L80 60 Z" fill="#E8734A" />
+          <path d="M90 60 L90 24 L140 4 L190 24 L190 60 Z" fill="#2FA0AE" />
+          <path d="M200 60 L200 30 L240 12 L280 30 L280 60 Z" fill="#FFB25E" />
+          <path d="M290 60 L290 26 L330 8 L370 26 L370 60 Z" fill="#E8734A" opacity="0.9" />
+        </svg>
+
+        <svg class="bzr-flag bzr-flag--1" viewBox="0 0 16 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <line x1="1" y1="0" x2="1" y2="24" stroke="var(--color-wood-dark)" stroke-width="1.5" />
+          <path d="M1 3 L14 6 L1 11 Z" fill="#FFD766" />
+        </svg>
+        <svg class="bzr-flag bzr-flag--2" viewBox="0 0 16 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <line x1="1" y1="0" x2="1" y2="24" stroke="var(--color-wood-dark)" stroke-width="1.5" />
+          <path d="M1 3 L14 6 L1 11 Z" fill="#E8734A" />
+        </svg>
+        <svg class="bzr-flag bzr-flag--3" viewBox="0 0 16 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <line x1="1" y1="0" x2="1" y2="24" stroke="var(--color-wood-dark)" stroke-width="1.5" />
+          <path d="M1 3 L14 6 L1 11 Z" fill="#2FA0AE" />
+        </svg>
+
+        <svg class="bzr-lantern bzr-lantern--1" viewBox="0 0 24 34" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <line x1="12" y1="0" x2="12" y2="8" stroke="var(--color-wood-dark)" stroke-width="1.5" />
+          <path d="M4 8h16l-2 18H6z" fill="#FFE9A8" stroke="#B8894F" stroke-width="1.5" />
+        </svg>
+        <svg class="bzr-lantern bzr-lantern--2" viewBox="0 0 24 34" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <line x1="12" y1="0" x2="12" y2="8" stroke="var(--color-wood-dark)" stroke-width="1.5" />
+          <path d="M4 8h16l-2 18H6z" fill="#FFE9A8" stroke="#B8894F" stroke-width="1.5" />
+        </svg>
       </div>
 
-      <!-- Stalls are generated by BazaarScene.js at runtime -->
-      <div class="bazaar-stalls" id="bazaar-stalls"></div>
+      <!-- LAYER 3: the market floor — counter, merchant, decor, and the game -->
+      <div class="bzr-layer bzr-layer--floor">
+
+        <!-- Carpet underfoot -->
+        <svg class="bzr-carpet" viewBox="0 0 300 60" preserveAspectRatio="none" aria-hidden="true">
+          <rect x="0" y="0" width="300" height="60" fill="#B0502A" opacity="0.5" />
+          <rect x="10" y="10" width="280" height="40" fill="none" stroke="#FFD766" stroke-width="2" opacity="0.6" />
+        </svg>
+
+        <!-- The central counter, with the merchant behind it -->
+        <div class="bzr-counter">
+          <svg viewBox="0 0 220 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="10" y="40" width="200" height="42" rx="4" fill="var(--color-wood-light)" stroke="var(--color-wood-dark)" stroke-width="3" />
+            <rect x="10" y="40" width="200" height="10" fill="var(--color-wood-dark)" opacity="0.5" />
+            <!-- the merchant: a simple, friendly shopkeeper figure, not a named character -->
+            <circle cx="110" cy="20" r="16" fill="#E3A97E" />
+            <path d="M92 14a18 10 0 0136 0z" fill="#8A5A3B" />
+            <circle cx="104" cy="20" r="2" fill="#2A2A2A" /><circle cx="116" cy="20" r="2" fill="#2A2A2A" />
+            <path d="M102 26q8 6 16 0" stroke="#2A2A2A" stroke-width="1.5" fill="none" />
+            <rect x="90" y="34" width="40" height="14" rx="4" fill="#2FA0AE" />
+          </svg>
+        </div>
+
+        <!-- Baskets, a barrel, ropes — market clutter that isn't part of the game -->
+        <svg class="bzr-prop bzr-prop--basket" viewBox="0 0 40 30" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M4 12h32l-4 16H8z" fill="var(--color-wood-light)" stroke="var(--color-wood-dark)" stroke-width="2" />
+          <path d="M4 12q16-8 32 0" fill="none" stroke="var(--color-wood-dark)" stroke-width="2" />
+        </svg>
+        <svg class="bzr-prop bzr-prop--barrel" viewBox="0 0 36 42" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M4 10 Q18 2 32 10 L29 34 Q18 40 7 34 Z" fill="var(--color-wood-light)" stroke="var(--color-wood-dark)" stroke-width="2" />
+          <path d="M5.5 20 Q18 26 30.5 20" fill="none" stroke="var(--color-wood-dark)" stroke-width="2" />
+        </svg>
+        <svg class="bzr-prop bzr-prop--rope" viewBox="0 0 48 26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M8 24a16 8 0 1132 0 16 8 0 11-32 0z" fill="none" stroke="var(--color-wood-dark)" stroke-width="3" />
+        </svg>
+
+        <!-- Mickey, standing beside the merchant -->
+        <div class="bzr-mickey-spot">
+          <div id="bazaar-mickey" class="mickey mickey--idle"></div>
+        </div>
+
+        <div class="bzr-dialog dialog dialog--hidden" id="bazaar-dialog">
+          <p id="bazaar-dialog-text"></p>
+        </div>
+
+        <div class="bzr-rules" id="bazaar-rules">
+          <p class="lagoon-rules__text" id="bazaar-rules-text"></p>
+          <div class="bzr-rules__demo">
+            <svg class="bzr-rules__item" id="bazaar-rules-item" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
+          </div>
+        </div>
+
+        <div class="lagoon-countdown" id="bazaar-countdown"></div>
+
+        <div class="adventure-round-dots" id="bazaar-round-dots">
+          <span class="adventure-round-dot"></span>
+          <span class="adventure-round-dot"></span>
+          <span class="adventure-round-dot"></span>
+          <span class="adventure-round-dot"></span>
+          <span class="adventure-round-dot"></span>
+        </div>
+
+        <!-- Goods on the counter — generated by BazaarScene.js -->
+        <div class="bzr-field" id="bazaar-field"></div>
+      </div>
 
       <button class="back-hint" id="bazaar-back" aria-label="Назад на острів">← Острів</button>
     </section>

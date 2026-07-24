@@ -77,6 +77,76 @@ const ICONS = {
     <circle cx="42" cy="21" r="1.5" fill="#2A2A2A"/>
     <ellipse cx="13" cy="37" rx="5" ry="3" fill="#5FA383"/>
     <ellipse cx="34" cy="37" rx="5" ry="3" fill="#5FA383"/>`,
+
+  /* ---- Lagoon: the three pieces the player is searching for ---- */
+
+  compassNeedle: `<circle cx="24" cy="24" r="17" fill="#FFF8ED" stroke="#B8894F" stroke-width="2.5"/>
+    <path d="M24 10L29 24L24 38L19 24Z" fill="#E8734A" stroke="#B0502A" stroke-width="1.5"/>
+    <path d="M24 10L29 24L24 24Z" fill="#FFB25E"/>
+    <circle cx="24" cy="24" r="3" fill="#B8894F"/>`,
+
+  compassBody: `<circle cx="24" cy="24" r="18" fill="#D9A24B" stroke="#8A5A3B" stroke-width="3"/>
+    <circle cx="24" cy="24" r="12" fill="#FFF8ED" stroke="#B8894F" stroke-width="1.5"/>
+    <path d="M24 14v4M24 30v4M14 24h4M30 24h4" stroke="#8A5A3B" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="24" cy="24" r="2.5" fill="#8A5A3B"/>`,
+
+  goldenKey: `<circle cx="14" cy="16" r="8" fill="none" stroke="#FFD766" stroke-width="4"/>
+    <path d="M20 22L38 40" stroke="#FFD766" stroke-width="4" stroke-linecap="round"/>
+    <path d="M31 33l5-5M35 37l5-5" stroke="#FFD766" stroke-width="4" stroke-linecap="round"/>`,
+
+  /* ---- Lagoon: decorative clutter the search items hide among ---- */
+
+  starfish: `<path d="M24 4l5 12 13 2-10 9 3 13-11-7-11 7 3-13-10-9 13-2z" fill="#FF9F6B" stroke="#D9743E" stroke-width="2"/>`,
+
+  coconut: `<circle cx="24" cy="24" r="16" fill="#6B4429" stroke="#4A2E1A" stroke-width="2"/>
+    <circle cx="24" cy="24" r="10" fill="#8A5A3B"/>
+    <circle cx="19" cy="20" r="1.8" fill="#3A2818"/><circle cx="29" cy="19" r="1.8" fill="#3A2818"/><circle cx="24" cy="27" r="1.8" fill="#3A2818"/>`,
+
+  bottle: `<path d="M20 6h8v6l4 4v24a2 2 0 01-2 2H18a2 2 0 01-2-2V16l4-4z" fill="#8FD6C4" stroke="#4FA98F" stroke-width="2" opacity="0.85"/>
+    <rect x="19" y="4" width="10" height="4" rx="1" fill="#4FA98F"/>
+    <path d="M17 26h14" stroke="#EAF6EF" stroke-width="1.5" opacity="0.7"/>`,
+
+  rope: `<path d="M8 24a16 8 0 1132 0 16 8 0 11-32 0z" fill="none" stroke="#D9A24B" stroke-width="4"/>
+    <path d="M8 24a16 8 0 1132 0" fill="none" stroke="#B8894F" stroke-width="1.5" stroke-dasharray="3 3"/>`,
+
+  oar: `<rect x="21" y="4" width="6" height="24" rx="3" fill="#B8894F"/>
+    <ellipse cx="24" cy="36" rx="9" ry="14" fill="#C98A4B" stroke="#8A5A3B" stroke-width="2"/>`,
+
+  pebble: `<ellipse cx="24" cy="27" rx="16" ry="11" fill="#9B9184" stroke="#6E665B" stroke-width="2"/>
+    <ellipse cx="19" cy="23" rx="5" ry="3" fill="#B0A79A" opacity="0.7"/>`,
+
+  lifeRingMini: `<circle cx="24" cy="24" r="16" fill="none" stroke="#FFF8ED" stroke-width="6"/>
+    <circle cx="24" cy="24" r="16" fill="none" stroke="#E8734A" stroke-width="6" stroke-dasharray="12 12"/>`,
+
+  miniMap: `<path d="M8 10l12-4 8 4 12-4v28l-12 4-8-4-12 4z" fill="#EBD5A6" stroke="#8A5A3B" stroke-width="2"/>
+    <path d="M20 6v28M28 10v28" stroke="#8A5A3B" stroke-width="1.5" opacity="0.6"/>
+    <path d="M14 20l6 4 8-6" stroke="#E8734A" stroke-width="1.5" fill="none" stroke-dasharray="2 2"/>`,
+
+  plank: `<rect x="4" y="18" width="40" height="10" rx="2" fill="#C98A4B" stroke="#8A5A3B" stroke-width="2"/>
+    <circle cx="10" cy="23" r="1.4" fill="#6B4429"/><circle cx="38" cy="23" r="1.4" fill="#6B4429"/>`,
+
+  /* ---- Bazaar: more market goods for the memory game ---- */
+
+  banana: `<path d="M14 8c-4 10-4 22 6 30 8-2 14-9 16-18-8 4-16 2-20-4-2-3-2-6-2-8z" fill="#FFD766" stroke="#D9A227" stroke-width="2"/>
+    <path d="M14 8c2 0 3 1 3 3" fill="none" stroke="#8A5A3B" stroke-width="2" stroke-linecap="round"/>`,
+
+  fishItem: `<ellipse cx="20" cy="24" rx="16" ry="10" fill="#6FD0D6" stroke="#2FA0AE" stroke-width="2"/>
+    <path d="M34 24l10-7v14z" fill="#2FA0AE"/>
+    <circle cx="12" cy="21" r="2" fill="#2A2A2A"/>
+    <path d="M8 28q6 4 12 0" stroke="#2FA0AE" stroke-width="1.5" fill="none"/>`,
+
+  emerald: `<path d="M24 6l14 9-5 15H15l-5-15z" fill="#5FA383" stroke="#2E6B58" stroke-width="2"/>
+    <path d="M24 6l7 9-7 15-7-15z" fill="#7BC49A" opacity="0.8"/>`,
+
+  lanternItem: `<path d="M15 12h18l-3 20H18z" fill="#FFE9A8" stroke="#B8894F" stroke-width="2" opacity="0.9"/>
+    <path d="M12 12h24l-2-5H14z" fill="#8A5A3B"/>
+    <rect x="21" y="34" width="6" height="6" fill="#8A5A3B"/>
+    <circle cx="24" cy="4" r="2" fill="#8A5A3B"/>`,
+
+  scroll: `<rect x="10" y="14" width="28" height="20" rx="2" fill="#EBD5A6" stroke="#8A5A3B" stroke-width="2"/>
+    <rect x="6" y="12" width="6" height="24" rx="3" fill="#B8894F"/>
+    <rect x="36" y="12" width="6" height="24" rx="3" fill="#B8894F"/>
+    <path d="M15 20h18M15 26h14" stroke="#8A5A3B" stroke-width="1.3" opacity="0.6"/>`,
 };
 
 /**

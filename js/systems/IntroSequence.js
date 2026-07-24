@@ -48,6 +48,11 @@ export class IntroSequence {
 
     this.islandEl = document.getElementById('scene-island');
     this.boxesEl = this.islandEl.querySelector('.boxes');
+    this.boxEls = {
+      lagoon: this.boxesEl.querySelector('[data-adventure="lagoon"]'),
+      mountain: this.boxesEl.querySelector('[data-adventure="mountain"]'),
+      bazaar: this.boxesEl.querySelector('[data-adventure="bazaar"]'),
+    };
     this.camera = new Camera(this.islandEl);
 
     this._fillStaticText();
@@ -78,7 +83,9 @@ export class IntroSequence {
 
   /** Island starts empty and dark: no Mickey, no boxes, camera pulled in close. */
   _prepareStage() {
-    this.boxesEl.classList.add('is-hidden');
+    // Boxes start invisible by default (see .box's base opacity:0 in
+    // scenes.css) — nothing to trigger here, they reveal individually
+    // later, each timed to the camera arriving at its spot (_stageTour).
 
     // Put him off-stage instantly. Without killing the transition first he'd
     // glide out of frame from his resting spot, which looks like a bug.
@@ -238,27 +245,29 @@ export class IntroSequence {
   }
 
   /**
-   * Stage 7 — the tour. Boxes grow out of the sand right as Mickey points
-   * and the camera begins moving — not held back until afterward, so the
-   * camera and the boxes read as one living moment instead of "camera
-   * moves, nothing happens, then boxes suddenly appear" (which looked like
-   * something had broken).
+   * Stage 7 — the tour. The camera visits each adventure's spot in turn,
+   * and that spot's box grows out of the sand right as the camera arrives
+   * there — not all three at once, and not held back until the tour is
+   * over. Camera and box are the same beat, one location at a time.
    */
   async _stageTour() {
     this.mickey.play(MICKEY_STATES.POINT);
-
-    this.boxesEl.classList.remove('is-hidden');
-    this.boxesEl.classList.add('is-revealing');
-    await wait(500);
+    await wait(400);
 
     this.camera.focus({ scale: 1.35, x: '16%', y: '-4%' }); // lagoon side
-    await wait(2000);
+    await wait(700); // let the camera actually get there first
+    this._revealBox('lagoon');
+    await wait(1300);
 
     this.camera.focus({ scale: 1.35, x: '0%', y: '-8%' }); // the mountain path
-    await wait(2000);
+    await wait(700);
+    this._revealBox('mountain');
+    await wait(1300);
 
     this.camera.focus({ scale: 1.35, x: '-16%', y: '-4%' }); // bazaar side
-    await wait(2000);
+    await wait(700);
+    this._revealBox('bazaar');
+    await wait(1300);
 
     this.camera.reset(); // back to the clearing — every box already grown in
     await wait(600);
@@ -269,11 +278,15 @@ export class IntroSequence {
     this.mickey.play(MICKEY_STATES.IDLE);
   }
 
+  /** Grow one specific box out of the sand. Stays revealed permanently. */
+  _revealBox(adventureId) {
+    this.boxEls[adventureId]?.classList.add('is-revealing');
+  }
+
   /** Hand the island over: overlay out of the way, Mickey back to normal. */
   _finish() {
     this.rootEl.classList.add('is-done');
     this.mickey.el.style.opacity = '';
-    this.boxesEl.classList.remove('is-revealing');
   }
 
 }

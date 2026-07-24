@@ -406,29 +406,27 @@
 }
 
 /* Before the intro finishes, the boxes aren't on the island yet. They grow
-   out of the sand rather than simply being there — see IntroSequence. */
-.boxes.is-hidden .box {
+   out of the sand one at a time, each exactly when the camera arrives at
+   its spot — see IntroSequence._stageTour(). Each box reveals itself
+   individually (not via a shared parent class) so they can be triggered
+   on their own schedule instead of all at once. */
+.box {
   opacity: 0;
 }
 
-.boxes.is-hidden .box__art,
-.boxes.is-hidden .box__pedestal,
-.boxes.is-hidden .box__shadow {
-  opacity: 0;
-}
-
-.boxes.is-revealing .box {
+.box.is-revealing {
   opacity: 1;
-  transition: opacity var(--duration-medium) var(--ease-soft);
+  /* Include transform here too — otherwise this higher-specificity rule
+     would silently replace (not add to) the base .box transition below,
+     permanently losing the hover/tap scale transition for the rest of
+     the game once a box has been revealed. */
+  transition: opacity var(--duration-medium) var(--ease-soft),
+              transform var(--duration-fast) var(--ease-soft);
 }
 
-.boxes.is-revealing .box__art {
+.box.is-revealing .box__art {
   animation: box-grow 0.75s cubic-bezier(0.3, 1.5, 0.5, 1) backwards;
 }
-
-.boxes.is-revealing .box--pos-1 .box__art { animation-delay: 0s; }
-.boxes.is-revealing .box--pos-2 .box__art { animation-delay: 0.25s; }
-.boxes.is-revealing .box--pos-3 .box__art { animation-delay: 0.5s; }
 
 .box {
   position: absolute;
@@ -627,11 +625,8 @@
 .grass-tuft {
   position: absolute;
   bottom: 0;
-  width: 26px;
-  height: 16px;
-  background: var(--color-palm-dark);
-  border-radius: 100% 100% 0 0;
-  opacity: 0.8;
+  width: 28px;
+  height: 22px;
   transform-origin: bottom center;
   animation: grass-sway 4s var(--ease-soft) infinite;
 }
@@ -639,6 +634,23 @@
 .grass-tuft--1 { left: 4%; animation-delay: 0s; }
 .grass-tuft--2 { left: 44%; animation-delay: 0.6s; }
 .grass-tuft--3 { right: 6%; animation-delay: 1.2s; }
+
+/* Seaweed and a tide pool: more shoreline nature detail */
+.prop--seaweed { left: 20%; bottom: 2%; width: 30px; }
+.prop--tide-pool { right: 8%; bottom: 3%; width: 56px; }
+
+/* Petals drifting on the wind — same idea as the butterfly/leaf critters,
+   but slower and more numerous, to sell a light breeze across the island */
+.petal {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.petal--1 { top: 40%; left: -6%; animation: petal-drift 22s linear infinite 2s; }
+.petal--2 { top: 62%; left: -10%; animation: petal-drift 26s linear infinite 12s; }
 
 .secret {
   position: absolute;
@@ -712,74 +724,10 @@
   pointer-events: none;
 }
 
-/* ---------------- Lagoon scene ---------------- */
-
-.scene--lagoon {
-  overflow: hidden;
-}
-
-.sky--lagoon {
-  background: linear-gradient(to bottom, #BEEBEF 0%, var(--color-sky-bottom) 70%);
-}
-
-.sea--full {
-  bottom: 0;
-  height: 100%;
-}
-
-.sea--full .wave {
-  height: 100px;
-}
-
-.lagoon-intro {
-  position: absolute;
-  top: 12%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: linear-gradient(to bottom, #F7E6C4 0%, #EBD5A6 100%);
-  border: 3px solid #B0894C;
-  color: #4A3218;
-  font-family: var(--font-display);
-  font-weight: 700;
-  padding: var(--space-md) var(--space-lg);
-  border-radius: 12px;
-  max-width: 260px;
-  text-align: center;
-  font-size: 16px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-  z-index: var(--z-dialog);
-  transition: opacity var(--duration-fast) var(--ease-soft);
-}
-
-.lagoon-intro.is-hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.lagoon-spots {
-  position: absolute;
-  inset: 0;
-  z-index: var(--z-land);
-}
-
-.lagoon-spot {
-  position: absolute;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--color-sea-light) 0%, var(--color-sea-mid) 100%);
-  border: 3px solid var(--color-foam);
-  transform: translate(-50%, -50%);
-  transition: transform var(--duration-fast) var(--ease-soft);
-}
-
-.lagoon-spot:active {
-  transform: translate(-50%, -50%) scale(0.9);
-}
-
-.lagoon-spot.is-found {
-  animation: spot-win var(--duration-medium) var(--ease-soft) forwards;
-}
+/* ---------------- Lagoon scene: see the full rebuild further down ---------------- */
+/* (sky--lagoon, sea--full, lagoon-intro, lagoon-spots were the old simple
+   version of this scene and have been replaced — search for "LAGOON: full
+   cinematic adventure" below for the current styles.) */
 
 .back-hint {
   position: absolute;
@@ -797,178 +745,328 @@
 
 .scene--mountain {
   overflow: hidden;
+  background: linear-gradient(to bottom, #C9D6DC 0%, #8FA79E 60%, var(--color-rock-mid) 100%);
+  /* Same camera mechanism as Island and Lagoon. */
+  --cam-x: 0%;
+  --cam-y: 0%;
+  --cam-scale: 1;
+  transform: scale(var(--cam-scale)) translate(var(--cam-x), var(--cam-y));
+  transform-origin: center 55%;
+  transition: opacity var(--duration-medium) var(--ease-soft),
+              transform 1.6s var(--ease-soft);
 }
 
-.sky--mountain {
-  background: linear-gradient(to bottom, #FFCBA0 0%, var(--color-sky-bottom) 75%);
-}
+.mtn-layer { position: absolute; inset: 0; }
+.mtn-layer--sky { z-index: 1; }
+.mtn-layer--far { z-index: 2; }
+.mtn-layer--mid { z-index: 3; pointer-events: none; }
+.mtn-layer--near { z-index: 4; }
 
-.mountain-backdrop {
+.mtn-layer--sky .sun { position: absolute; top: 6%; right: 14%; filter: saturate(0.7); }
+
+.mtn-peaks { position: absolute; bottom: 40%; left: 0; width: 100%; height: 34%; }
+
+.mtn-fog {
   position: absolute;
+  left: -10%;
+  width: 120%;
+  height: 12%;
+  background: linear-gradient(to right, transparent, var(--color-rock-fog), transparent);
+  opacity: 0.35;
+  filter: blur(2px);
+}
+.mtn-fog--1 { bottom: 44%; animation: mtn-fog-drift 20s linear infinite; }
+.mtn-fog--2 { bottom: 50%; animation: mtn-fog-drift 26s linear infinite reverse 4s; }
+
+.mtn-eagle { top: 12%; left: -10%; width: 34px; height: 18px; opacity: 0; animation: mtn-eagle-pass 30s linear infinite 6s; }
+
+.mtn-ridge { position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; }
+
+.mtn-waterfall {
+  position: absolute;
+  bottom: 30%;
+  left: 62%;
+  width: 18px;
+  height: 26%;
+  overflow: hidden;
+}
+.mtn-waterfall span {
+  position: absolute;
+  top: -20%;
   left: 0;
-  right: 0;
-  bottom: 0;
-  height: 55%;
-  z-index: var(--z-sea);
-  background: linear-gradient(to bottom, var(--color-palm-dark) 0%, var(--color-palm-light) 100%);
-  clip-path: polygon(0% 100%, 0% 40%, 20% 55%, 38% 20%, 55% 48%, 72% 15%, 88% 45%, 100% 30%, 100% 100%);
-  opacity: 0.85;
+  width: 100%;
+  height: 40%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(255,255,255,0.3));
+  animation: mtn-waterfall-flow 1.2s linear infinite;
+}
+.mtn-waterfall span:nth-child(2) { animation-delay: 0.4s; left: 30%; }
+.mtn-waterfall span:nth-child(3) { animation-delay: 0.8s; left: 60%; width: 60%; }
+
+.mtn-waterfall-mist {
+  position: absolute;
+  bottom: 28%;
+  left: 58%;
+  width: 60px;
+  height: 30px;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.5), transparent 70%);
+  animation: mtn-mist-pulse 3s var(--ease-soft) infinite;
 }
 
-.mountain-intro {
+.mtn-cave {
   position: absolute;
-  top: 12%;
+  bottom: 32%;
+  left: 20%;
+  width: 70px;
+  height: 60px;
+  background: #1A2A2E;
+  border-radius: 50% 50% 20% 20%;
+}
+.mtn-cave__glow {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50% 50% 20% 20%;
+  background: radial-gradient(circle, var(--color-sea-light) 0%, transparent 75%);
+  animation: mtn-cave-glow 3.4s var(--ease-soft) infinite;
+}
+
+.mtn-bridge { position: absolute; bottom: 34%; left: 30%; width: 160px; height: 32px; opacity: 0.9; }
+
+/* ---- Ruins, flags ---- */
+
+.mtn-ruins { position: absolute; bottom: 2%; left: 0; width: 100%; height: 30%; opacity: 0.9; }
+
+.mtn-flag { position: absolute; width: 18px; height: 26px; transform-origin: top left; }
+.mtn-flag--1 { left: 8%; bottom: 32%; animation: mtn-flag-wave 2.6s var(--ease-soft) infinite; }
+.mtn-flag--2 { right: 10%; bottom: 30%; animation: mtn-flag-wave 3.1s var(--ease-soft) infinite 0.5s; }
+
+/* ---- Mickey, dialog, rules ---- */
+
+.mtn-mickey-spot { position: absolute; left: 6%; bottom: 4%; width: 84px; height: 140px; }
+.mtn-mickey-spot .mickey { position: relative; left: auto; bottom: auto; transform: none; height: 100%; }
+
+.mtn-dialog { position: absolute; top: 8%; left: 50%; transform: translateX(-50%); z-index: 20; max-width: 260px; }
+
+.mtn-rules {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  background: rgba(20, 30, 40, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-medium) var(--ease-soft);
+}
+.mtn-rules.is-visible { opacity: 1; }
+
+.mtn-rules__demo { display: flex; gap: var(--space-md); }
+.mtn-rules__crystal {
+  width: 40px;
+  height: 46px;
+  clip-path: polygon(50% 0%, 100% 35%, 82% 100%, 18% 100%, 0% 35%);
+  background: linear-gradient(to bottom, #8FD6E8 0%, #4FAFC4 100%);
+  opacity: 0.5;
+}
+.mtn-rules__crystal.is-glowing {
+  animation: lagoon-demo-glow 1s var(--ease-soft) infinite;
+  opacity: 1;
+}
+.mtn-rules__crystal.is-collected {
+  animation: lagoon-demo-collect 0.5s var(--ease-soft) forwards;
+}
+
+/* ---- Round progress dots ---- */
+
+.adventure-round-dots {
+  position: absolute;
+  top: 6%;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(to bottom, #F7E6C4 0%, #EBD5A6 100%);
-  border: 3px solid #B0894C;
-  color: #4A3218;
-  font-family: var(--font-display);
-  font-weight: 700;
-  padding: var(--space-md) var(--space-lg);
-  border-radius: 12px;
-  max-width: 260px;
-  text-align: center;
-  font-size: 16px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-  z-index: var(--z-dialog);
+  display: flex;
+  gap: 8px;
+  z-index: 20;
+}
+.adventure-round-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+  border: 1.5px solid rgba(255,255,255,0.6);
+  transition: background var(--duration-fast) var(--ease-soft);
+}
+.adventure-round-dot.is-done { background: var(--color-box-glow); }
+.adventure-round-dot.is-current { background: var(--color-sun); }
+
+/* ---- The crystal grid ---- */
+
+.mtn-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+}
+
+.mtn-crystal {
+  position: absolute;
+  width: 46px;
+  height: 52px;
+  transform: translate(-50%, -50%);
+  padding: 0;
+}
+
+.mtn-crystal__shape {
+  display: block;
+  width: 100%;
+  height: 100%;
+  clip-path: polygon(50% 0%, 100% 35%, 82% 100%, 18% 100%, 0% 35%);
+  background: linear-gradient(to bottom, #B8C4C9 0%, #8B929A 100%);
+  border: 2px solid #6E767D;
+  opacity: 0.55;
   transition: opacity var(--duration-fast) var(--ease-soft);
 }
 
-.mountain-intro.is-hidden {
+.mtn-crystal.is-lit .mtn-crystal__shape,
+.mtn-crystal.is-correct .mtn-crystal__shape {
+  background: linear-gradient(to bottom, #A8E8F5 0%, #4FAFC4 100%);
+  border-color: #2FA0AE;
+  opacity: 1;
+}
+
+.mtn-crystal.is-lit { animation: stone-flash 0.5s var(--ease-soft); }
+.mtn-crystal.is-correct { animation: stone-flash 0.4s var(--ease-soft); }
+.mtn-crystal.is-wrong { animation: stone-shake 0.35s var(--ease-soft); }
+
+.mtn-crystal.is-hinting .mtn-crystal__shape {
+  animation: lagoon-item-hint 1.2s var(--ease-soft) infinite;
+}
+
+/* ---- Final light wave when the mountain wakes ---- */
+
+.mtn-light-wave {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  background: radial-gradient(circle at 20% 68%, var(--color-box-glow) 0%, transparent 60%);
   opacity: 0;
   pointer-events: none;
 }
-
-.mountain-stones {
-  position: absolute;
-  inset: 0;
-  z-index: var(--z-land);
-}
-
-.mountain-stone {
-  position: absolute;
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--color-sand) 0%, var(--color-sand-dark) 100%);
-  border: 3px solid var(--color-trunk);
-  transform: translate(-50%, -50%);
-  transition: transform var(--duration-fast) var(--ease-soft), box-shadow var(--duration-fast) var(--ease-soft);
-}
-
-.mountain-stone:active {
-  transform: translate(-50%, -50%) scale(0.92);
-}
-
-.mountain-stone.is-lit {
-  box-shadow: 0 0 0 6px var(--color-box-glow);
-  animation: stone-flash 0.5s var(--ease-soft);
-}
-
-.mountain-stone.is-correct {
-  animation: stone-flash 0.4s var(--ease-soft);
-}
-
-.mountain-stone.is-wrong {
-  animation: stone-shake 0.35s var(--ease-soft);
+.mtn-light-wave.is-visible {
+  animation: mtn-wave-flash 1.6s var(--ease-soft) forwards;
 }
 
 /* ---------------- Bazaar scene ---------------- */
 
 .scene--bazaar {
   overflow: hidden;
-}
-
-.sky--bazaar {
   background: linear-gradient(to bottom, #FFE0B5 0%, var(--color-sky-bottom) 80%);
+  /* Same camera mechanism as every other scene. */
+  --cam-x: 0%;
+  --cam-y: 0%;
+  --cam-scale: 1;
+  transform: scale(var(--cam-scale)) translate(var(--cam-x), var(--cam-y));
+  transform-origin: center 55%;
+  transition: opacity var(--duration-medium) var(--ease-soft),
+              transform 1.6s var(--ease-soft);
 }
 
-.bazaar-intro {
+.bzr-layer { position: absolute; inset: 0; }
+.bzr-layer--sky { z-index: 1; }
+.bzr-layer--roofs { z-index: 2; pointer-events: none; }
+.bzr-layer--floor { z-index: 3; }
+
+.bzr-layer--sky .sun { position: absolute; top: 6%; right: 16%; }
+
+.bzr-roofline { position: absolute; top: 0; left: 0; width: 100%; height: 16%; }
+
+.bzr-flag { position: absolute; top: 14%; width: 16px; height: 24px; transform-origin: top left; }
+.bzr-flag--1 { left: 15%; animation: mtn-flag-wave 2.4s var(--ease-soft) infinite; }
+.bzr-flag--2 { left: 48%; animation: mtn-flag-wave 2.8s var(--ease-soft) infinite 0.4s; }
+.bzr-flag--3 { left: 80%; animation: mtn-flag-wave 2.6s var(--ease-soft) infinite 0.8s; }
+
+.bzr-lantern { position: absolute; top: 13%; width: 24px; height: 34px; transform-origin: top center; }
+.bzr-lantern--1 { left: 30%; animation: bzr-lantern-sway 3.2s var(--ease-soft) infinite; }
+.bzr-lantern--2 { left: 65%; animation: bzr-lantern-sway 3.6s var(--ease-soft) infinite 0.6s; }
+
+/* ---- The market floor ---- */
+
+.bzr-carpet { position: absolute; bottom: 4%; left: 50%; transform: translateX(-50%); width: 70%; height: 12%; }
+
+.bzr-counter {
   position: absolute;
-  top: 10%;
+  bottom: 32%;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(to bottom, #F7E6C4 0%, #EBD5A6 100%);
-  border: 3px solid #B0894C;
-  color: #4A3218;
-  font-family: var(--font-display);
-  font-weight: 700;
-  padding: var(--space-md) var(--space-lg);
-  border-radius: 12px;
-  max-width: 260px;
-  text-align: center;
-  font-size: 16px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-  z-index: var(--z-dialog);
-  transition: opacity var(--duration-fast) var(--ease-soft);
+  width: 200px;
 }
 
-.bazaar-intro.is-hidden {
-  opacity: 0;
-  pointer-events: none;
-}
+.bzr-prop { position: absolute; pointer-events: none; }
+.bzr-prop--basket { left: 8%; bottom: 10%; width: 46px; }
+.bzr-prop--barrel { right: 10%; bottom: 8%; width: 40px; }
+.bzr-prop--rope { left: 62%; bottom: 6%; width: 44px; }
 
-.bazaar-stalls {
+.bzr-mickey-spot { position: absolute; left: 6%; bottom: 6%; width: 80px; height: 130px; }
+.bzr-mickey-spot .mickey { position: relative; left: auto; bottom: auto; transform: none; height: 100%; }
+
+.bzr-dialog { position: absolute; top: 8%; left: 50%; transform: translateX(-50%); z-index: 20; max-width: 260px; }
+
+.bzr-rules {
   position: absolute;
   inset: 0;
-  top: 26%;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: var(--space-md);
-  padding: 0 var(--space-lg);
-  align-content: start;
-  z-index: var(--z-land);
+  background: rgba(120, 70, 30, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-medium) var(--ease-soft);
 }
+.bzr-rules.is-visible { opacity: 1; }
 
-.bazaar-stall {
-  background: var(--color-text-light);
-  border-radius: var(--radius-md);
-  padding: var(--space-md) var(--space-sm);
-  text-align: center;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.12);
-  transition: transform var(--duration-fast) var(--ease-soft);
+.bzr-rules__demo { width: 64px; height: 64px; }
+.bzr-rules__item { width: 100%; height: 100%; }
+.bzr-rules__item.is-glowing { animation: lagoon-demo-glow 1s var(--ease-soft) infinite; }
+.bzr-rules__item.is-collected { animation: lagoon-demo-collect 0.5s var(--ease-soft) forwards; }
+
+/* ---- The counter goods — generated by BazaarScene.js ---- */
+
+.bzr-field { position: absolute; inset: 0; z-index: 10; }
+
+.bzr-item {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  transition: transform 0.15s var(--ease-soft);
 }
+.bzr-item .icon { width: 100%; height: 100%; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.15)); }
+.bzr-item:active { transform: scale(0.88); }
 
-.bazaar-stall:active {
-  transform: scale(0.95);
+.bzr-item.is-hinting { animation: lagoon-item-hint 1.4s var(--ease-soft) infinite; }
+.bzr-item.is-wrong { animation: lagoon-decoy-wobble 0.3s var(--ease-soft); }
+.bzr-item.is-correct { animation: stone-flash 0.4s var(--ease-soft); }
+.bzr-item.is-lit { animation: stone-flash 0.5s var(--ease-soft); }
+
+/* ---- The little time dial in round 5, gentle not punishing ---- */
+
+.bzr-timer {
+  position: absolute;
+  top: 6%;
+  right: 6%;
+  width: 34px;
+  height: 34px;
+  z-index: 20;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-soft);
 }
-
-.bazaar-stall__icon {
-  margin-bottom: var(--space-xs);
-}
-
-.bazaar-stall__icon .icon {
-  width: 42px;
-  height: 42px;
-}
-
-.bazaar-stall__name {
-  font-size: 14px;
-  color: var(--color-text-dark);
-  opacity: 0.75;
-  margin-bottom: var(--space-xs);
-}
-
-.bazaar-stall__price {
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.bazaar-stall__original {
-  text-decoration: line-through;
-  opacity: 0.5;
-  font-weight: 400;
-  font-size: 13px;
-  margin-right: var(--space-xs);
-}
-
-.bazaar-stall.is-correct {
-  animation: stall-win var(--duration-medium) var(--ease-soft);
-}
-
-.bazaar-stall.is-wrong {
-  animation: stone-shake 0.35s var(--ease-soft);
+.bzr-timer.is-visible { opacity: 1; }
+.bzr-timer__fill {
+  transform-origin: center;
+  transition: stroke-dashoffset 1s linear;
 }
 
 /* ---------------- Reward scene (universal) ---------------- */
@@ -1005,11 +1103,17 @@
 /* ---- The chest ---- */
 
 .reward-box {
+  /* Explicit centering rather than relying on the parent flex container's
+     alignment for an absolutely-positioned child — that "static position"
+     behavior is part of the flex spec but isn't implemented consistently
+     everywhere, and this element disappearing was traced back to it. */
   position: absolute;
+  top: 50%;
+  left: 50%;
   width: 170px;
   height: 156px;
   opacity: 0;
-  transform: scale(0.8);
+  transform: translate(-50%, -50%) scale(0.8);
   /* Not clickable until .is-visible — without this, a tap during the 3-2-1
      countdown could open the chest before enter() has even finished timing
      it, leaving the chest and the countdown fighting over the same state. */
@@ -1020,7 +1124,7 @@
 
 .reward-box.is-visible {
   opacity: 1;
-  transform: scale(1);
+  transform: translate(-50%, -50%) scale(1);
   pointer-events: auto;
   animation: chest-invite 2.6s var(--ease-soft) infinite;
 }
@@ -1036,7 +1140,7 @@
 
 .reward-box.is-gone {
   opacity: 0;
-  transform: scale(0.9);
+  transform: translate(-50%, -50%) scale(0.9);
 }
 
 .reward-box__art {
@@ -1089,7 +1193,14 @@
 /* ---- The three cards ---- */
 
 .reward-cards {
+  /* Same explicit centering as .reward-box, for the same reason: don't
+     rely on flex static-position behavior for an absolutely-positioned
+     child, especially one whose content (the cards) is injected by JS
+     after the fact. */
   position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   gap: var(--space-md);
   opacity: 0;
@@ -1163,7 +1274,11 @@
 /* ---- The reveal ---- */
 
 .reward-reveal {
+  /* Same explicit centering as .reward-box and .reward-cards. */
   position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   text-align: center;
   padding: var(--space-lg);
   opacity: 0;
@@ -1362,4 +1477,299 @@
   pointer-events: none;
   width: 100%;
   height: 100%;
+}
+
+/* ================= LAGOON: full cinematic adventure ================= */
+/* Layered like the Island hub, but its own self-contained world — nothing
+   here is shared with the island's .layer/.land classes, so redesigning
+   one never risks breaking the other. */
+
+.scene--lagoon {
+  overflow: hidden;
+  background: var(--color-sky-bottom);
+  /* The "camera": same mechanism as .scene--island — Camera.js sets these
+     custom properties, this transform is what actually moves the scene. */
+  --cam-x: 0%;
+  --cam-y: 0%;
+  --cam-scale: 1;
+  transform: scale(var(--cam-scale)) translate(var(--cam-x), var(--cam-y));
+  transform-origin: center 55%;
+  transition: opacity var(--duration-medium) var(--ease-soft),
+              transform 1.6s var(--ease-soft);
+}
+
+.lagoon-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.lagoon-layer--sky { z-index: 1; }
+.lagoon-layer--horizon { z-index: 2; }
+.lagoon-layer--sea { z-index: 3; pointer-events: none; }
+.lagoon-layer--beach { z-index: 4; }
+
+.lagoon-layer--sky .sun { position: absolute; top: 8%; right: 12%; }
+
+.lagoon-layer--horizon .sea-far { bottom: 55%; height: 10%; }
+.lagoon-layer--horizon .distant-island--1 { bottom: 62%; }
+.lagoon-layer--horizon .distant-island--2 { bottom: 60%; }
+
+.lagoon-layer--sea .sea {
+  position: absolute;
+  inset: 0;
+}
+
+.lagoon-layer--sea .wave { position: absolute; left: -10%; width: 120%; height: 30%; border-radius: 45%; }
+.lagoon-layer--sea .wave--back { bottom: 45%; background: var(--color-sea-mid); opacity: 0.7; }
+.lagoon-layer--sea .wave--mid { bottom: 30%; background: var(--color-sea-light); opacity: 0.8; }
+.lagoon-layer--sea .wave--front { bottom: 18%; height: 20%; background: var(--color-foam); opacity: 0.85; }
+
+.lagoon-boat {
+  position: absolute;
+  bottom: 42%;
+  left: 12%;
+  width: 60px;
+  height: 55px;
+  animation: boat-rock 3.6s var(--ease-soft) infinite;
+  transform-origin: bottom center;
+}
+
+.lagoon-layer--sea .gull--1 { top: 16%; left: 20%; }
+.lagoon-layer--sea #lagoon-fish { bottom: 30%; left: 60%; width: 26px; height: 16px; opacity: 0; animation: fish-jump 14s ease-in-out infinite 3s; }
+
+/* ---- Beach ---- */
+
+.lagoon-layer--beach { bottom: 0; top: auto; height: 62%; overflow: hidden; }
+.lagoon-layer--beach .foam-edge { position: absolute; top: -4%; left: 0; right: 0; height: 14%; }
+.lagoon-layer--beach .dunes { position: absolute; inset: 0; }
+
+.lagoon-layer--beach .palm--left { position: absolute; left: 4%; bottom: 4%; width: 90px; height: 190px; }
+.lagoon-layer--beach .palm--right { position: absolute; right: 6%; bottom: 2%; width: 90px; height: 190px; }
+.lagoon-layer--beach .palm--left { animation: palm-sway 4.5s var(--ease-soft) infinite; }
+.lagoon-layer--beach .palm--right { animation: palm-sway 5.2s var(--ease-soft) infinite 0.8s; }
+
+.lagoon-jetty {
+  position: absolute;
+  left: 6%;
+  bottom: 30%;
+  width: 130px;
+  height: 52px;
+  transform: rotate(-4deg);
+}
+
+.lagoon-prop { position: absolute; pointer-events: none; }
+.lagoon-prop--anchor { left: 44%; bottom: 6%; width: 34px; }
+.lagoon-prop--rocks { right: 30%; bottom: 4%; width: 60px; }
+.lagoon-prop--shells { left: 30%; bottom: 3%; width: 40px; }
+.lagoon-prop--coconuts { right: 12%; bottom: 34%; width: 44px; }
+.lagoon-prop--flowers { left: 56%; bottom: 30%; width: 38px; }
+.lagoon-prop--seaweed { left: 20%; bottom: 24%; width: 26px; }
+.lagoon-prop--old-map { right: 40%; bottom: 8%; width: 40px; }
+
+.lagoon-layer--beach .critter.crab { left: -8%; bottom: 5%; width: 30px; height: 20px; animation: crab-scurry 24s linear infinite 5s; }
+
+.lagoon-mickey-spot {
+  position: absolute;
+  left: 10%;
+  bottom: 30%;
+  width: 90px;
+  height: 150px;
+}
+
+.lagoon-mickey-spot .mickey { position: relative; left: auto; bottom: auto; transform: none; height: 100%; }
+
+.lagoon-half-compass {
+  position: absolute;
+  bottom: 18%;
+  left: 72%;
+  width: 34px;
+  height: 34px;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
+}
+
+.lagoon-table {
+  position: absolute;
+  right: 8%;
+  bottom: 34%;
+  width: 90px;
+}
+
+.lagoon-table__slots {
+  position: absolute;
+  top: -22px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.lagoon-table__slots .icon {
+  width: 22px;
+  height: 22px;
+  opacity: 0;
+  transform: scale(0.4);
+  transition: opacity 0.4s var(--ease-soft), transform 0.4s var(--ease-soft);
+}
+
+.lagoon-table__slots .icon.is-placed {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.lagoon-dialog {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  max-width: 260px;
+}
+
+/* ---- Rules demo: plays once, teaches the tap-to-collect gesture ---- */
+
+.lagoon-rules {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  background: rgba(21, 122, 140, 0.15);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-medium) var(--ease-soft);
+}
+
+.lagoon-rules.is-visible {
+  opacity: 1;
+}
+
+.lagoon-rules__text {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--color-text-dark);
+  background: linear-gradient(to bottom, #F7E6C4 0%, #EBD5A6 100%);
+  border: 3px solid #B0894C;
+  border-radius: 12px;
+  padding: var(--space-sm) var(--space-lg);
+  max-width: 280px;
+  text-align: center;
+  font-size: 15px;
+}
+
+.lagoon-rules__demo {
+  width: 64px;
+  height: 64px;
+}
+
+.lagoon-rules__demo-item {
+  width: 100%;
+  height: 100%;
+}
+
+.lagoon-rules__demo-item.is-glowing {
+  animation: lagoon-demo-glow 1s var(--ease-soft) infinite;
+}
+
+.lagoon-rules__demo-item.is-collected {
+  animation: lagoon-demo-collect 0.5s var(--ease-soft) forwards;
+}
+
+/* ---- Countdown (same visual language as the Reward scene's) ---- */
+
+.lagoon-countdown {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display);
+  font-size: 60px;
+  font-weight: 700;
+  color: var(--color-text-light);
+  text-shadow: 0 3px 10px rgba(0,0,0,0.3);
+  opacity: 0;
+  z-index: 25;
+}
+
+.lagoon-countdown.is-visible {
+  animation: countdown-pulse 1s var(--ease-soft);
+}
+
+/* ---- The search field: clutter + hidden targets, generated at runtime ---- */
+
+.lagoon-field {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+}
+
+.lagoon-item {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  transition: transform 0.15s var(--ease-soft);
+}
+
+.lagoon-item .icon {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.15));
+}
+
+.lagoon-item:active {
+  transform: scale(0.88);
+}
+
+/* A gentle shimmer the hint system applies to a not-yet-found target */
+.lagoon-item.is-hinting {
+  animation: lagoon-item-hint 1.4s var(--ease-soft) infinite;
+}
+
+/* Decoys get a tiny wobble on tap — acknowledged, not penalized */
+.lagoon-item.is-decoy-tapped {
+  animation: lagoon-decoy-wobble 0.3s var(--ease-soft);
+}
+
+/* A found target flies from its spot to the table, then is removed */
+.lagoon-item.is-collected {
+  animation: lagoon-item-collect 0.7s cubic-bezier(0.3, 0.4, 0.3, 1) forwards;
+  pointer-events: none;
+}
+
+/* ---- Compass assembly + golden ray, played on winning ---- */
+
+.lagoon-compass-final {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  width: 90px;
+  height: 90px;
+  z-index: 40;
+  opacity: 0;
+}
+
+.lagoon-compass-final.is-visible {
+  animation: lagoon-compass-appear 1s cubic-bezier(0.3, 1.4, 0.5, 1) forwards;
+}
+
+.lagoon-compass-ray {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  width: 300px;
+  height: 300px;
+  transform: translate(-50%, -50%) scale(0);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--color-box-glow) 0%, transparent 70%);
+  z-index: 39;
+  opacity: 0;
+}
+
+.lagoon-compass-ray.is-visible {
+  animation: lagoon-ray-burst 1.4s var(--ease-soft) forwards;
 }
