@@ -103,6 +103,16 @@ export class IslandScene {
 
   async _enterInner(data) {
     this._isTransitioning = false;
+
+    // Defensive safety net, same reasoning as RewardScene: an adventure's
+    // own input-guard should already clear itself on exit(), but this is
+    // the one place a leftover guard would be most damaging (it would
+    // silently swallow every future box tap) — so clear all of them here
+    // too, regardless of whether that already happened upstream.
+    document.querySelectorAll('.adventure-input-guard').forEach((el) => {
+      el.classList.remove('is-active');
+    });
+
     this._syncBoxesWithSave();
 
     if (data.fromIntro) {

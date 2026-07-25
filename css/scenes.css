@@ -915,7 +915,15 @@
   width: 46px;
   height: 52px;
   transform: translate(-50%, -50%);
-  padding: 0;
+  /* Invisible padding so the actual tappable area extends a little past
+     the visible crystal shape — the hint glow (drop-shadow, up to 9px)
+     visually suggests a bigger target than the shape itself, and a tap
+     landing on the glow but just outside the old hit-box would silently
+     miss. Deliberately NOT box-sizing:border-box — this padding adds to
+     the inline width/height set in JS rather than carving into them, so
+     the inner shape (100% of the content box) still renders at exactly
+     the same visible size as before. */
+  padding: 8px;
 }
 
 .mtn-crystal__shape {
@@ -1456,13 +1464,30 @@
   pointer-events: auto;
 }
 
+.reward-card-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  animation: card-rise 0.6s var(--ease-soft) backwards;
+  transition: opacity var(--duration-fast) var(--ease-soft),
+              transform var(--duration-fast) var(--ease-soft);
+}
+
+.reward-card-slot.is-dismissed {
+  opacity: 0;
+  transform: translateY(10px) scale(0.9);
+}
+
+.reward-card-slot__open-btn {
+  font-size: 13px;
+  padding: 4px 14px;
+}
+
 .reward-card {
   width: 94px;
   height: 124px;
   perspective: 600px;
-  animation: card-rise 0.6s var(--ease-soft) backwards;
-  transition: opacity var(--duration-fast) var(--ease-soft),
-              transform var(--duration-fast) var(--ease-soft);
 }
 
 .reward-card__inner {
@@ -1476,11 +1501,6 @@
 
 .reward-card.is-chosen .reward-card__inner {
   transform: rotateY(180deg) scale(1.08);
-}
-
-.reward-card.is-dismissed {
-  opacity: 0;
-  transform: translateY(10px) scale(0.9);
 }
 
 .reward-card__face {
@@ -2109,5 +2129,31 @@
 }
 
 .adventure-input-guard.is-active {
+  pointer-events: auto;
+}
+
+/* An explicit, unambiguous "open" button as a second guaranteed way to
+   trigger the same action as tapping the chest itself.
+   .reward-open-btn.wooden-button (both classes) is used deliberately —
+   .wooden-button on its own sets position:relative and its own
+   translateY(10px) transform, which was winning the cascade by being
+   declared later in components.css and knocking this button out of its
+   intended absolute position entirely (it fell into normal document
+   flow, landing wherever the surrounding layout happened to push it —
+   the reported "flew to the bottom-right corner"). The extra specificity
+   here guarantees this rule always wins regardless of file load order. */
+.reward-open-btn.wooden-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 90px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-medium) var(--ease-soft);
+}
+
+.reward-open-btn.wooden-button.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 90px);
   pointer-events: auto;
 }

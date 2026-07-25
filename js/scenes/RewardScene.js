@@ -35,6 +35,7 @@ export class RewardScene {
 
     this.countdownEl = sceneEl.querySelector('#reward-countdown');
     this.boxEl = sceneEl.querySelector('#reward-box');
+    this.openBtn = sceneEl.querySelector('#reward-open-btn');
     this.rewardArtEl = sceneEl.querySelector('.reward-box__art');
     this.beamEl = sceneEl.querySelector('#reward-beam');
     this.sparklesEl = sceneEl.querySelector('#reward-sparkles');
@@ -46,6 +47,7 @@ export class RewardScene {
     this.continueBtn = sceneEl.querySelector('#reward-continue');
 
     this.boxEl.addEventListener('click', () => this._openChest());
+    this.openBtn.addEventListener('click', () => this._openChest());
     this.continueBtn.addEventListener('click', () => this._finish());
 
     this._adventureId = null;
@@ -105,6 +107,17 @@ export class RewardScene {
     this._isBusy = false;
     const token = ++this._runToken;
 
+    // Defensive safety net: an adventure's own input-guard should already
+    // clear itself on exit(), but this scene is the one moment that
+    // absolutely must never be silently blocked — so clear every
+    // adventure's guard here too, regardless of whether that already
+    // happened correctly upstream. Belt and suspenders: this can never
+    // hurt (there's nothing else on screen for it to interfere with),
+    // and it guarantees the chest is reachable no matter what.
+    document.querySelectorAll('.adventure-input-guard').forEach((el) => {
+      el.classList.remove('is-active');
+    });
+
     // Same chest they tapped on the island, not a generic one — the theme
     // comes straight from which adventure just finished.
     renderChest(this.rewardArtEl, this._adventureId);
@@ -118,6 +131,7 @@ export class RewardScene {
 
     this.state = 'CHEST';
     this.boxEl.classList.add('is-visible');
+    this.openBtn.classList.add('is-visible');
     this.mickey.hush();
     console.log('[Reward] _enterInner: finished, chest is now visible and tappable');
   }
@@ -136,6 +150,7 @@ export class RewardScene {
 
   _resetVisualState() {
     this.boxEl.classList.remove('is-visible', 'is-open', 'is-gone');
+    this.openBtn.classList.remove('is-visible');
     this.beamEl.classList.remove('is-shining');
     this.sparklesEl.innerHTML = '';
     this.cardsEl.classList.remove('is-visible');
@@ -172,6 +187,7 @@ export class RewardScene {
     try {
       this.audio.chest();
       this.boxEl.classList.add('is-open');
+      this.openBtn.classList.remove('is-visible');
       await wait(260);
       if (token !== this._runToken) { console.log('[Reward] _openChest: stale token after lid delay, aborting'); return; }
 
@@ -229,9 +245,12 @@ export class RewardScene {
     this.cardsEl.innerHTML = '';
 
     gifts.forEach((gift, i) => {
+      const wrapEl = document.createElement('div');
+      wrapEl.className = 'reward-card-slot';
+      wrapEl.style.animationDelay = `${i * 0.12}s`;
+
       const cardEl = document.createElement('button');
       cardEl.className = 'reward-card';
-      cardEl.style.animationDelay = `${i * 0.12}s`;
       cardEl.setAttribute('aria-label', 'Обрати картку');
       cardEl.innerHTML = `
         <span class="reward-card__inner">
@@ -239,8 +258,21 @@ export class RewardScene {
           <span class="reward-card__face reward-card__front">${icon(gift.icon)}</span>
         </span>
       `;
-      cardEl.addEventListener('click', () => this._chooseGift(gift, cardEl));
-      this.cardsEl.appendChild(cardEl);
+
+      // An explicit, unambiguous button below the card — a second
+      // guaranteed way to choose it, same reasoning as the chest's own
+      // open button above.
+      const openBtn = document.createElement('button');
+      openBtn.className = 'reward-card-slot__open-btn wooden-button';
+      openBtn.textContent = 'Відкрити';
+
+      const choose = () => this._chooseGift(gift, cardEl);
+      cardEl.addEventListener('click', choose);
+      openBtn.addEventListener('click', choose);
+
+      wrapEl.appendChild(cardEl);
+      wrapEl.appendChild(openBtn);
+      this.cardsEl.appendChild(wrapEl);
     });
   }
 
@@ -258,8 +290,9 @@ export class RewardScene {
     try {
       this.giftManager.claim(gift.id);
 
-      this.cardsEl.querySelectorAll('.reward-card').forEach((el) => {
-        if (el !== cardEl) el.classList.add('is-dismissed');
+      this.cardsEl.querySelectorAll('.reward-card-slot').forEach((slotEl) => {
+        if (slotEl.contains(cardEl)) return;
+        slotEl.classList.add('is-dismissed');
       });
 
       this.audio.tap();
