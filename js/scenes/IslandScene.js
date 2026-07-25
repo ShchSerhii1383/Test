@@ -44,10 +44,12 @@ export class IslandScene {
     this.growthEls = Array.from(sceneEl.querySelectorAll('.growth'));
 
     this.lighthouseEl = sceneEl.querySelector('#lighthouse');
-    this.lighthouseEl.addEventListener('click', () => {
+    this.lighthouseEl.addEventListener('click', async () => {
       if (this._isTransitioning) return;
+      this._isTransitioning = true;
       this.audio.tap();
-      this.sceneManager.goTo(SCENES.ALBUM);
+      await this.sceneManager.goTo(SCENES.ALBUM);
+      this._isTransitioning = false;
     });
 
     this.camera = new Camera(sceneEl);
@@ -120,7 +122,9 @@ export class IslandScene {
       setTimeout(() => this.mickey.play(MICKEY_STATES.IDLE), 1200);
       this._startWandering();
 
+      this._isTransitioning = true;
       await this._revealNextBoxIfAny(data.returningFrom);
+      this._isTransitioning = false;
       return;
     }
 
@@ -216,19 +220,19 @@ export class IslandScene {
     await this._wait(1500);
 
     this._materializedBoxes.add(nextId);
-    nextBox.enable();
-    await this._materializeBox(nextBox.el);
+    await this._materializeBox(nextBox);
 
     await this._wait(500);
     this.camera.reset();
   }
 
   /** The actual "appearing out of thin air" moment: glow, sound, grow, sparkle. */
-  async _materializeBox(boxEl) {
+  async _materializeBox(box) {
     this.audio.chest(); // the same warm, magical chime used for opening gifts
-    boxEl.classList.add('is-revealing', 'is-materializing');
+    box.el.classList.add('is-revealing', 'is-materializing');
     await this._wait(900);
-    boxEl.classList.remove('is-materializing');
+    box.el.classList.remove('is-materializing');
+    box.enable(); // only tappable once it has actually finished appearing
   }
 
   /**
@@ -315,7 +319,7 @@ export class IslandScene {
     this.mickey.el.classList.add('mickey--diving');
     await this._wait(500);
 
-    this.sceneManager.goTo(sceneName);
+    await this.sceneManager.goTo(sceneName);
     this.camera.reset();
     this._isTransitioning = false;
 

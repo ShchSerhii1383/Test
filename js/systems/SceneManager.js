@@ -7,20 +7,30 @@
  *
  * Each registered scene may implement any of: enter(), exit().
  * Both are optional and both may be async.
+ *
+ * IMPORTANT lesson learned: this was briefly rewritten as a strict promise
+ * queue (every goTo() chained onto the last one). That looked safer on
+ * paper, but it broke the single most common call pattern in this game —
+ * every adventure calls goTo(REWARD) from *inside* its own still-running
+ * enter(). Queued, that call had to wait for the current transition to
+ * finish, which could only happen once that same nested call resolved —
+ * a genuine deadlock (A waits on B, B waits on A), not just a slow path.
+ * It could look like it "worked" for one adventure and hung on another
+ * depending on timing, which is exactly the confusing symptom that showed
+ * up in testing.
+ *
+ * The actual protection against overlapping/duplicate transitions belongs
+ * at the scene level, not here — each adventure already guards its own
+ * back button and win-sequence with an _isFinishing flag, and the island
+ * guards box taps with _isTransitioning. This class just needs a same-
+ * scene no-op guard and clear logging; it does not need to force every
+ * call through a single global queue.
  */
 export class SceneManager {
   constructor() {
     /** @type {Map<string, {el: HTMLElement, instance: object}>} */
     this.scenes = new Map();
     this.currentSceneName = null;
-
-    // Bumped on every goTo() call. If a second goTo() fires while the
-    // first is still mid-transition (e.g. a double-tap that survived
-    // whatever guard the calling scene had), the first call notices its
-    // token is stale after its next await and quietly stops — instead of
-    // its exit()/enter() interleaving with the second call's and leaving
-    // currentSceneName pointing at the wrong thing.
-    this._runToken = 0;
   }
 
   /**
@@ -34,19 +44,27 @@ export class SceneManager {
   }
 
   /**
-   * Switch to a scene by name. Runs exit() on the old scene,
-   * then enter() on the new one, after the fade-out finishes.
+   * Switch to a scene by name. Runs exit() on the old scene, then enter()
+   * on the new one. Safe to call from within another scene's own enter()
+   * chain (every adventure's win-sequence does exactly this) — it is NOT
+   * safe against a *second, independent* caller firing at the same time,
+   * which is why each scene guards its own triggers (buttons, taps).
    * @param {string} name
    * @param {object} [data] - optional payload passed to the next scene's enter()
    */
   async goTo(name, data) {
+    if (name === this.currentSceneName) {
+      // Already here — re-running exit()/enter() on the same scene would
+      // just restart it pointlessly.
+      return;
+    }
+
     const next = this.scenes.get(name);
     if (!next) {
       console.warn(`SceneManager: no scene registered as "${name}"`);
       return;
     }
 
-    const token = ++this._runToken;
     const from = this.currentSceneName ?? '(none)';
     console.log(`[SceneManager] ${from} -> ${name}`, data ?? '');
 
@@ -58,17 +76,9 @@ export class SceneManager {
       if (typeof current.instance.exit === 'function') {
         await current.instance.exit();
       }
-      if (token !== this._runToken) {
-        console.log(`[SceneManager] ${from} -> ${name} abandoned — a newer transition took over`);
-        return;
-      }
       current.el.classList.remove('is-active');
     }
 
-    if (token !== this._runToken) {
-      console.log(`[SceneManager] ${from} -> ${name} abandoned — a newer transition took over`);
-      return;
-    }
     next.el.classList.add('is-active');
     this.currentSceneName = name;
 

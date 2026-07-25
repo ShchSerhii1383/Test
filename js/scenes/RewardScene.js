@@ -66,7 +66,14 @@ export class RewardScene {
     try {
       await this._enterInner(data);
     } catch (err) {
+      // Better to skip the gift-picking moment than strand the player on
+      // a broken reward screen — at least the adventure still counts as
+      // done and they're back somewhere they can keep playing.
       console.error('RewardScene.enter() failed partway through:', err);
+      if (this._adventureId) {
+        this.saveManager.markCompleted(this._adventureId);
+      }
+      await this.sceneManager.goTo(SCENES.ISLAND, { returningFrom: this._adventureId });
     }
   }
 
@@ -103,6 +110,7 @@ export class RewardScene {
     this.cardsEl.innerHTML = '';
     this.revealEl.classList.remove('is-visible');
     this.countdownEl.classList.remove('is-visible');
+    this.continueBtn.style.pointerEvents = '';
 
     // Force the browser to drop the finished animations before we re-add the
     // classes, otherwise the second chest can come back already "open".
@@ -220,6 +228,15 @@ export class RewardScene {
       this.revealMessageEl.textContent = gift.message;
       this.revealEl.classList.add('is-visible');
       this.mickey.play(MICKEY_STATES.CELEBRATE);
+
+      // The reveal appears at the same screen spot the card grid just
+      // occupied — an impatient rapid double-tap (pick the card, tap
+      // again out of habit) could otherwise land right on "Далі" before
+      // the player has actually registered seeing their gift.
+      this.continueBtn.style.pointerEvents = 'none';
+      setTimeout(() => {
+        this.continueBtn.style.pointerEvents = '';
+      }, 900);
     } finally {
       this._isBusy = false;
     }

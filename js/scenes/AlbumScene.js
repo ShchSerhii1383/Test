@@ -37,6 +37,7 @@ export class AlbumScene {
       await this._enterInner();
     } catch (err) {
       console.error('AlbumScene.enter() failed partway through:', err);
+      await this.sceneManager.goTo(SCENES.FINALE);
     }
   }
 

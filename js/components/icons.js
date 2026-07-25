@@ -148,6 +148,17 @@ const ICONS = {
     <rect x="36" y="12" width="6" height="24" rx="3" fill="#B8894F"/>
     <path d="M15 20h18M15 26h14" stroke="#8A5A3B" stroke-width="1.3" opacity="0.6"/>`,
 
+  /* ---- Lagoon: expedition collection items not already covered above ---- */
+
+  crabIcon: `<ellipse cx="24" cy="26" rx="14" ry="9" fill="#E8734A" stroke="#C85A32" stroke-width="2"/>
+    <circle cx="17" cy="18" r="4" fill="#E8734A" stroke="#C85A32" stroke-width="1.5"/><circle cx="17" cy="17" r="1.5" fill="#2A2A2A"/>
+    <circle cx="31" cy="18" r="4" fill="#E8734A" stroke="#C85A32" stroke-width="1.5"/><circle cx="31" cy="17" r="1.5" fill="#2A2A2A"/>
+    <path d="M8 22L2 16M10 28L2 28M40 22L46 16M38 28L46 28" stroke="#C85A32" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <path d="M14 33L10 38M18 34L16 39M30 34L32 39M34 33L38 38" stroke="#C85A32" stroke-width="2" stroke-linecap="round" fill="none"/>`,
+
+  featherIcon: `<path d="M36 6C20 10 10 24 8 40c10-2 16-8 20-16 3 6 2 12-2 16 10-2 16-12 16-24 0-4-2-8-6-10z" fill="#EAF6EF" stroke="#8A5A3B" stroke-width="2"/>
+    <path d="M28 16q4 8 0 18M22 26q3 6 0 12" stroke="#B0A79A" stroke-width="1.3" fill="none"/>`,
+
   /* ---- Bazaar: riddle-answer icons not already covered above ---- */
 
   palmIcon: `<path d="M22 44V22" stroke="#8A5A3B" stroke-width="4" stroke-linecap="round"/>

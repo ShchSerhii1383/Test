@@ -8,45 +8,64 @@
 
 export const ADVENTURE_CONFIG = {
   lagoon: {
-    title: 'Секретна лагуна',
+    title: 'Колекція дослідника',
 
-    // Mickey's opening story, typed one line at a time before the game starts.
     story: [
-      'Ми майже знайшли шлях до скарбів...',
-      'Але хвиля розкидала деталі чарівного компаса по всій лагуні!',
-      'Допоможіть мені зібрати його знову.',
+      'Коли я вперше досліджував цей острів, я склав список найцінніших знахідок...',
+      'Але сильний вітер розкидав їх по всій лагуні!',
+      'Допоможіть мені знову зібрати колекцію.',
     ],
 
-    // Shown once, briefly, during the animated rules demo.
-    rulesLine: 'Знаходь предмети, що світяться — решта просто прикраса.',
+    rulesLine: 'Знаходь предмети з експедиційної дошки — решта просто прикраса.',
 
-    // The three pieces the player must find among the clutter, in any order.
-    // Each has its own icon (drawn in components/icons.js) and a label used
-    // for the aria description only — nothing about them is shown as text
-    // during play, so finding them is genuinely a search.
-    targets: [
-      { id: 'compass-needle', icon: 'compassNeedle', label: 'Стрілка компаса' },
-      { id: 'compass-body', icon: 'compassBody', label: 'Корпус компаса' },
-      { id: 'golden-key', icon: 'goldenKey', label: 'Золотий ключ' },
-    ],
-
-    // Decoy clutter: purely visual "noise" the targets hide among. Reusing
-    // a modest set of types scattered many times (with random rotation/
-    // scale) reads as "30-something items" without needing 30 unique
-    // drawings — same trick real point-and-click games use.
-    clutterTypes: ['shell', 'starfish', 'coconut', 'bottle', 'rope', 'oar', 'pebble', 'lifeRingMini', 'miniMap', 'plank'],
-    clutterCount: 28,
-
-    // Gentle nudges if the player hasn't found a target in a while —
-    // never a penalty, just Mickey noticing something.
+    // Two-stage hint: a spoken nudge first, then (if still stuck) a soft
+    // shimmer on one of the still-missing items.
     hintLines: [
-      'Мені здається, хвиля щось залишила біля каміння.',
-      'Подивіться ближче до пальми.',
-      'Здається, щось виблискує в піску.',
+      'Мені здається, я бачив щось біля великого каменя.',
+      'Подивись ближче до пальми.',
+      'Здається, там щось виблискує в піску.',
     ],
-    hintDelayMs: 17000,
+    hintTalkDelayMs: 25000,
+    hintShimmerDelayMs: 45000,
 
-    winLine: 'Компас зібрано!',
+    roundWinLines: ['Чудовий початок!', 'Залишився останній список!'],
+    winLine: 'Колекція зібрана!',
+
+    // Decorative clutter the targets hide among — same pool for every round.
+    clutterTypes: ['shell', 'starfish', 'bottle', 'rope', 'oar', 'pebble', 'lifeRingMini', 'plank'],
+
+    // Three rounds, each pulling its own set of target items and adding
+    // more decoy clutter, so the beach gets a little busier (and the
+    // items sit a little closer together) each time.
+    rounds: [
+      {
+        targets: [
+          { id: 'coconut', icon: 'coconut', label: 'Кокос' },
+          { id: 'shell-find', icon: 'shell', label: 'Мушля' },
+          { id: 'map', icon: 'miniMap', label: 'Карта' },
+        ],
+        clutterCount: 16,
+      },
+      {
+        targets: [
+          { id: 'crab', icon: 'crabIcon', label: 'Краб' },
+          { id: 'anchor', icon: 'anchorIcon', label: 'Якір' },
+          { id: 'compass', icon: 'compassBody', label: 'Компас' },
+          { id: 'coconut-2', icon: 'coconut', label: 'Кокос' },
+        ],
+        clutterCount: 20,
+      },
+      {
+        targets: [
+          { id: 'fish', icon: 'fishItem', label: 'Рибка' },
+          { id: 'feather', icon: 'featherIcon', label: 'Перо' },
+          { id: 'scroll', icon: 'scroll', label: 'Сувій' },
+          { id: 'crystal', icon: 'emerald', label: 'Кристал' },
+          { id: 'golden-key', icon: 'goldenKey', label: 'Золотий ключ' },
+        ],
+        clutterCount: 24,
+      },
+    ],
   },
   mountain: {
     title: 'Гора кристалів',

@@ -47,13 +47,13 @@ export class MountainScene {
     this.lightWaveEl = sceneEl.querySelector('#mountain-light-wave');
     this.backBtn = sceneEl.querySelector('#mountain-back');
 
-    this.backBtn.addEventListener('click', () => {
+    this.backBtn.addEventListener('click', async () => {
       // Blocked once the win sequence has started — otherwise a fast tap
       // here races the win sequence's own goTo(REWARD) and can win,
       // dumping the player back on the island without ever seeing the
       // reward (the intermittent "finishes early" bug).
       if (this._isFinishing) return;
-      this.sceneManager.goTo(SCENES.ISLAND);
+      await this.sceneManager.goTo(SCENES.ISLAND);
     });
 
     this._runToken = 0;
@@ -67,7 +67,15 @@ export class MountainScene {
     try {
       await this._enterInner();
     } catch (err) {
+      // Never leave the player stranded on a broken scene: if the error
+      // hit after they'd already won, still try to get them their reward;
+      // otherwise just send them back to the island.
       console.error('MountainScene.enter() failed partway through:', err);
+      if (this._isFinishing) {
+        await this.sceneManager.goTo(SCENES.REWARD, { adventureId: 'mountain' });
+      } else {
+        await this.sceneManager.goTo(SCENES.ISLAND);
+      }
     }
   }
 
@@ -271,11 +279,20 @@ export class MountainScene {
 
   _renderGrid(gridSize, onTap) {
     const positions = this._gridPositions(gridSize);
+    // Smaller grids can afford bigger crystals; a 4x4 grid packs cells
+    // much closer together (same total area, more of them), so the
+    // crystal itself needs to shrink or neighbors start overlapping —
+    // which was the actual cause of some cells becoming untappable
+    // (a later-rendered neighbor visually covered them).
+    const sizePx = gridSize <= 3 ? 46 : 32;
+
     return positions.map((pos, i) => {
       const el = document.createElement('button');
       el.className = 'mtn-crystal';
       el.style.left = `${pos.x}%`;
       el.style.top = `${pos.y}%`;
+      el.style.width = `${sizePx}px`;
+      el.style.height = `${sizePx * 1.13}px`; // keeps the same width:height ratio as the CSS default
 
       const palette = MountainScene.CRYSTAL_COLORS[i % MountainScene.CRYSTAL_COLORS.length];
       el.style.setProperty('--crystal-color', palette.color);
@@ -296,13 +313,40 @@ export class MountainScene {
     const spanY = 46;
     const startX = 34;
     const startY = 34;
+    // A 4x4 grid packs cells much closer together than a 3x3 one (same
+    // area, more cells) — the same jitter amount that looked natural on
+    // a 3x3 grid was enough to occasionally push two 4x4 neighbors close
+    // enough to overlap, letting one cover the other's tap area entirely.
+    const jitter = gridSize <= 3 ? 3 : 1.4;
+    // Below this distance (in the same % units as x/y), two crystals are
+    // considered too close — that's what let one hide behind another.
+    const minDistance = gridSize <= 3 ? 6 : 4;
 
     for (let r = 0; r < gridSize; r++) {
       for (let c = 0; c < gridSize; c++) {
-        positions.push({
-          x: startX + (c / (gridSize - 1)) * spanX + (Math.random() - 0.5) * 3,
-          y: startY + (r / (gridSize - 1)) * spanY + (Math.random() - 0.5) * 3,
-        });
+        const baseX = startX + (c / (gridSize - 1)) * spanX;
+        const baseY = startY + (r / (gridSize - 1)) * spanY;
+
+        // Try a few jittered positions and keep the first one that's not
+        // too close to an already-placed neighbor — falls back to the
+        // un-jittered exact grid spot if every attempt is too close,
+        // which is always guaranteed safe since the grid spacing itself
+        // is bigger than minDistance.
+        let candidate = { x: baseX, y: baseY };
+        for (let attempt = 0; attempt < 5; attempt++) {
+          const tryPos = {
+            x: baseX + (Math.random() - 0.5) * jitter,
+            y: baseY + (Math.random() - 0.5) * jitter,
+          };
+          const tooClose = positions.some(
+            (p) => Math.hypot(p.x - tryPos.x, p.y - tryPos.y) < minDistance
+          );
+          if (!tooClose) {
+            candidate = tryPos;
+            break;
+          }
+        }
+        positions.push(candidate);
       }
     }
     return positions;

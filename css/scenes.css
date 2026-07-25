@@ -1661,69 +1661,122 @@
 
 .lagoon-mickey-spot .mickey { position: relative; left: auto; bottom: auto; transform: none; height: 100%; }
 
-.lagoon-half-compass {
+.lagoon-diary {
   position: absolute;
-  bottom: 18%;
-  left: 72%;
-  width: 34px;
-  height: 34px;
+  bottom: 20%;
+  left: 70%;
+  width: 32px;
+  height: 26px;
   filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
 }
 
-.lagoon-table {
+/* ---- The expedition notes panel: a worn journal page pinned above the
+   beach, holding the current round's target cards. Semi-transparent on
+   purpose — it should read as part of the scene, not a modern HUD
+   floating over it, and it must never fully hide the sea behind it. ---- */
+
+.lagoon-panel {
   position: absolute;
-  right: 8%;
-  bottom: 34%;
-  width: 90px;
+  top: 3%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 86%;
+  max-width: 320px;
+  z-index: 25;
+  background: linear-gradient(to bottom, rgba(247,230,196,0.88) 0%, rgba(235,213,166,0.88) 100%);
+  border: 3px solid rgba(176,137,79,0.85);
+  border-radius: 4px;
+  padding: var(--space-sm) var(--space-md) var(--space-md);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+  /* worn corners: a rougher, uneven edge rather than a clean rectangle */
+  clip-path: polygon(2% 4%, 98% 0%, 100% 92%, 96% 100%, 3% 98%, 0% 8%);
 }
 
-.lagoon-table__slots {
+.lagoon-panel__nail {
   position: absolute;
-  top: -22px;
-  left: 0;
-  width: 100%;
+  top: -5px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #B0894C 0%, #7A5A32 100%);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+.lagoon-panel__nail--left { left: 12%; }
+.lagoon-panel__nail--right { right: 12%; }
+
+.lagoon-panel__title {
+  font-family: var(--font-hand);
+  font-size: 18px;
+  color: #6B4A22;
+  text-align: center;
+  margin-bottom: var(--space-xs);
+}
+
+.lagoon-panel__cards {
   display: flex;
   justify-content: center;
-  gap: 6px;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
 }
 
-/* Shown faint from the very start — a quiet reminder of what to look for,
-   rather than an empty table with no hint of what "done" looks like. */
-.lagoon-table__slot {
+/* ---- Each target card ---- */
+
+.lagoon-card {
   position: relative;
-  width: 22px;
-  height: 22px;
-  opacity: 0.3;
-  filter: grayscale(1);
-  transition: opacity 0.4s var(--ease-soft), filter 0.4s var(--ease-soft);
+  width: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-xs);
+  background: rgba(255,248,237,0.7);
+  border: 1.5px solid #B0894C;
+  border-radius: 6px;
+  opacity: 0.55;
+  filter: grayscale(0.6);
+  transition: opacity 0.4s var(--ease-soft), filter 0.4s var(--ease-soft), transform 0.4s var(--ease-soft);
+  animation: lagoon-card-in 0.5s var(--ease-soft) backwards;
 }
 
-.lagoon-table__slot .icon {
-  width: 100%;
-  height: 100%;
+.lagoon-card .icon {
+  width: 28px;
+  height: 28px;
 }
 
-.lagoon-table__slot.is-found {
+.lagoon-card__name {
+  font-size: 9px;
+  color: #6B4A22;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.lagoon-card.is-found {
   opacity: 1;
   filter: none;
-  animation: lagoon-slot-found 0.5s var(--ease-soft);
+  animation: lagoon-card-found 0.5s var(--ease-soft);
 }
 
-/* A small checkmark badge, once that piece is actually found */
-.lagoon-table__slot.is-found::after {
-  content: '✓';
+/* A round green "FOUND" stamp, the atmospheric touch called out
+   specifically as the preferred way to mark progress. */
+.lagoon-card.is-found::after {
+  content: 'FOUND';
   position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 12px;
-  height: 12px;
-  background: var(--color-sun);
-  color: var(--color-text-dark);
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  margin: auto;
+  border: 2px solid #3A8067;
   border-radius: 50%;
-  font-size: 9px;
+  color: #3A8067;
+  font-family: var(--font-display);
   font-weight: 700;
-  line-height: 12px;
-  text-align: center;
+  font-size: 8px;
+  letter-spacing: 0.04em;
+  background: rgba(255,255,255,0.35);
+  transform: rotate(-12deg);
 }
 
 .lagoon-dialog {
@@ -1843,7 +1896,7 @@
   animation: lagoon-decoy-wobble 0.3s var(--ease-soft);
 }
 
-/* A found target flies from its spot to the table, then is removed */
+/* A found target pops and fades away — see the keyframe for why */
 .lagoon-item.is-collected {
   animation: lagoon-item-collect 0.7s cubic-bezier(0.3, 0.4, 0.3, 1) forwards;
   pointer-events: none;
@@ -1851,37 +1904,8 @@
 
 /* ---- Compass assembly + golden ray, played on winning ---- */
 
-.lagoon-compass-final {
-  position: absolute;
-  top: 40%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0);
-  width: 90px;
-  height: 90px;
-  z-index: 40;
-  opacity: 0;
-}
-
-.lagoon-compass-final.is-visible {
-  animation: lagoon-compass-appear 1s cubic-bezier(0.3, 1.4, 0.5, 1) forwards;
-}
-
-.lagoon-compass-ray {
-  position: absolute;
-  top: 40%;
-  left: 50%;
-  width: 300px;
-  height: 300px;
-  transform: translate(-50%, -50%) scale(0);
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--color-box-glow) 0%, transparent 70%);
-  z-index: 39;
-  opacity: 0;
-}
-
-.lagoon-compass-ray.is-visible {
-  animation: lagoon-ray-burst 1.4s var(--ease-soft) forwards;
-}
+/* (the assembled-compass finale visuals were replaced by the expedition
+   panel closing + Mickey celebrating — see LagoonScene._playWinSequence) */
 
 .lagoon-leaf--1 { top: 30%; left: -6%; animation: petal-drift 20s linear infinite 3s; }
 .lagoon-leaf--2 { top: 55%; left: -10%; animation: petal-drift 25s linear infinite 11s; }

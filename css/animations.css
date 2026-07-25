@@ -386,28 +386,15 @@
   66% { transform: rotate(8deg); }
 }
 
-/* A found piece leaves its spot and flies toward the table (top-right-ish,
-   where .lagoon-table sits) — this is a generic arc; JS sets the exact
-   --target-x/--target-y per item so it flies to the real table position. */
+/* A found item pops up slightly and fades away in place — progress shows
+   on the expedition panel now, so there's no table to fly toward anymore. */
 @keyframes lagoon-item-collect {
   0% { transform: translate(0, 0) scale(1); opacity: 1; }
-  60% { transform: translate(calc(var(--target-x, 0px) * 0.7), calc(var(--target-y, 0px) * 0.7 - 30px)) scale(0.8); opacity: 1; }
-  100% { transform: translate(var(--target-x, 0px), var(--target-y, 0px)) scale(0.15); opacity: 0; }
+  60% { transform: translateY(-30px) scale(0.8); opacity: 1; }
+  100% { transform: translateY(-30px) scale(0.15); opacity: 0; }
 }
 
 /* ---- Lagoon: compass finale ---- */
-
-@keyframes lagoon-compass-appear {
-  0% { transform: translate(-50%, -50%) scale(0) rotate(-30deg); opacity: 0; }
-  70% { transform: translate(-50%, -50%) scale(1.15) rotate(8deg); opacity: 1; }
-  100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
-}
-
-@keyframes lagoon-ray-burst {
-  0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-  40% { opacity: 0.8; }
-  100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
-}
 
 /* ---- Mountain: environment ---- */
 
@@ -492,9 +479,16 @@
   50% { opacity: 0.5; transform: translate(10px, -16px); }
 }
 
-/* ---- Lagoon: a table slot lighting up once its piece is found ---- */
-@keyframes lagoon-slot-found {
-  0% { transform: scale(0.7); }
-  60% { transform: scale(1.3); }
+
+/* ---- Lagoon: expedition panel cards ---- */
+
+@keyframes lagoon-card-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.85); }
+  to { opacity: 0.55; transform: translateY(0) scale(1); }
+}
+
+@keyframes lagoon-card-found {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.18); }
   100% { transform: scale(1); }
 }

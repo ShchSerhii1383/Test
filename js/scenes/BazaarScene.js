@@ -43,13 +43,13 @@ export class BazaarScene {
     this.roundDotEls = Array.from(sceneEl.querySelectorAll('#bazaar-round-dots .adventure-round-dot'));
     this.backBtn = sceneEl.querySelector('#bazaar-back');
 
-    this.backBtn.addEventListener('click', () => {
+    this.backBtn.addEventListener('click', async () => {
       // Blocked once the win sequence has started — otherwise a fast tap
       // here races the win sequence's own goTo(REWARD) and can win,
       // dumping the player back on the island without ever seeing the
       // reward (the intermittent "finishes early" bug).
       if (this._isFinishing) return;
-      this.sceneManager.goTo(SCENES.ISLAND);
+      await this.sceneManager.goTo(SCENES.ISLAND);
     });
 
     this._runToken = 0;
@@ -62,7 +62,15 @@ export class BazaarScene {
     try {
       await this._enterInner();
     } catch (err) {
+      // Never leave the player stranded on a broken scene: if the error
+      // hit after they'd already won, still try to get them their reward;
+      // otherwise just send them back to the island.
       console.error('BazaarScene.enter() failed partway through:', err);
+      if (this._isFinishing) {
+        await this.sceneManager.goTo(SCENES.REWARD, { adventureId: 'bazaar' });
+      } else {
+        await this.sceneManager.goTo(SCENES.ISLAND);
+      }
     }
   }
 

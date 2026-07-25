@@ -5,28 +5,22 @@ import { Camera } from '../systems/Camera.js';
 import { typeText, wait } from '../utils/typewriter.js';
 
 /**
- * LagoonScene
- * -----------
- * The first full adventure, rebuilt as a small cinematic location rather
- * than a quick mini-game: Mickey lost the pieces of a magic compass when a
- * wave scattered them across the beach, and the player has to find all
- * three among a wide field of decorative clutter.
+ * LagoonScene — "The Explorer's Collection"
+ * ------------------------------------------
+ * The first adventure: Mickey's old expedition notes were scattered by
+ * the wind, and the player rebuilds the collection across three rounds
+ * (3, then 4, then 5 items), each a little busier and more tightly
+ * packed than the last. The expedition-notes panel at the top always
+ * shows exactly what's left to find for the current round — no guessing.
  *
- * Every adventure follows the same shared rhythm (see the design brief):
- *   cinematic reveal -> Mickey's story -> rules shown by example ->
- *   3-2-1 -> the game itself -> gentle hints if stuck -> a small
- *   celebration -> handed off to the shared Reward scene.
- *
- * This scene has its own small Camera and its own dialog bubble — it does
- * NOT touch the shared Mickey component (that one only controls the
- * island's #mickey). Mickey here is a second, purely decorative copy of
- * the same artwork, standing still by the boat.
+ * Same shared rhythm as every adventure: reveal -> story -> rules demo ->
+ * 3-2-1 -> the rounds -> gentle hints if stuck -> celebration -> Reward.
  */
 export class LagoonScene {
   /**
    * @param {HTMLElement} sceneEl
    * @param {import('../systems/SceneManager.js').SceneManager} sceneManager
-   * @param {import('../components/Mickey.js').Mickey} mickey - the shared island Mickey, used only to update his state when we return
+   * @param {import('../components/Mickey.js').Mickey} mickey - the shared island Mickey, used only when we return
    * @param {import('../systems/AudioManager.js').AudioManager} audio
    */
   constructor(sceneEl, sceneManager, mickey, audio) {
@@ -44,26 +38,25 @@ export class LagoonScene {
     this.rulesDemoItemEl = sceneEl.querySelector('#lagoon-rules-demo-item');
     this.countdownEl = sceneEl.querySelector('#lagoon-countdown');
     this.fieldEl = sceneEl.querySelector('#lagoon-field');
-    this.tableSlotsEl = sceneEl.querySelector('#lagoon-table-slots');
-    this.compassFinalEl = sceneEl.querySelector('.lagoon-compass-final');
-    this.compassRayEl = sceneEl.querySelector('.lagoon-compass-ray');
+    this.panelCardsEl = sceneEl.querySelector('#lagoon-panel-cards');
+    this.roundDotEls = Array.from(sceneEl.querySelectorAll('#lagoon-round-dots .adventure-round-dot'));
     this.backBtn = sceneEl.querySelector('#lagoon-back');
 
-    this.backBtn.addEventListener('click', () => {
+    this.backBtn.addEventListener('click', async () => {
       // Blocked once the win sequence has started — otherwise a fast tap
       // here races the win sequence's own goTo(REWARD) and can win,
       // dumping the player back on the island without ever seeing the
-      // reward (the intermittent "finishes early" bug).
+      // reward.
       if (this._isFinishing) return;
-      this.sceneManager.goTo(SCENES.ISLAND);
+      await this.sceneManager.goTo(SCENES.ISLAND);
     });
 
-    /** @type {Set<string>} ids of targets found so far this visit */
-    this._found = new Set();
-    this._hintTimer = null;
     this._runToken = 0;
     this._isFinishing = false;
     this.backBtn.classList.remove('is-disabled');
+    this._talkHintTimer = null;
+    this._shimmerHintTimer = null;
+    this._pendingResolve = null;
   }
 
   async enter() {
@@ -71,6 +64,11 @@ export class LagoonScene {
       await this._enterInner();
     } catch (err) {
       console.error('LagoonScene.enter() failed partway through:', err);
+      if (this._isFinishing) {
+        await this.sceneManager.goTo(SCENES.REWARD, { adventureId: 'lagoon' });
+      } else {
+        await this.sceneManager.goTo(SCENES.ISLAND);
+      }
     }
   }
 
@@ -90,30 +88,28 @@ export class LagoonScene {
     await this._runCountdown();
     if (token !== this._runToken) return;
 
-    this._scatterField();
-    this._startHintTimer();
+    await this._playRounds(token);
   }
-
 
   async exit() {
     this._runToken += 1;
-    clearTimeout(this._hintTimer);
+    clearTimeout(this._talkHintTimer);
+    clearTimeout(this._shimmerHintTimer);
+    this._pendingResolve?.(false);
+    this._pendingResolve = null;
   }
 
   _resetState() {
     this._isFinishing = false;
-    this._found.clear();
     this.fieldEl.innerHTML = '';
-    this.tableSlotsEl.innerHTML = '';
+    this.panelCardsEl.innerHTML = '';
     this.dialogEl.classList.add('dialog--hidden');
     this.rulesEl.classList.remove('is-visible');
     this.countdownEl.classList.remove('is-visible');
-    this.compassFinalEl.classList.remove('is-visible');
-    this.compassRayEl.classList.remove('is-visible');
+    this.roundDotEls.forEach((dot) => dot.classList.remove('is-done', 'is-current'));
     this.camera.reset();
   }
 
-  /** Stage 1 — a slow, quiet camera reveal of the lagoon before anything talks. */
   async _stageReveal() {
     this.camera.focus({ scale: 1.15, x: '0%', y: '4%' });
     await wait(1400);
@@ -121,7 +117,6 @@ export class LagoonScene {
     await wait(900);
   }
 
-  /** Stage 2 — Mickey explains what happened, one typed line at a time. */
   async _stageStory() {
     for (const line of this.config.story) {
       this.dialogEl.classList.remove('dialog--hidden');
@@ -132,10 +127,6 @@ export class LagoonScene {
     await wait(300);
   }
 
-  /**
-   * Stage 3 — teach the interaction by demonstrating it, not by describing
-   * it: one example item glows, then "gets tapped" on its own and vanishes.
-   */
   async _stageRulesDemo() {
     this.rulesTextEl.textContent = this.config.rulesLine;
     this.rulesDemoItemEl.innerHTML = icon('shell');
@@ -153,7 +144,6 @@ export class LagoonScene {
     await wait(300);
   }
 
-  /** Stage 4 — 3-2-1, same rhythm as every other countdown in the game. */
   async _runCountdown() {
     for (const step of ['3', '2', '1']) {
       this.countdownEl.textContent = step;
@@ -165,19 +155,69 @@ export class LagoonScene {
     this.countdownEl.classList.remove('is-visible');
   }
 
+  /** Play all three rounds in order, then the finale. */
+  async _playRounds(token) {
+    for (let i = 0; i < this.config.rounds.length; i++) {
+      this._updateRoundDots(i);
+      const won = await this._playRound(this.config.rounds[i], token);
+      if (!won) return; // scene was exited mid-round
+
+      if (i < this.config.rounds.length - 1) {
+        const line = this.config.roundWinLines[i % this.config.roundWinLines.length];
+        this.dialogEl.classList.remove('dialog--hidden');
+        await typeText(this.dialogTextEl, line);
+        await wait(900);
+        this.dialogEl.classList.add('dialog--hidden');
+        await wait(500);
+      }
+    }
+
+    if (token !== this._runToken) return;
+    await this._playWinSequence();
+  }
+
+  _updateRoundDots(currentIndex) {
+    this.roundDotEls.forEach((dot, i) => {
+      dot.classList.toggle('is-done', i < currentIndex);
+      dot.classList.toggle('is-current', i === currentIndex);
+    });
+  }
+
   /**
-   * Stage 5 — scatter the clutter and the three hidden targets across the
-   * beach. Positions come from a loose grid with jitter (not a strict
-   * grid) so nothing lines up in neat rows, matching the brief's "natural,
-   * partly overlapping, slightly tilted" look.
+   * One round: show the panel cards for this round's targets (dimmed,
+   * un-found), scatter those targets plus decoy clutter across the beach,
+   * and wait for every target to be tapped. Resolves true once solved,
+   * false if the scene was exited early.
    */
-  _scatterField() {
+  _playRound(round, token) {
+    return new Promise((resolve) => {
+      this._pendingResolve = resolve;
+
+      const found = new Set();
+      this._renderPanelCards(round.targets);
+      this._scatterField(round, found, token, resolve);
+    });
+  }
+
+  /** The panel cards for the current round — dimmed until found. */
+  _renderPanelCards(targets) {
+    this.panelCardsEl.innerHTML = '';
+    targets.forEach((target, i) => {
+      const card = document.createElement('div');
+      card.className = 'lagoon-card';
+      card.dataset.targetId = target.id;
+      card.style.animationDelay = `${i * 0.1}s`;
+      card.innerHTML = `${icon(target.icon)}<span class="lagoon-card__name">${target.label}</span>`;
+      this.panelCardsEl.appendChild(card);
+    });
+  }
+
+  _scatterField(round, found, token, resolve) {
     this.fieldEl.innerHTML = '';
     this.fieldEl.style.pointerEvents = '';
-    this._renderTableSlots();
 
-    const targets = this.config.targets.map((t) => ({ ...t, isTarget: true }));
-    const decoys = Array.from({ length: this.config.clutterCount }, (_, i) => ({
+    const targets = round.targets.map((t) => ({ ...t, isTarget: true }));
+    const decoys = Array.from({ length: round.clutterCount }, (_, i) => ({
       icon: this.config.clutterTypes[i % this.config.clutterTypes.length],
       isTarget: false,
     }));
@@ -194,29 +234,21 @@ export class LagoonScene {
       el.innerHTML = icon(item.icon);
       el.setAttribute('aria-label', item.isTarget ? item.label : 'Дрібниця на пляжі');
 
-      el.addEventListener('click', () => this._handleTap(item, el));
+      el.addEventListener('click', () => {
+        if (token !== this._runToken) return;
+        this._handleTap(item, el, round, found, resolve);
+      });
       this.fieldEl.appendChild(el);
     });
+
+    this._startHintTimers(round, found, token);
   }
 
   /**
-   * A faint outline slot for each of the three targets, shown before any
-   * are found — so the player can see what they're looking for and watch
-   * their progress fill in, rather than the table starting completely
-   * empty with no hint of what "done" looks like.
+   * Loose scattered layout, jittered so items don't line up neatly — later
+   * rounds pack more items into the same beach area, which is exactly
+   * what makes them feel "busier" and harder to scan at a glance.
    */
-  _renderTableSlots() {
-    this.tableSlotsEl.innerHTML = '';
-    this.config.targets.forEach((target) => {
-      const slot = document.createElement('span');
-      slot.className = 'lagoon-table__slot';
-      slot.dataset.targetId = target.id;
-      slot.innerHTML = icon(target.icon);
-      this.tableSlotsEl.appendChild(slot);
-    });
-  }
-
-  /** Loose scattered grid, jittered so items don't line up neatly. */
   _generatePositions(count) {
     const cols = 6;
     const rows = Math.ceil(count / cols);
@@ -225,10 +257,10 @@ export class LagoonScene {
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         cells.push({
-          left: 20 + c * ((85 - 20) / (cols - 1)) + (Math.random() - 0.5) * 6,
-          top: 46 + r * ((90 - 46) / Math.max(rows - 1, 1)) + (Math.random() - 0.5) * 5,
+          left: 18 + c * ((88 - 18) / (cols - 1)) + (Math.random() - 0.5) * 6,
+          top: 44 + r * ((92 - 44) / Math.max(rows - 1, 1)) + (Math.random() - 0.5) * 5,
           rotation: (Math.random() - 0.5) * 40,
-          scale: 0.85 + Math.random() * 0.35,
+          scale: 0.8 + Math.random() * 0.35,
         });
       }
     }
@@ -240,9 +272,9 @@ export class LagoonScene {
     return [...arr].sort(() => Math.random() - 0.5);
   }
 
-  _handleTap(item, el) {
+  _handleTap(item, el, round, found, resolve) {
     if (item.isTarget) {
-      this._collectTarget(item, el);
+      this._collectTarget(item, el, round, found, resolve);
     } else {
       this.audio.tap();
       el.classList.remove('is-decoy-tapped');
@@ -251,77 +283,70 @@ export class LagoonScene {
     }
   }
 
-  /** A found piece flies from where it sits to the table, then is removed. */
-  _collectTarget(target, el) {
-    if (this._found.has(target.id)) return; // already collected
-    this._found.add(target.id);
+  /** A found item gets a quick pop, its panel card gets stamped "FOUND". */
+  _collectTarget(target, el, round, found, resolve) {
+    if (found.has(target.id)) return; // already collected
+    found.add(target.id);
     this.audio.win();
 
-    const itemRect = el.getBoundingClientRect();
-    const tableRect = this.tableSlotsEl.getBoundingClientRect();
-    const dx = (tableRect.left + tableRect.width / 2) - (itemRect.left + itemRect.width / 2);
-    const dy = (tableRect.top + tableRect.height / 2) - (itemRect.top + itemRect.height / 2);
-
-    el.style.setProperty('--target-x', `${dx}px`);
-    el.style.setProperty('--target-y', `${dy}px`);
     el.classList.add('is-collected');
+    setTimeout(() => el.remove(), 400);
 
-    setTimeout(() => {
-      const slot = this.tableSlotsEl.querySelector(`[data-target-id="${target.id}"]`);
-      slot?.classList.add('is-found');
-      el.remove();
-    }, 650);
+    const card = this.panelCardsEl.querySelector(`[data-target-id="${target.id}"]`);
+    card?.classList.add('is-found');
 
-    // Any hint currently showing is no longer needed — a piece was just found.
-    clearTimeout(this._hintTimer);
+    clearTimeout(this._talkHintTimer);
+    clearTimeout(this._shimmerHintTimer);
 
-    if (this._found.size === this.config.targets.length) {
+    if (found.size === round.targets.length) {
       this.fieldEl.style.pointerEvents = 'none';
-      this._playWinSequence();
+      this._pendingResolve = null;
+      resolve(true);
     } else {
-      this._startHintTimer();
+      this._startHintTimers(round, found, this._runToken);
     }
   }
 
-  /** If nothing's been found in a while, Mickey nudges toward one target. */
-  _startHintTimer() {
-    clearTimeout(this._hintTimer);
-    this._hintTimer = setTimeout(() => this._giveHint(), this.config.hintDelayMs);
+  /**
+   * Two-stage hint: a spoken nudge first, and — if the player is still
+   * stuck a good while later — one of the missing items starts to
+   * shimmer softly.
+   */
+  _startHintTimers(round, found, token) {
+    clearTimeout(this._talkHintTimer);
+    clearTimeout(this._shimmerHintTimer);
+
+    this._talkHintTimer = setTimeout(async () => {
+      if (token !== this._runToken || found.size === round.targets.length) return;
+      const line = this.config.hintLines[Math.floor(Math.random() * this.config.hintLines.length)];
+      this.dialogEl.classList.remove('dialog--hidden');
+      await typeText(this.dialogTextEl, line);
+      setTimeout(() => this.dialogEl.classList.add('dialog--hidden'), 2400);
+    }, this.config.hintTalkDelayMs);
+
+    this._shimmerHintTimer = setTimeout(() => {
+      if (token !== this._runToken || found.size === round.targets.length) return;
+      const remaining = round.targets.filter((t) => !found.has(t.id));
+      if (remaining.length === 0) return;
+
+      const pick = remaining[Math.floor(Math.random() * remaining.length)];
+      const targetEl = Array.from(this.fieldEl.children).find(
+        (el) => el.getAttribute('aria-label') === pick.label
+      );
+      targetEl?.classList.add('is-hinting');
+      setTimeout(() => targetEl?.classList.remove('is-hinting'), 4000);
+    }, this.config.hintShimmerDelayMs);
   }
 
-  async _giveHint() {
-    const remaining = this.config.targets.filter((t) => !this._found.has(t.id));
-    if (remaining.length === 0) return;
-
-    const line = this.config.hintLines[Math.floor(Math.random() * this.config.hintLines.length)];
-    this.dialogEl.classList.remove('dialog--hidden');
-    await typeText(this.dialogTextEl, line);
-
-    // Softly point at one still-hidden target rather than all of them.
-    const targetId = remaining[Math.floor(Math.random() * remaining.length)].id;
-    const targetEl = Array.from(this.fieldEl.children).find(
-      (el) => el.getAttribute('aria-label') === remaining.find((t) => t.id === targetId)?.label
-    );
-    targetEl?.classList.add('is-hinting');
-
-    setTimeout(() => {
-      this.dialogEl.classList.add('dialog--hidden');
-      targetEl?.classList.remove('is-hinting');
-    }, 4000);
-
-    this._startHintTimer();
-  }
-
-  /** All three pieces found: the compass assembles, and we head to the reward. */
+  /** All three rounds solved: the panel closes, Mickey celebrates. */
   async _playWinSequence() {
     this._isFinishing = true;
     this.backBtn.classList.add('is-disabled');
-    await wait(500);
+    this._updateRoundDots(this.config.rounds.length);
+    await wait(600);
 
-    this.compassFinalEl.innerHTML = icon('compassBody');
-    this.compassRayEl.classList.add('is-visible');
-    this.compassFinalEl.classList.add('is-visible');
     this.audio.chest();
+    this.camera.focus({ scale: 1.08, x: '0%', y: '-2%' }); // a small pull-back, not a push-in
 
     this.dialogEl.classList.remove('dialog--hidden');
     await typeText(this.dialogTextEl, this.config.winLine);
