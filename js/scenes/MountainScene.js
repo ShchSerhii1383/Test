@@ -35,6 +35,7 @@ export class MountainScene {
     this.config = ADVENTURE_CONFIG.mountain;
 
     this.camera = new Camera(sceneEl);
+    this.inputGuardEl = sceneEl.querySelector('#mountain-input-guard');
     this.dialogEl = sceneEl.querySelector('#mountain-dialog');
     this.dialogTextEl = sceneEl.querySelector('#mountain-dialog-text');
     this.rulesEl = sceneEl.querySelector('#mountain-rules');
@@ -113,6 +114,7 @@ export class MountainScene {
     if (token !== this._runToken) return;
 
     this.state = 'PLAY';
+    this._setInputBlocked(false); // the game itself is the only tappable thing now
     await this._playRounds(token);
   }
 
@@ -122,10 +124,15 @@ export class MountainScene {
     clearTimeout(this._hintTimer);
     this._pendingResolve?.(false);
     this._pendingResolve = null;
+    // See LagoonScene.exit() for why this matters: left active, this
+    // guard's pointer-events:auto would silently swallow every tap
+    // anywhere else in the game, including on the island, forever.
+    this._setInputBlocked(false);
   }
 
   _resetState() {
     this.state = 'INTRO';
+    this._setInputBlocked(true); // stays blocked through reveal/story/rules/countdown
     this.gridEl.innerHTML = '';
     this.dialogEl.classList.add('dialog--hidden');
     this.rulesEl.classList.remove('is-visible');
@@ -133,6 +140,15 @@ export class MountainScene {
     this.lightWaveEl.classList.remove('is-visible');
     this.roundDotEls.forEach((dot) => dot.classList.remove('is-done', 'is-current'));
     this.camera.reset();
+  }
+
+  /** The one mechanism that guarantees nothing can be tapped while the
+   *  player is just watching (story, rules, countdown, win-sequence) —
+   *  a transparent full-scene layer that blocks every tap while active,
+   *  rather than relying on each individual element being correctly
+   *  disabled on its own. */
+  _setInputBlocked(blocked) {
+    this.inputGuardEl.classList.toggle('is-active', blocked);
   }
 
   async _stageReveal() {
@@ -392,6 +408,7 @@ export class MountainScene {
   async _playWinSequence() {
     console.log('[Mountain] _playWinSequence: started');
     this.state = 'WIN';
+    this._setInputBlocked(true); // nothing should be tappable during the celebration either
     this._updateRoundDots(this.config.rounds.length);
     await wait(400);
     console.log('[Mountain] _playWinSequence: initial wait done');
@@ -403,9 +420,12 @@ export class MountainScene {
     this.dialogEl.classList.remove('dialog--hidden');
     await typeText(this.dialogTextEl, this.config.winLine);
     await wait(1400);
+    console.log('1. Win animation finished');
     console.log('[Mountain] _playWinSequence: win line shown, calling _exit(REWARD)');
 
+    console.log('2. Calling _exit(REWARD)');
     await this._exit(SCENES.REWARD, { adventureId: 'mountain' });
+    console.log('3. _exit returned');
     console.log('[Mountain] _playWinSequence: _exit(REWARD) returned normally');
   }
 }

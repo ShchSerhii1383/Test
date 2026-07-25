@@ -44,6 +44,7 @@ export class BazaarScene {
     this.config = ADVENTURE_CONFIG.bazaar;
 
     this.camera = new Camera(sceneEl);
+    this.inputGuardEl = sceneEl.querySelector('#bazaar-input-guard');
     this.dialogEl = sceneEl.querySelector('#bazaar-dialog');
     this.dialogTextEl = sceneEl.querySelector('#bazaar-dialog-text');
     this.rulesEl = sceneEl.querySelector('#bazaar-rules');
@@ -120,6 +121,7 @@ export class BazaarScene {
     if (token !== this._runToken) return;
 
     this.state = 'PLAY';
+    this._setInputBlocked(false); // the game itself is the only tappable thing now
     this.questions.start(5);
     await this._playQuestions(token);
   }
@@ -128,10 +130,15 @@ export class BazaarScene {
     this._runToken += 1;
     this._pendingResolve?.(false);
     this._pendingResolve = null;
+    // See LagoonScene.exit() for why this matters: left active, this
+    // guard's pointer-events:auto would silently swallow every tap
+    // anywhere else in the game, including on the island, forever.
+    this._setInputBlocked(false);
   }
 
   _resetState() {
     this.state = 'INTRO';
+    this._setInputBlocked(true); // stays blocked through reveal/story/rules/countdown
     this.cardsEl.innerHTML = '';
     this.stamp.reset();
     this.dialogEl.classList.add('dialog--hidden');
@@ -141,6 +148,15 @@ export class BazaarScene {
     this.bookEl.style.opacity = '';
     this.bookEl.style.transform = '';
     this.camera.reset();
+  }
+
+  /** The one mechanism that guarantees nothing can be tapped while the
+   *  player is just watching (story, rules, countdown, win-sequence) —
+   *  a transparent full-scene layer that blocks every tap while active,
+   *  rather than relying on each individual element being correctly
+   *  disabled on its own. */
+  _setInputBlocked(blocked) {
+    this.inputGuardEl.classList.toggle('is-active', blocked);
   }
 
   async _stageReveal() {
@@ -267,6 +283,7 @@ export class BazaarScene {
   async _playWinSequence() {
     console.log('[Bazaar] _playWinSequence: started');
     this.state = 'WIN';
+    this._setInputBlocked(true); // nothing should be tappable during the celebration either
     await wait(400);
 
     this.bookEl.style.transition = 'opacity 0.6s ease, transform 0.6s ease';

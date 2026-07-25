@@ -2095,3 +2095,19 @@
 .bzr-dust--1 { top: 40%; left: 30%; animation: bzr-dust-float 6s ease-in-out infinite; }
 .bzr-dust--2 { top: 55%; left: 60%; animation: bzr-dust-float 7.5s ease-in-out infinite 1.5s; }
 .bzr-dust--3 { top: 35%; left: 70%; animation: bzr-dust-float 5.5s ease-in-out infinite 3s; }
+
+/* ---- Adventure input guard: a transparent full-scene layer that blocks
+   every tap while active. One robust mechanism instead of relying on
+   every individual element being correctly disabled — used during the
+   story, rules demo, countdown, and win-sequence in every adventure, so
+   nothing on screen can be triggered while the player is just watching. ---- */
+.adventure-input-guard {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.adventure-input-guard.is-active {
+  pointer-events: auto;
+}

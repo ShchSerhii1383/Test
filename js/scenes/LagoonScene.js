@@ -31,6 +31,7 @@ export class LagoonScene {
     this.config = ADVENTURE_CONFIG.lagoon;
 
     this.camera = new Camera(sceneEl);
+    this.inputGuardEl = sceneEl.querySelector('#lagoon-input-guard');
     this.dialogEl = sceneEl.querySelector('#lagoon-dialog');
     this.dialogTextEl = sceneEl.querySelector('#lagoon-dialog-text');
     this.rulesEl = sceneEl.querySelector('#lagoon-rules');
@@ -103,6 +104,7 @@ export class LagoonScene {
     if (token !== this._runToken) return;
 
     this.state = 'PLAY';
+    this._setInputBlocked(false); // the game itself is the only tappable thing now
     this.panelEl.classList.add('is-visible');
     await this._playRounds(token);
   }
@@ -113,10 +115,19 @@ export class LagoonScene {
     clearTimeout(this._shimmerHintTimer);
     this._pendingResolve?.(false);
     this._pendingResolve = null;
+    // The win-sequence leaves the input guard active (nothing should be
+    // tappable during the celebration) — but if we never come back to
+    // THIS scene again (the normal case, once an adventure is finished),
+    // nothing else would ever clear it. Its pointer-events:auto would
+    // then sit invisibly over the whole screen forever, silently
+    // swallowing every tap anywhere else in the game, including on the
+    // island. Always clear it the moment the scene is actually left.
+    this._setInputBlocked(false);
   }
 
   _resetState() {
     this.state = 'INTRO';
+    this._setInputBlocked(true); // stays blocked through reveal/story/rules/countdown
     this.fieldEl.innerHTML = '';
     this.panelCardsEl.innerHTML = '';
     this.panelEl.classList.remove('is-visible');
@@ -125,6 +136,15 @@ export class LagoonScene {
     this.countdownEl.classList.remove('is-visible');
     this.roundDotEls.forEach((dot) => dot.classList.remove('is-done', 'is-current'));
     this.camera.reset();
+  }
+
+  /** The one mechanism that guarantees nothing can be tapped while the
+   *  player is just watching (story, rules, countdown, win-sequence) —
+   *  a transparent full-scene layer that blocks every tap while active,
+   *  rather than relying on each individual element being correctly
+   *  disabled on its own. */
+  _setInputBlocked(blocked) {
+    this.inputGuardEl.classList.toggle('is-active', blocked);
   }
 
   async _stageReveal() {
@@ -376,6 +396,7 @@ export class LagoonScene {
   async _playWinSequence() {
     console.log('[Lagoon] _playWinSequence: started');
     this.state = 'WIN';
+    this._setInputBlocked(true); // nothing should be tappable during the celebration either
     this._updateRoundDots(this.config.rounds.length);
     this.panelEl.classList.remove('is-visible');
     await wait(600);
@@ -387,9 +408,12 @@ export class LagoonScene {
     this.dialogEl.classList.remove('dialog--hidden');
     await typeText(this.dialogTextEl, this.config.winLine);
     await wait(1400);
+    console.log('1. Win animation finished');
     console.log('[Lagoon] _playWinSequence: win line shown, calling _exit(REWARD)');
 
+    console.log('2. Calling _exit(REWARD)');
     await this._exit(SCENES.REWARD, { adventureId: 'lagoon' });
+    console.log('3. _exit returned');
     console.log('[Lagoon] _playWinSequence: _exit(REWARD) returned normally');
   }
 }

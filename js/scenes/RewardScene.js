@@ -98,6 +98,7 @@ export class RewardScene {
   }
 
   async _enterInner(data = {}) {
+    console.log('4. enter()');
     console.log('[Reward] _enterInner: started', data);
     this._resetState();
     this._adventureId = data.adventureId ?? null;
@@ -111,6 +112,7 @@ export class RewardScene {
 
     this._resetVisualState();
     await this._runCountdown();
+    console.log('5. countdown finished');
     console.log('[Reward] countdown done');
     if (token !== this._runToken) return; // a newer visit started meanwhile
 
@@ -164,6 +166,7 @@ export class RewardScene {
     if (this._isBusy) return; // ignore double-taps
     this._isBusy = true;
     const token = this._runToken;
+    console.log('6. chest opened');
     console.log('[Reward] _openChest: tapped, starting open sequence');
 
     try {
@@ -181,10 +184,12 @@ export class RewardScene {
       await wait(400);
       if (token !== this._runToken) { console.log('[Reward] _openChest: stale token after chest-gone delay, aborting'); return; }
 
+      console.log('7. cards rendered');
       console.log('[Reward] _openChest: about to render cards');
       this._renderCards();
       this.cardsEl.classList.add('is-visible');
       this.state = 'CARDS';
+      console.log('8. cards visible');
       console.log('[Reward] _openChest: cards rendered and visible —', this.cardsEl.children.length, 'cards');
     } catch (err) {
       // This used to be a bare try/finally with no catch — an exception
