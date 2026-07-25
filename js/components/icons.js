@@ -147,6 +147,18 @@ const ICONS = {
     <rect x="6" y="12" width="6" height="24" rx="3" fill="#B8894F"/>
     <rect x="36" y="12" width="6" height="24" rx="3" fill="#B8894F"/>
     <path d="M15 20h18M15 26h14" stroke="#8A5A3B" stroke-width="1.3" opacity="0.6"/>`,
+
+  /* ---- Bazaar: riddle-answer icons not already covered above ---- */
+
+  palmIcon: `<path d="M22 44V22" stroke="#8A5A3B" stroke-width="4" stroke-linecap="round"/>
+    <path d="M22 22Q10 16 4 22M22 22Q12 10 8 4M22 22Q34 16 40 22M22 22Q32 10 36 4M22 22Q22 8 18 2"
+      fill="none" stroke="#3A8067" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="17" cy="26" r="3" fill="#6B4429"/><circle cx="25" cy="28" r="3" fill="#8A5A3B"/>`,
+
+  anchorIcon: `<circle cx="24" cy="10" r="5" fill="none" stroke="#9B9184" stroke-width="3"/>
+    <line x1="24" y1="14" x2="24" y2="38" stroke="#9B9184" stroke-width="4" stroke-linecap="round"/>
+    <path d="M8 26q16 14 32 0" fill="none" stroke="#9B9184" stroke-width="4" stroke-linecap="round"/>
+    <line x1="8" y1="18" x2="40" y2="18" stroke="#9B9184" stroke-width="3" stroke-linecap="round"/>`,
 };
 
 /**

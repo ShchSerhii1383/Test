@@ -13,6 +13,14 @@ export class SceneManager {
     /** @type {Map<string, {el: HTMLElement, instance: object}>} */
     this.scenes = new Map();
     this.currentSceneName = null;
+
+    // Bumped on every goTo() call. If a second goTo() fires while the
+    // first is still mid-transition (e.g. a double-tap that survived
+    // whatever guard the calling scene had), the first call notices its
+    // token is stale after its next await and quietly stops — instead of
+    // its exit()/enter() interleaving with the second call's and leaving
+    // currentSceneName pointing at the wrong thing.
+    this._runToken = 0;
   }
 
   /**
@@ -38,6 +46,7 @@ export class SceneManager {
       return;
     }
 
+    const token = ++this._runToken;
     const current = this.currentSceneName
       ? this.scenes.get(this.currentSceneName)
       : null;
@@ -46,9 +55,11 @@ export class SceneManager {
       if (typeof current.instance.exit === 'function') {
         await current.instance.exit();
       }
+      if (token !== this._runToken) return; // a newer goTo() took over while we were exiting
       current.el.classList.remove('is-active');
     }
 
+    if (token !== this._runToken) return;
     next.el.classList.add('is-active');
     this.currentSceneName = name;
 

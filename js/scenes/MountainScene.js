@@ -54,6 +54,14 @@ export class MountainScene {
   }
 
   async enter() {
+    try {
+      await this._enterInner();
+    } catch (err) {
+      console.error('MountainScene.enter() failed partway through:', err);
+    }
+  }
+
+  async _enterInner() {
     const token = ++this._runToken;
     this._resetState();
 
@@ -71,6 +79,7 @@ export class MountainScene {
 
     await this._playRounds(token);
   }
+
 
   async exit() {
     this._runToken += 1;
@@ -172,6 +181,7 @@ export class MountainScene {
   _playRound(round, token) {
     return new Promise((resolve) => {
       this.gridEl.innerHTML = '';
+      this._setGridEnabled(true);
       const totalCells = round.grid * round.grid;
       const correctSet = new Set(round.pattern ?? this._pickRandomCells(totalCells, round.revealCount));
       const found = new Set();
@@ -187,6 +197,7 @@ export class MountainScene {
           clearTimeout(this._hintTimer);
 
           if (found.size === correctSet.size) {
+            this._setGridEnabled(false); // no more taps can land while we transition to the next round
             resolve(true);
           } else {
             this._startHintTimer(correctSet, found, cellEls, token);
@@ -205,6 +216,13 @@ export class MountainScene {
         this._startHintTimer(correctSet, found, cellEls, token);
       });
     });
+  }
+
+  /** Blocks every crystal in the current grid from receiving taps — used
+   *  the instant a round is won, so a stray fast tap during the
+   *  round-transition dialog can't do anything. */
+  _setGridEnabled(enabled) {
+    this.gridEl.style.pointerEvents = enabled ? '' : 'none';
   }
 
   _pickRandomCells(totalCells, count) {

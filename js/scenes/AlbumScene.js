@@ -33,10 +33,19 @@ export class AlbumScene {
   }
 
   async enter() {
+    try {
+      await this._enterInner();
+    } catch (err) {
+      console.error('AlbumScene.enter() failed partway through:', err);
+    }
+  }
+
+  async _enterInner() {
     this.introEl.textContent = ALBUM_INTRO;
     this._renderGifts();
     this._renderBonus();
   }
+
 
   _renderGifts() {
     this.gridEl.innerHTML = '';

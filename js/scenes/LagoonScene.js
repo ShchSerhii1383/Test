@@ -58,6 +58,14 @@ export class LagoonScene {
   }
 
   async enter() {
+    try {
+      await this._enterInner();
+    } catch (err) {
+      console.error('LagoonScene.enter() failed partway through:', err);
+    }
+  }
+
+  async _enterInner() {
     const token = ++this._runToken;
     this._resetState();
 
@@ -76,6 +84,7 @@ export class LagoonScene {
     this._scatterField();
     this._startHintTimer();
   }
+
 
   async exit() {
     this._runToken += 1;
@@ -154,6 +163,7 @@ export class LagoonScene {
    */
   _scatterField() {
     this.fieldEl.innerHTML = '';
+    this.fieldEl.style.pointerEvents = '';
 
     const targets = this.config.targets.map((t) => ({ ...t, isTarget: true }));
     const decoys = Array.from({ length: this.config.clutterCount }, (_, i) => ({
@@ -241,6 +251,7 @@ export class LagoonScene {
     clearTimeout(this._hintTimer);
 
     if (this._found.size === this.config.targets.length) {
+      this.fieldEl.style.pointerEvents = 'none';
       this._playWinSequence();
     } else {
       this._startHintTimer();

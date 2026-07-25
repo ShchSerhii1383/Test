@@ -72,10 +72,28 @@ export class IslandScene {
 
     this._hasGreeted = false;
     this._justReturnedFrom = null;
+
+    // Which boxes have actually appeared this session. A box being
+    // "unlockable" per save data and a box having played its materialize
+    // cinematic are different things — the second and third box must stay
+    // completely invisible (not even dimmed/locked-looking) until the
+    // moment they're meant to dramatically appear.
+    this._materializedBoxes = new Set();
   }
 
   /** Called by SceneManager right before this scene becomes visible. */
   async enter(data = {}) {
+    try {
+      await this._enterInner(data);
+    } catch (err) {
+      // A bug in one stage should never leave the whole island stuck and
+      // silent — log it, and make sure the player can still do something.
+      console.error('IslandScene.enter() failed partway through:', err);
+      this._startWandering();
+    }
+  }
+
+  async _enterInner(data) {
     this._syncBoxesWithSave();
 
     if (data.fromIntro) {
@@ -94,6 +112,8 @@ export class IslandScene {
       this.mickey.say('Молодці!', 1800);
       setTimeout(() => this.mickey.play(MICKEY_STATES.IDLE), 1200);
       this._startWandering();
+
+      await this._revealNextBoxIfAny(data.returningFrom);
       return;
     }
 
@@ -123,23 +143,33 @@ export class IslandScene {
    * player's to explore. Everything the intro suppressed starts here.
    */
   beginLife() {
+    // The intro already grew Lagoon's box out of the sand itself — this
+    // just tells IslandScene it doesn't need to do that again.
+    this._materializedBoxes.add('lagoon');
     this._startWandering();
   }
 
-  /** Reflect completed adventures from SaveManager onto the box visuals. */
+  /**
+   * Reflect completed adventures onto the box visuals. Crucially, this
+   * does NOT reveal or enable a box just because its prerequisite is
+   * done — that would make box 2 or 3 pop into existence the instant
+   * _syncBoxesWithSave() runs, before the camera has even traveled there.
+   * A not-yet-materialized box is left completely alone: invisible,
+   * locked, no shadow, nothing — exactly as if it doesn't exist yet.
+   */
   _syncBoxesWithSave() {
     this.boxes.forEach((box) => {
       if (this.saveManager.isCompleted(box.adventureId)) {
         box.markCompleted();
+        this._materializedBoxes.add(box.adventureId);
         return;
       }
 
-      const orderIndex = ADVENTURE_ORDER.indexOf(box.adventureId);
-      const previousId = ADVENTURE_ORDER[orderIndex - 1];
-      const isFirst = orderIndex === 0;
-      const previousDone = !previousId || this.saveManager.isCompleted(previousId);
-
-      if ((isFirst || previousDone) && box.isLocked) {
+      // If this box already played its materialize cinematic earlier this
+      // session (including the very first one, added in beginLife()),
+      // keep it visible/enabled on every later visit — this just re-applies
+      // that state, it never triggers the reveal itself.
+      if (this._materializedBoxes.has(box.adventureId) && box.isLocked) {
         box.enable();
       }
     });
@@ -151,6 +181,47 @@ export class IslandScene {
       // Small delay so it doesn't pop in the instant the box marks complete.
       requestAnimationFrame(() => this.lighthouseEl.classList.add('is-visible'));
     }
+  }
+
+  /**
+   * The materialize choreography: camera travels to the next adventure's
+   * spot, and only once it arrives does that box appear — light, sound,
+   * a bounce out of the sand, a few sparkles. Does nothing if every
+   * adventure is already unlocked, or if this box already appeared.
+   */
+  async _revealNextBoxIfAny(justCompletedId) {
+    const index = ADVENTURE_ORDER.indexOf(justCompletedId);
+    const nextId = ADVENTURE_ORDER[index + 1];
+    if (!nextId || this._materializedBoxes.has(nextId)) return;
+
+    const nextBox = this.boxes.find((b) => b.adventureId === nextId);
+    if (!nextBox) return;
+
+    // Let the "Молодці!" moment land before the camera starts moving.
+    await this._wait(1400);
+
+    const spot = this._percentOf(nextBox.el, this.sceneEl);
+    this.camera.focus({
+      scale: 1.3,
+      x: `${(50 - spot.left) * 0.4}%`,
+      y: `${(50 - spot.top) * 0.25}%`,
+    });
+    await this._wait(1500);
+
+    this._materializedBoxes.add(nextId);
+    nextBox.enable();
+    await this._materializeBox(nextBox.el);
+
+    await this._wait(500);
+    this.camera.reset();
+  }
+
+  /** The actual "appearing out of thin air" moment: glow, sound, grow, sparkle. */
+  async _materializeBox(boxEl) {
+    this.audio.chest(); // the same warm, magical chime used for opening gifts
+    boxEl.classList.add('is-revealing', 'is-materializing');
+    await this._wait(900);
+    boxEl.classList.remove('is-materializing');
   }
 
   /**

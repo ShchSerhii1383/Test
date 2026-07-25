@@ -75,35 +75,61 @@ export const ADVENTURE_CONFIG = {
     ],
   },
   bazaar: {
-    title: 'Базар див',
+    title: 'Книга загадок',
 
     story: [
-      'Цей торговець дуже любить загадки.',
-      'Якщо впораємося з його випробуваннями — віддасть останній ключ.',
+      'Дивись, що я знайшов — стародавню книгу загадок!',
+      'Кажуть, той, хто розгадає всі п\'ять, отримає останній ключ.',
     ],
 
-    rulesLine: 'Запам\'ятай, що засвітилося на прилавку — і знайди ті самі речі.',
+    rulesLine: 'Обери правильну відповідь на кожній сторінці.',
+    missLine: 'Не та відповідь — спробуй ще раз.',
+    pageWinLines: ['Правильно!', 'Так, саме так!', 'Сторінка гортається...', 'Ще одна розгадана!'],
+    winLine: 'Останній ключ у нас!',
 
-    hintLine: 'Продавець підморгує — одна річ досі чекає.',
-    hintDelayMs: 11000,
-    missLine: 'Не той товар — придивись ще раз.',
-    roundWinLines: ['Продавець посміхається!', 'Уважно!', 'Ще трохи...', 'Майже все розпізнали!'],
-    winLine: 'Ключ у нас!',
-
-    // All the goods that can appear on the counter — memorized targets and
-    // decoys are drawn from the same pool, so nothing LOOKS more "special".
-    goods: ['banana', 'coconut', 'compassBody', 'miniMap', 'fishItem', 'pineapple', 'shell', 'emerald', 'lanternItem', 'scroll'],
-
-    // Five rounds: more items each time. Round 4 reshuffles positions right
-    // after the memorize flash (same items, new spots — tests whether you
-    // remembered the goods, not just where they sat). Round 5 adds a
-    // gentle time hint via a visible little dial, no penalty if it runs out.
-    rounds: [
-      { itemCount: 10, targetCount: 3 },
-      { itemCount: 12, targetCount: 4 },
-      { itemCount: 14, targetCount: 5 },
-      { itemCount: 14, targetCount: 5, reshuffleAfterMemorize: true },
-      { itemCount: 16, targetCount: 5, reshuffleAfterMemorize: true, timedHint: true },
+    // Five riddles, easiest first. Each has exactly one correct option;
+    // order of the three options is shuffled at render time.
+    riddles: [
+      {
+        question: 'Я завжди показую шлях, але сам нікуди не йду. Що я?',
+        options: [
+          { icon: 'compassBody', label: 'Компас', correct: true },
+          { icon: 'coconut', label: 'Кокос' },
+          { icon: 'fishItem', label: 'Риба' },
+        ],
+      },
+      {
+        question: 'Мене можна знайти на пляжі, але я не камінь. Хто я?',
+        options: [
+          { icon: 'shell', label: 'Мушля', correct: true },
+          { icon: 'palmIcon', label: 'Пальма' },
+          { icon: 'anchorIcon', label: 'Якір' },
+        ],
+      },
+      {
+        question: 'Я росту високо, даю тінь і кокоси, але не вмію ходити. Що я?',
+        options: [
+          { icon: 'lanternItem', label: 'Ліхтар' },
+          { icon: 'palmIcon', label: 'Пальма', correct: true },
+          { icon: 'scroll', label: 'Сувій' },
+        ],
+      },
+      {
+        question: 'Я тримаюсь на дні моря, щоб корабель не поплив геть. Хто я?',
+        options: [
+          { icon: 'anchorIcon', label: 'Якір', correct: true },
+          { icon: 'emerald', label: 'Смарагд' },
+          { icon: 'banana', label: 'Банан' },
+        ],
+      },
+      {
+        question: 'Я світлю вночі, а вдень мовчу і чекаю темряви. Що я?',
+        options: [
+          { icon: 'scroll', label: 'Сувій' },
+          { icon: 'banana', label: 'Банан' },
+          { icon: 'lanternItem', label: 'Ліхтар', correct: true },
+        ],
+      },
     ],
   },
 };

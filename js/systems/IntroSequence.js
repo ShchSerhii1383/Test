@@ -245,10 +245,11 @@ export class IntroSequence {
   }
 
   /**
-   * Stage 7 — the tour. The camera visits each adventure's spot in turn,
-   * and that spot's box grows out of the sand right as the camera arrives
-   * there — not all three at once, and not held back until the tour is
-   * over. Camera and box are the same beat, one location at a time.
+   * Stage 7 — the tour. The camera visits each adventure's spot, but only
+   * Lagoon's box actually appears here — Mountain's and Bazaar's stay
+   * completely invisible (not even a shadow) until the player has earned
+   * them; IslandScene handles materializing those later, the same way,
+   * once each preceding adventure is finished.
    */
   async _stageTour() {
     this.mickey.play(MICKEY_STATES.POINT);
@@ -256,20 +257,16 @@ export class IntroSequence {
 
     this.camera.focus({ scale: 1.35, x: '16%', y: '-4%' }); // lagoon side
     await wait(700); // let the camera actually get there first
-    this._revealBox('lagoon');
-    await wait(1300);
+    await this._materializeBox('lagoon');
+    await wait(900);
 
     this.camera.focus({ scale: 1.35, x: '0%', y: '-8%' }); // the mountain path
-    await wait(700);
-    this._revealBox('mountain');
     await wait(1300);
 
     this.camera.focus({ scale: 1.35, x: '-16%', y: '-4%' }); // bazaar side
-    await wait(700);
-    this._revealBox('bazaar');
     await wait(1300);
 
-    this.camera.reset(); // back to the clearing — every box already grown in
+    this.camera.reset(); // back to the clearing
     await wait(600);
 
     this.mickey.play(MICKEY_STATES.HAPPY);
@@ -278,9 +275,19 @@ export class IntroSequence {
     this.mickey.play(MICKEY_STATES.IDLE);
   }
 
-  /** Grow one specific box out of the sand. Stays revealed permanently. */
-  _revealBox(adventureId) {
-    this.boxEls[adventureId]?.classList.add('is-revealing');
+  /**
+   * The box appears out of the sand with a beat of ceremony: a magic
+   * chime, a glow, the grow-and-bounce, then a few sparkles settling.
+   * Stays revealed permanently once played.
+   */
+  async _materializeBox(adventureId) {
+    const boxEl = this.boxEls[adventureId];
+    if (!boxEl) return;
+
+    this.audio.chest();
+    boxEl.classList.add('is-revealing', 'is-materializing');
+    await wait(900);
+    boxEl.classList.remove('is-materializing');
   }
 
   /** Hand the island over: overlay out of the way, Mickey back to normal. */

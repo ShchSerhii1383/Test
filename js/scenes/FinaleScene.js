@@ -24,6 +24,14 @@ export class FinaleScene {
   }
 
   async enter() {
+    try {
+      await this._enterInner();
+    } catch (err) {
+      console.error('FinaleScene.enter() failed partway through:', err);
+    }
+  }
+
+  async _enterInner() {
     this.titleEl.textContent = FINALE_WISH.title;
     this.messageEl.textContent = FINALE_WISH.message;
 
@@ -39,4 +47,5 @@ export class FinaleScene {
     await wait(700);
     this.confetti.burst(50, 0.4);
   }
+
 }

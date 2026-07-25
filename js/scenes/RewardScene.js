@@ -63,6 +63,14 @@ export class RewardScene {
 
   /** @param {{adventureId: string}} data */
   async enter(data = {}) {
+    try {
+      await this._enterInner(data);
+    } catch (err) {
+      console.error('RewardScene.enter() failed partway through:', err);
+    }
+  }
+
+  async _enterInner(data = {}) {
     this._adventureId = data.adventureId ?? null;
     this._isBusy = false;
     const token = ++this._runToken;
@@ -78,6 +86,7 @@ export class RewardScene {
     this.boxEl.classList.add('is-visible');
     this.mickey.hush();
   }
+
 
   /** Leave nothing behind: the next adventure gets a clean scene. */
   async exit() {
