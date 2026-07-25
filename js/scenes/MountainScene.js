@@ -47,8 +47,17 @@ export class MountainScene {
     this.lightWaveEl = sceneEl.querySelector('#mountain-light-wave');
     // No "back to island" escape hatch on purpose — once an adventure
     // starts, the only way out is finishing it.
+    //
+    // State machine: INTRO -> RULES -> PLAY -> WIN -> EXIT. Only the
+    // EXIT state may ever call sceneManager.goTo() — see _exit() below.
+    // This scene used to have goTo() called from two independent places
+    // (the win-sequence, and the enter() catch fallback), which is
+    // exactly the kind of "more than one way out" that let a crystal tap
+    // occasionally end the scene early: the two paths didn't know about
+    // each other. Now there's one gateway, and everything else just sets
+    // state and lets the gateway decide.
     this._runToken = 0;
-    this._isFinishing = false;
+    this.state = 'INTRO';
     this._hintTimer = null;
     this._pendingResolve = null;
   }
@@ -59,20 +68,36 @@ export class MountainScene {
     } catch (err) {
       // Never leave the player stranded on a broken scene: if the error
       // hit after they'd already won, still try to get them their reward;
-      // otherwise just send them back to the island.
+      // otherwise just send them back to the island. Either way this
+      // goes through the same single _exit() gateway as the normal path.
       console.error('[Mountain] enter() FALLBACK TRIGGERED — _enterInner() threw:', err);
-      console.log('[Mountain] fallback: _isFinishing =', this._isFinishing, '-> going to', this._isFinishing ? 'REWARD' : 'ISLAND');
-      if (this._isFinishing) {
-        await this.sceneManager.goTo(SCENES.REWARD, { adventureId: 'mountain' });
+      console.log('[Mountain] fallback: state =', this.state, '-> going to', this.state === 'WIN' ? 'REWARD' : 'ISLAND');
+      if (this.state === 'WIN') {
+        await this._exit(SCENES.REWARD, { adventureId: 'mountain' });
       } else {
-        await this.sceneManager.goTo(SCENES.ISLAND);
+        await this._exit(SCENES.ISLAND);
       }
     }
+  }
+
+  /**
+   * The ONLY place in this scene allowed to call sceneManager.goTo().
+   * Every other method that wants to leave the scene sets `this.state`
+   * and calls this — never goTo() directly. The state===EXIT guard means
+   * even if something calls this twice (e.g. a genuine error right after
+   * a legitimate finish), the second call is a harmless no-op instead of
+   * a second competing transition.
+   */
+  async _exit(targetScene, data) {
+    if (this.state === 'EXIT') return;
+    this.state = 'EXIT';
+    await this.sceneManager.goTo(targetScene, data);
   }
 
   async _enterInner() {
     const token = ++this._runToken;
     this._resetState();
+    this.state = 'INTRO';
 
     await this._stageReveal();
     if (token !== this._runToken) return;
@@ -80,12 +105,14 @@ export class MountainScene {
     await this._stageStory();
     if (token !== this._runToken) return;
 
+    this.state = 'RULES';
     await this._stageRulesDemo();
     if (token !== this._runToken) return;
 
     await this._runCountdown();
     if (token !== this._runToken) return;
 
+    this.state = 'PLAY';
     await this._playRounds(token);
   }
 
@@ -98,7 +125,7 @@ export class MountainScene {
   }
 
   _resetState() {
-    this._isFinishing = false;
+    this.state = 'INTRO';
     this.gridEl.innerHTML = '';
     this.dialogEl.classList.add('dialog--hidden');
     this.rulesEl.classList.remove('is-visible');
@@ -364,7 +391,7 @@ export class MountainScene {
   /** All three rounds solved: the mountain wakes up. */
   async _playWinSequence() {
     console.log('[Mountain] _playWinSequence: started');
-    this._isFinishing = true;
+    this.state = 'WIN';
     this._updateRoundDots(this.config.rounds.length);
     await wait(400);
     console.log('[Mountain] _playWinSequence: initial wait done');
@@ -376,9 +403,9 @@ export class MountainScene {
     this.dialogEl.classList.remove('dialog--hidden');
     await typeText(this.dialogTextEl, this.config.winLine);
     await wait(1400);
-    console.log('[Mountain] _playWinSequence: win line shown, calling goTo(REWARD)');
+    console.log('[Mountain] _playWinSequence: win line shown, calling _exit(REWARD)');
 
-    await this.sceneManager.goTo(SCENES.REWARD, { adventureId: 'mountain' });
-    console.log('[Mountain] _playWinSequence: goTo(REWARD) returned normally');
+    await this._exit(SCENES.REWARD, { adventureId: 'mountain' });
+    console.log('[Mountain] _playWinSequence: _exit(REWARD) returned normally');
   }
 }

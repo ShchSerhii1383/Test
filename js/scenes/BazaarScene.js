@@ -1,27 +1,33 @@
 import { ADVENTURE_CONFIG } from '../data/adventures.js';
-import { ATLAS_PUZZLES } from '../data/atlasPuzzles.js';
+import { JOURNAL_QUESTIONS } from '../data/journalQuestions.js';
 import { SCENES, MICKEY_STATES } from '../config/constants.js';
 import { icon } from '../components/icons.js';
 import { Camera } from '../systems/Camera.js';
+import { QuestionManager } from '../systems/QuestionManager.js';
+import { QuestionCard } from '../components/QuestionCard.js';
+import { AnswerCard } from '../components/AnswerCard.js';
+import { StampAnimation } from '../components/StampAnimation.js';
 import { typeText, wait } from '../utils/typewriter.js';
 
 /**
- * BazaarScene — "Explorer's Atlas"
- * ---------------------------------
- * The third adventure: Mickey finds an ancient atlas guarded by a lock
- * that only opens to whoever looks closely at the world. Five trials are
- * drawn at random from a bank of twenty (five categories: logical route,
- * find the error, sequence, odd one out, matching) — so no two
- * playthroughs land on quite the same five.
+ * BazaarScene — "Explorer's Journal"
+ * ------------------------------------
+ * The third adventure: Mickey finds an old expedition journal. Five
+ * questions are drawn at random from the bank each playthrough, no
+ * repeats. This scene is the orchestrator only — it owns the flow
+ * (reveal -> story -> rules -> countdown -> five questions -> key ->
+ * Reward) and wires together four small, independent pieces that don't
+ * know about each other:
  *
- * Every puzzle's answer is meant to be readable straight off its own
- * illustration rather than a memorized geography fact — see the design
- * notes in data/atlasPuzzles.js before adding or editing any of them.
+ *   QuestionManager  — which questions this run uses, and which is current
+ *   QuestionCard     — renders the story/question text
+ *   AnswerCard       — one wooden card, reports taps, shows correct/wrong
+ *   StampAnimation   — the "CORRECT" stamp that drops on a right answer
  *
- * Replaces the earlier riddle-book version entirely: same "no penalty,
- * just try again" feel, same shared adventure rhythm (reveal -> story ->
- * rules demo -> 3-2-1 -> the trials -> celebration -> Reward), but with
- * real visual-reasoning puzzles instead of a fixed set of five riddles.
+ * The question bank (data/journalQuestions.js) is deliberately a small
+ * set of placeholder questions — the brief was explicit that the
+ * mechanism should be built first, with the real 20-50 questions written
+ * later without touching any of the logic below.
  */
 export class BazaarScene {
   /**
@@ -44,18 +50,26 @@ export class BazaarScene {
     this.rulesTextEl = sceneEl.querySelector('#bazaar-rules-text');
     this.rulesItemEl = sceneEl.querySelector('#bazaar-rules-item');
     this.countdownEl = sceneEl.querySelector('#bazaar-countdown');
-    this.counterEl = sceneEl.querySelector('#atlas-counter');
-    this.bookEl = sceneEl.querySelector('#atlas-book');
-    this.pageLeftEl = sceneEl.querySelector('.atlas-book__page--left');
-    this.illustrationEl = sceneEl.querySelector('#atlas-illustration');
-    this.questionEl = sceneEl.querySelector('#atlas-question');
-    this.optionsEl = sceneEl.querySelector('#atlas-options');
+    this.bookEl = sceneEl.querySelector('#journal-book');
+    this.pageEl = sceneEl.querySelector('.journal-page');
+    this.cardsEl = sceneEl.querySelector('#journal-cards');
     this.keyEl = sceneEl.querySelector('#atlas-key');
+
+    this.questions = new QuestionManager(JOURNAL_QUESTIONS);
+    this.questionCard = new QuestionCard({
+      counterEl: sceneEl.querySelector('#journal-counter'),
+      storyEl: sceneEl.querySelector('#journal-story'),
+      questionEl: sceneEl.querySelector('#journal-question'),
+    });
+    this.stamp = new StampAnimation(sceneEl.querySelector('#journal-stamp'));
 
     // No "back to island" escape hatch on purpose — once an adventure
     // starts, the only way out is finishing it.
+    //
+    // State machine: INTRO -> RULES -> PLAY -> WIN -> EXIT. Only the
+    // EXIT state may ever call sceneManager.goTo() — see _exit() below.
     this._runToken = 0;
-    this._isFinishing = false;
+    this.state = 'INTRO';
     this._pendingResolve = null;
   }
 
@@ -67,18 +81,30 @@ export class BazaarScene {
       // hit after they'd already won, still try to get them their reward;
       // otherwise just send them back to the island.
       console.error('[Bazaar] enter() FALLBACK TRIGGERED — _enterInner() threw:', err);
-      console.log('[Bazaar] fallback: _isFinishing =', this._isFinishing, '-> going to', this._isFinishing ? 'REWARD' : 'ISLAND');
-      if (this._isFinishing) {
-        await this.sceneManager.goTo(SCENES.REWARD, { adventureId: 'bazaar' });
+      console.log('[Bazaar] fallback: state =', this.state, '-> going to', this.state === 'WIN' ? 'REWARD' : 'ISLAND');
+      if (this.state === 'WIN') {
+        await this._exit(SCENES.REWARD, { adventureId: 'bazaar' });
       } else {
-        await this.sceneManager.goTo(SCENES.ISLAND);
+        await this._exit(SCENES.ISLAND);
       }
     }
+  }
+
+  /**
+   * The ONLY place in this scene allowed to call sceneManager.goTo().
+   * The state===EXIT guard makes a second call a harmless no-op instead
+   * of a second competing transition.
+   */
+  async _exit(targetScene, data) {
+    if (this.state === 'EXIT') return;
+    this.state = 'EXIT';
+    await this.sceneManager.goTo(targetScene, data);
   }
 
   async _enterInner() {
     const token = ++this._runToken;
     this._resetState();
+    this.state = 'INTRO';
 
     await this._stageReveal();
     if (token !== this._runToken) return;
@@ -86,14 +112,16 @@ export class BazaarScene {
     await this._stageStory();
     if (token !== this._runToken) return;
 
+    this.state = 'RULES';
     await this._stageRulesDemo();
     if (token !== this._runToken) return;
 
     await this._runCountdown();
     if (token !== this._runToken) return;
 
-    const trials = this._pickTrials(5);
-    await this._playTrials(trials, token);
+    this.state = 'PLAY';
+    this.questions.start(5);
+    await this._playQuestions(token);
   }
 
   async exit() {
@@ -103,10 +131,9 @@ export class BazaarScene {
   }
 
   _resetState() {
-    this._isFinishing = false;
-    this.optionsEl.innerHTML = '';
-    this.questionEl.textContent = '';
-    this.illustrationEl.innerHTML = '';
+    this.state = 'INTRO';
+    this.cardsEl.innerHTML = '';
+    this.stamp.reset();
     this.dialogEl.classList.add('dialog--hidden');
     this.rulesEl.classList.remove('is-visible');
     this.countdownEl.classList.remove('is-visible');
@@ -161,22 +188,19 @@ export class BazaarScene {
     this.countdownEl.classList.remove('is-visible');
   }
 
-  /** Draw `count` distinct puzzles from the 20-puzzle bank. */
-  _pickTrials(count) {
-    return [...ATLAS_PUZZLES].sort(() => Math.random() - 0.5).slice(0, count);
-  }
+  /** Play all five questions in order, then the finale. */
+  async _playQuestions(token) {
+    let question = this.questions.current();
+    while (question) {
+      console.log(`[Bazaar] question ${this.questions.currentNumber()}/${this.questions.total()}`);
+      const won = await this._playQuestion(question, token);
+      console.log(`[Bazaar] question ${this.questions.currentNumber()} resolved with won=${won}`);
+      if (!won) return; // scene was exited mid-question
 
-  /** Play all five trials in order, then the finale. */
-  async _playTrials(trials, token) {
-    for (let i = 0; i < trials.length; i++) {
-      console.log(`[Bazaar] starting trial ${i + 1}/${trials.length} (puzzle #${trials[i].id}, ${trials[i].category})`);
-      this.counterEl.textContent = `${i + 1} / ${trials.length}`;
-      const won = await this._playTrial(trials[i], token);
-      console.log(`[Bazaar] trial ${i + 1} resolved with won=${won}`);
-      if (!won) return; // scene was exited mid-trial
+      question = this.questions.advance();
     }
 
-    console.log('[Bazaar] all trials complete, checking token before win sequence', { token, current: this._runToken });
+    console.log('[Bazaar] all questions complete, checking token before win sequence', { token, current: this._runToken });
     if (token !== this._runToken) return;
 
     console.log('[Bazaar] calling _playWinSequence()');
@@ -185,66 +209,64 @@ export class BazaarScene {
   }
 
   /**
-   * One trial: show the illustration and question, render the four
-   * (shuffled) answer cards, wait for the correct one to be tapped.
-   * A wrong tap gets a shake and a brief cooldown, never a penalty.
-   * Resolves true once solved, false if the scene was exited early.
+   * One question: render it via QuestionCard, build four AnswerCards
+   * (shuffled), wait for the correct one. A wrong tap shakes and clears
+   * itself — no penalty, answer again any time. Resolves true once
+   * solved, false if the scene was exited early.
    */
-  _playTrial(puzzle, token) {
+  _playQuestion(question, token) {
     return new Promise((resolve) => {
       this._pendingResolve = resolve;
 
-      this.illustrationEl.innerHTML = puzzle.illustration;
-      this.questionEl.textContent = puzzle.question;
-      this.optionsEl.innerHTML = '';
+      this.questionCard.render(question, this.questions.currentNumber(), this.questions.total());
+      this.cardsEl.innerHTML = '';
 
-      const options = [...puzzle.options].sort(() => Math.random() - 0.5);
-      options.forEach((option) => {
-        const el = document.createElement('button');
-        el.className = 'atlas-option';
-        el.textContent = option.label;
-
-        el.addEventListener('click', () => {
+      const order = question.answers.map((text, i) => ({ text, isCorrect: i === question.correct }));
+      this._shuffle(order).forEach((entry) => {
+        const card = new AnswerCard(entry.text, (tappedCard) => {
           try {
             if (token !== this._runToken) return;
-
-            if (option.correct) {
-              this.audio.win();
-              el.classList.add('is-correct');
-              this.optionsEl.style.pointerEvents = 'none';
-              this._pendingResolve = null;
-              this._turnPage().then(() => resolve(true));
-            } else {
-              this.audio.nudge();
-              el.classList.add('is-wrong');
-              this.optionsEl.style.pointerEvents = 'none'; // one-second cooldown before trying again
-              setTimeout(() => {
-                el.classList.remove('is-wrong');
-                this.optionsEl.style.pointerEvents = '';
-              }, 1000);
-            }
+            this._handleAnswerTap(entry, tappedCard, resolve);
           } catch (err) {
-            console.error('[Bazaar] atlas answer tap handler failed:', err);
+            console.error('[Bazaar] journal answer tap handler failed:', err);
           }
         });
-
-        this.optionsEl.appendChild(el);
+        this.cardsEl.appendChild(card.el);
       });
     });
   }
 
-  /** A short page-flip on the left page between trials. */
-  async _turnPage() {
-    this.audio.tap();
-    await wait(500); // let the CORRECT stamp actually be seen first
-    this.pageLeftEl.classList.add('is-turning');
-    await wait(600);
-    this.pageLeftEl.classList.remove('is-turning');
+  _handleAnswerTap(entry, tappedCard, resolve) {
+    if (entry.isCorrect) {
+      this.audio.win();
+      tappedCard.markCorrect();
+      this._pendingResolve = null;
+      this._onCorrectAnswer().then(() => resolve(true));
+    } else {
+      this.audio.nudge();
+      tappedCard.markWrong();
+      setTimeout(() => tappedCard.clearWrong(), 400);
+    }
   }
 
+  /** Stamp falls, then the page turns — same beat every time an answer lands. */
+  async _onCorrectAnswer() {
+    await this.stamp.play('CORRECT');
+    this.audio.tap();
+    this.pageEl.classList.add('is-turning');
+    await wait(600);
+    this.pageEl.classList.remove('is-turning');
+    this.stamp.reset();
+  }
+
+  _shuffle(arr) {
+    return [...arr].sort(() => Math.random() - 0.5);
+  }
+
+  /** All five questions solved: the journal closes, the key appears. */
   async _playWinSequence() {
     console.log('[Bazaar] _playWinSequence: started');
-    this._isFinishing = true;
+    this.state = 'WIN';
     await wait(400);
 
     this.bookEl.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
@@ -258,9 +280,9 @@ export class BazaarScene {
     this.dialogEl.classList.remove('dialog--hidden');
     await typeText(this.dialogTextEl, this.config.winLine);
     await wait(1400);
-    console.log('[Bazaar] _playWinSequence: win line shown, calling goTo(REWARD)');
+    console.log('[Bazaar] _playWinSequence: win line shown, calling _exit(REWARD)');
 
-    await this.sceneManager.goTo(SCENES.REWARD, { adventureId: 'bazaar' });
-    console.log('[Bazaar] _playWinSequence: goTo(REWARD) returned normally');
+    await this._exit(SCENES.REWARD, { adventureId: 'bazaar' });
+    console.log('[Bazaar] _playWinSequence: _exit(REWARD) returned normally');
   }
 }

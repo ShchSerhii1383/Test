@@ -44,11 +44,15 @@ export class LagoonScene {
 
     // No "back to island" escape hatch on purpose — once an adventure
     // starts, the only way out is finishing it: reveal -> story -> rules
-    // -> countdown -> rounds -> win -> Reward -> island. A visible way to
-    // leave mid-adventure was also one more path that could race the
-    // win-sequence's own transition to Reward.
+    // -> countdown -> rounds -> win -> Reward -> island.
+    //
+    // State machine: INTRO -> RULES -> PLAY -> WIN -> EXIT. Only the
+    // EXIT state may ever call sceneManager.goTo() — see _exit() below.
+    // Having goTo() reachable from two independent places (the win-
+    // sequence and the enter() catch fallback) was exactly the kind of
+    // "more than one way out" that let the scene end early sometimes.
     this._runToken = 0;
-    this._isFinishing = false;
+    this.state = 'INTRO';
     this._talkHintTimer = null;
     this._shimmerHintTimer = null;
     this._pendingResolve = null;
@@ -59,17 +63,31 @@ export class LagoonScene {
       await this._enterInner();
     } catch (err) {
       console.error('[Lagoon] enter() FALLBACK TRIGGERED — _enterInner() threw:', err);
-      if (this._isFinishing) {
-        await this.sceneManager.goTo(SCENES.REWARD, { adventureId: 'lagoon' });
+      console.log('[Lagoon] fallback: state =', this.state, '-> going to', this.state === 'WIN' ? 'REWARD' : 'ISLAND');
+      if (this.state === 'WIN') {
+        await this._exit(SCENES.REWARD, { adventureId: 'lagoon' });
       } else {
-        await this.sceneManager.goTo(SCENES.ISLAND);
+        await this._exit(SCENES.ISLAND);
       }
     }
+  }
+
+  /**
+   * The ONLY place in this scene allowed to call sceneManager.goTo().
+   * The state===EXIT guard makes a second call (e.g. an error right
+   * after a legitimate finish) a harmless no-op instead of a second
+   * competing transition.
+   */
+  async _exit(targetScene, data) {
+    if (this.state === 'EXIT') return;
+    this.state = 'EXIT';
+    await this.sceneManager.goTo(targetScene, data);
   }
 
   async _enterInner() {
     const token = ++this._runToken;
     this._resetState();
+    this.state = 'INTRO';
 
     await this._stageReveal();
     if (token !== this._runToken) return;
@@ -77,12 +95,14 @@ export class LagoonScene {
     await this._stageStory();
     if (token !== this._runToken) return;
 
+    this.state = 'RULES';
     await this._stageRulesDemo();
     if (token !== this._runToken) return;
 
     await this._runCountdown();
     if (token !== this._runToken) return;
 
+    this.state = 'PLAY';
     this.panelEl.classList.add('is-visible');
     await this._playRounds(token);
   }
@@ -96,7 +116,7 @@ export class LagoonScene {
   }
 
   _resetState() {
-    this._isFinishing = false;
+    this.state = 'INTRO';
     this.fieldEl.innerHTML = '';
     this.panelCardsEl.innerHTML = '';
     this.panelEl.classList.remove('is-visible');
@@ -355,7 +375,7 @@ export class LagoonScene {
   /** All three rounds solved: the panel closes, Mickey celebrates. */
   async _playWinSequence() {
     console.log('[Lagoon] _playWinSequence: started');
-    this._isFinishing = true;
+    this.state = 'WIN';
     this._updateRoundDots(this.config.rounds.length);
     this.panelEl.classList.remove('is-visible');
     await wait(600);
@@ -367,9 +387,9 @@ export class LagoonScene {
     this.dialogEl.classList.remove('dialog--hidden');
     await typeText(this.dialogTextEl, this.config.winLine);
     await wait(1400);
-    console.log('[Lagoon] _playWinSequence: win line shown, calling goTo(REWARD)');
+    console.log('[Lagoon] _playWinSequence: win line shown, calling _exit(REWARD)');
 
-    await this.sceneManager.goTo(SCENES.REWARD, { adventureId: 'lagoon' });
-    console.log('[Lagoon] _playWinSequence: goTo(REWARD) returned normally');
+    await this._exit(SCENES.REWARD, { adventureId: 'lagoon' });
+    console.log('[Lagoon] _playWinSequence: _exit(REWARD) returned normally');
   }
 }

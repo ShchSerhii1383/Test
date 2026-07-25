@@ -59,6 +59,14 @@ export class RewardScene {
     // Bumped on every enter(). A stray timer from a previous visit compares
     // its token and bows out instead of touching the new run's state.
     this._runToken = 0;
+
+    // State machine: COUNTDOWN -> CHEST -> CARDS -> REVEAL -> EXIT. Only
+    // the EXIT state may ever call sceneManager.goTo() — see _exit()
+    // below. This scene used to have goTo() reachable from two
+    // independent places (the enter() catch fallback, and _finish()),
+    // which is exactly the "more than one way out" the Blueprint rules
+    // out.
+    this.state = 'COUNTDOWN';
   }
 
   /** @param {{adventureId: string}} data */
@@ -73,12 +81,25 @@ export class RewardScene {
       if (this._adventureId) {
         this.saveManager.markCompleted(this._adventureId);
       }
-      await this.sceneManager.goTo(SCENES.ISLAND, { returningFrom: this._adventureId });
+      await this._exit(SCENES.ISLAND, { returningFrom: this._adventureId });
     }
+  }
+
+  /**
+   * The ONLY place in this scene allowed to call sceneManager.goTo().
+   * The state===EXIT guard makes a second call (say, _finish() firing
+   * right after an error fallback already left) a harmless no-op instead
+   * of a second competing transition.
+   */
+  async _exit(targetScene, data) {
+    if (this.state === 'EXIT') return;
+    this.state = 'EXIT';
+    await this.sceneManager.goTo(targetScene, data);
   }
 
   async _enterInner(data = {}) {
     console.log('[Reward] _enterInner: started', data);
+    this._resetState();
     this._adventureId = data.adventureId ?? null;
     this._isBusy = false;
     const token = ++this._runToken;
@@ -93,6 +114,7 @@ export class RewardScene {
     console.log('[Reward] countdown done');
     if (token !== this._runToken) return; // a newer visit started meanwhile
 
+    this.state = 'CHEST';
     this.boxEl.classList.add('is-visible');
     this.mickey.hush();
     console.log('[Reward] _enterInner: finished, chest is now visible and tappable');
@@ -104,6 +126,10 @@ export class RewardScene {
     this._runToken += 1;
     this._isBusy = false;
     this._resetVisualState();
+  }
+
+  _resetState() {
+    this.state = 'COUNTDOWN';
   }
 
   _resetVisualState() {
@@ -158,6 +184,7 @@ export class RewardScene {
       console.log('[Reward] _openChest: about to render cards');
       this._renderCards();
       this.cardsEl.classList.add('is-visible');
+      this.state = 'CARDS';
       console.log('[Reward] _openChest: cards rendered and visible —', this.cardsEl.children.length, 'cards');
     } catch (err) {
       // This used to be a bare try/finally with no catch — an exception
@@ -244,6 +271,7 @@ export class RewardScene {
       this.revealMessageEl.textContent = gift.message;
       this.revealEl.classList.add('is-visible');
       this.mickey.play(MICKEY_STATES.CELEBRATE);
+      this.state = 'REVEAL';
       console.log('[Reward] _chooseGift: reveal is now visible');
 
       // The reveal appears at the same screen spot the card grid just
@@ -271,6 +299,6 @@ export class RewardScene {
     if (finishedAdventure) {
       this.saveManager.markCompleted(finishedAdventure);
     }
-    return this.sceneManager.goTo(SCENES.ISLAND, { returningFrom: finishedAdventure });
+    return this._exit(SCENES.ISLAND, { returningFrom: finishedAdventure });
   }
 }

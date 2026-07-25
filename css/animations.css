@@ -499,3 +499,17 @@
   70% { transform: translate(-50%, -50%) scale(1.15) rotate(8deg); opacity: 1; }
   100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
 }
+
+/* ---- Explorer's Journal: pages ever so slightly "breathing" ---- */
+@keyframes journal-page-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.004); }
+}
+
+/* ---- Explorer's Journal: the CORRECT stamp dropping with impact ---- */
+@keyframes journal-stamp-drop {
+  0% { transform: translate(-50%, -180%) scale(0.6) rotate(-8deg); opacity: 0; }
+  60% { transform: translate(-50%, -50%) scale(1.15) rotate(-8deg); opacity: 1; }
+  80% { transform: translate(-50%, -50%) scale(0.95) rotate(-8deg); }
+  100% { transform: translate(-50%, -50%) scale(1) rotate(-8deg); opacity: 1; }
+}

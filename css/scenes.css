@@ -1060,9 +1060,9 @@
 .bzr-rules__item.is-glowing { animation: lagoon-demo-glow 1s var(--ease-soft) infinite; }
 .bzr-rules__item.is-collected { animation: lagoon-demo-collect 0.5s var(--ease-soft) forwards; }
 
-/* ---- The atlas's top panel: nameplate, round counter, small compass ---- */
+/* ---- The journal's nameplate ---- */
 
-.atlas-topbar {
+.journal-topbar {
   position: absolute;
   top: 3%;
   left: 50%;
@@ -1078,119 +1078,224 @@
   box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
-.atlas-topbar__compass { width: 20px; height: 20px; animation: bzr-globe-spin 8s linear infinite; }
-.atlas-topbar__title { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: #4A3218; }
-.atlas-topbar__counter { font-family: var(--font-display); font-size: 12px; color: #4A3218; opacity: 0.8; }
+.journal-topbar__compass { width: 20px; height: 20px; animation: bzr-globe-spin 8s linear infinite; }
+.journal-topbar__title { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: #4A3218; }
 
-/* ---- The atlas book: an open two-page spread ---- */
+/* ---- The journal book itself: one open, worn page ---- */
 
-.atlas-book {
+.journal-book {
   position: absolute;
-  top: 12%;
+  top: 11%;
   left: 50%;
   transform: translateX(-50%);
   width: 88%;
   max-width: 380px;
-  height: 62%;
-  display: flex;
+  height: 66%;
   z-index: 15;
-  box-shadow: 0 14px 28px rgba(0,0,0,0.4);
-  border-radius: 6px;
-  overflow: hidden;
 }
 
-.atlas-book__page {
-  flex: 1;
-  background: linear-gradient(to bottom, #F7E6C4 0%, #EBD5A6 100%);
-  padding: var(--space-md);
+/* A ribbon bookmark hanging out the top, purely decorative */
+.journal-book__ribbon {
+  position: absolute;
+  top: -10px;
+  left: 30%;
+  width: 14px;
+  height: 46px;
+  background: #C4504F;
+  clip-path: polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%);
+  z-index: 2;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.journal-page {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(115deg, #F7E6C4 0%, #EFDCB2 45%, #F7E6C4 100%);
+  border: 3px solid #B0894C;
+  border-radius: 6px;
+  padding: var(--space-md) var(--space-lg);
+  box-shadow: 0 14px 28px rgba(0,0,0,0.4), 0 0 0 6px rgba(139, 100, 56, 0.15) inset;
+  /* worn, uneven edges rather than a clean rectangle */
+  clip-path: polygon(1% 3%, 99% 0%, 100% 96%, 97% 100%, 2% 99%, 0% 6%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  overflow: hidden;
+  animation: journal-page-breathe 6s ease-in-out infinite;
 }
 
-.atlas-book__page--left.is-turning {
+.journal-page.is-turning {
   animation: bzr-page-turn 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
 }
 
-.atlas-book__spine { width: 6px; background: var(--color-wood-dark); box-shadow: 0 0 6px rgba(0,0,0,0.4) inset; }
+/* A couple of faint old tea-colored stains, just atmosphere */
+.journal-stain {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(176, 137, 79, 0.25) 0%, transparent 70%);
+  pointer-events: none;
+}
+.journal-stain--1 { width: 70px; height: 70px; top: 8%; right: 6%; }
+.journal-stain--2 { width: 46px; height: 46px; bottom: 12%; left: 8%; }
 
-.atlas-book__illustration { width: 100%; }
-.atlas-illustration { width: 100%; height: auto; }
+.journal-doodle { position: absolute; opacity: 0.7; pointer-events: none; }
+.journal-doodle--1 { top: 6%; left: 5%; width: 26px; }
+.journal-doodle--2 { bottom: 8%; right: 6%; width: 36px; }
 
-.atlas-book__question {
+/* A stitched thread line down the inner margin */
+.journal-thread {
+  position: absolute;
+  top: 4%;
+  bottom: 4%;
+  left: 10px;
+  width: 0;
+  border-left: 1px dashed rgba(139, 100, 56, 0.4);
+  pointer-events: none;
+}
+
+.journal-page__number {
+  position: absolute;
+  bottom: 6px;
+  right: 12px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  color: #8A5A3B;
+  opacity: 0.7;
+}
+
+.journal-page__chapter {
+  font-family: var(--font-hand);
+  font-size: 15px;
+  color: #6B4A22;
+  margin-bottom: -2px;
+}
+
+.journal-page__counter {
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: #8A5A3B;
+  opacity: 0.8;
+  margin-bottom: var(--space-xs);
+}
+
+.journal-page__story {
+  font-family: var(--font-hand);
+  font-size: 14px;
+  color: #4A3218;
+  text-align: center;
+  line-height: 1.3;
+  max-width: 90%;
+  margin-bottom: var(--space-xs);
+}
+
+.journal-page__question {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 13px;
   color: #4A3218;
   text-align: center;
-  line-height: 1.35;
+  line-height: 1.3;
   margin-bottom: var(--space-sm);
 }
 
-.atlas-book__options {
+.journal-page__cards {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-xs);
   width: 100%;
+  max-width: 280px;
 }
 
-/* Answer cards: not plain buttons — a small lift, shadow, and a gold glow. */
-.atlas-option {
-  min-height: 44px;
-  background: var(--color-text-light);
-  border: 2px solid #D9B77C;
+/* Answer cards: wood texture, frame, shadow, rounded, a real press feel — never a plain button. */
+.journal-card {
+  min-height: 46px;
+  background: linear-gradient(160deg, #D9A24B 0%, #B8894F 100%);
+  border: 2px solid #8A5A3B;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 6px;
-  font-size: 10px;
+  padding: 4px 8px;
+  font-size: 11px;
   font-family: var(--font-display);
-  color: #4A3218;
+  color: #FFF8ED;
   text-align: center;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
-  transition: transform 0.2s var(--ease-soft), box-shadow 0.2s var(--ease-soft);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.25), 0 1px 0 rgba(255,255,255,0.15) inset;
+  transition: transform 0.15s var(--ease-soft), box-shadow 0.15s var(--ease-soft);
   position: relative;
 }
 
 @media (hover: hover) {
-  .atlas-option:hover {
-    transform: translateY(-3px) scale(1.03);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.2), 0 0 10px 2px var(--color-box-glow);
-    border-color: var(--color-sun);
+  .journal-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 10px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.2) inset;
   }
 }
 
-.atlas-option:active { transform: scale(0.94); }
-
-.atlas-option.is-correct {
-  animation: stone-flash 0.4s var(--ease-soft);
-  border-color: #3A8067;
-  background: #E3F3EA;
+/* The requested "sinks 2-3px" press feedback */
+.journal-card:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3) inset;
 }
 
-.atlas-option.is-correct::after {
-  content: '✓ CORRECT';
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(58, 128, 103, 0.92);
-  color: #fff;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  border-radius: 6px;
+.journal-card.is-correct {
+  background: linear-gradient(160deg, #5FA383 0%, #3A8067 100%);
+  border-color: #245B4F;
 }
 
-.atlas-option.is-wrong {
+.journal-card.is-wrong {
   animation: lagoon-decoy-wobble 0.3s var(--ease-soft);
   border-color: #C4504F;
 }
 
-/* ---- The golden key, revealed once all five trials are solved ---- */
+/* ---- The stamp: falls onto the page with a small impact ---- */
+
+.journal-stamp {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0) rotate(-8deg);
+  z-index: 25;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  border: 4px solid #3A8067;
+  color: #3A8067;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  background: rgba(255,255,255,0.15);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.journal-stamp.is-visible {
+  animation: journal-stamp-drop 0.5s cubic-bezier(0.34, 1.6, 0.4, 1) forwards;
+}
+
+/* ---- Responsive: vertical on phone, horizontal on desktop ---- */
+
+@media (max-width: 480px) {
+  .journal-book { top: 10%; height: 70%; max-width: 92%; }
+  .journal-page__story { font-size: 12px; }
+  .journal-page__question { font-size: 12px; }
+  .journal-card { min-height: 40px; font-size: 10px; }
+}
+
+@media (min-width: 900px) {
+  .journal-book { max-width: 480px; height: 58%; }
+  .journal-page__cards { max-width: 340px; }
+  .journal-page__story { font-size: 15px; }
+  .journal-page__question { font-size: 15px; }
+}
+
+/* ---- The golden key, revealed once all five questions are solved ---- */
 
 .atlas-key {
   position: absolute;

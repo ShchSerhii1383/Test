@@ -1,5 +1,4 @@
 import { SceneManager } from './systems/SceneManager.js';
-import { NavigationGuard } from './systems/NavigationGuard.js';
 import { SaveManager } from './systems/SaveManager.js';
 import { IntroSequence } from './systems/IntroSequence.js';
 import { AudioManager } from './systems/AudioManager.js';
@@ -29,19 +28,6 @@ function start() {
   const giftManager = new GiftManager(saveManager);
   const sceneManager = new SceneManager();
   const audio = new AudioManager();
-
-  // Lagoon/Mountain/Bazaar/Reward have no in-scene "back to island" button
-  // on purpose (see each scene's own comments) — but a browser or OS back
-  // gesture bypasses that entirely unless something traps it. This closes
-  // that last escape hatch so the reveal -> dialog -> rules -> game ->
-  // win -> reward chest -> pick-a-card sequence really is the only way
-  // through, with no way to leave early.
-  new NavigationGuard(sceneManager, [
-    SCENES.LAGOON,
-    SCENES.MOUNTAIN,
-    SCENES.BAZAAR,
-    SCENES.REWARD,
-  ]);
 
   // Draw Mickey's artwork into every .mickey container (island, finale, ...)
   // from the single sprite module, before anything tries to animate him.
