@@ -41,20 +41,14 @@ export class LagoonScene {
     this.panelEl = sceneEl.querySelector('#lagoon-panel');
     this.panelCardsEl = sceneEl.querySelector('#lagoon-panel-cards');
     this.roundDotEls = Array.from(sceneEl.querySelectorAll('#lagoon-round-dots .adventure-round-dot'));
-    this.backBtn = sceneEl.querySelector('#lagoon-back');
 
-    this.backBtn.addEventListener('click', async () => {
-      // Blocked once the win sequence has started — otherwise a fast tap
-      // here races the win sequence's own goTo(REWARD) and can win,
-      // dumping the player back on the island without ever seeing the
-      // reward.
-      if (this._isFinishing) return;
-      await this.sceneManager.goTo(SCENES.ISLAND);
-    });
-
+    // No "back to island" escape hatch on purpose — once an adventure
+    // starts, the only way out is finishing it: reveal -> story -> rules
+    // -> countdown -> rounds -> win -> Reward -> island. A visible way to
+    // leave mid-adventure was also one more path that could race the
+    // win-sequence's own transition to Reward.
     this._runToken = 0;
     this._isFinishing = false;
-    this.backBtn.classList.remove('is-disabled');
     this._talkHintTimer = null;
     this._shimmerHintTimer = null;
     this._pendingResolve = null;
@@ -362,7 +356,6 @@ export class LagoonScene {
   async _playWinSequence() {
     console.log('[Lagoon] _playWinSequence: started');
     this._isFinishing = true;
-    this.backBtn.classList.add('is-disabled');
     this._updateRoundDots(this.config.rounds.length);
     this.panelEl.classList.remove('is-visible');
     await wait(600);

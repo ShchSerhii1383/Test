@@ -90,65 +90,23 @@ export const ADVENTURE_CONFIG = {
     rounds: [
       { grid: 3, revealCount: 4 },
       { grid: 4, revealCount: 6 },
-      { grid: 4, pattern: [1, 2, 5, 6, 8, 9, 10, 11] }, // a simple mountain-peak silhouette
+      { grid: 4, patterns: [
+        [1, 2, 5, 6, 8, 9, 10, 11],   // a simple mountain-peak silhouette
+        [1, 2, 4, 7, 8, 11, 13, 14],  // a diamond outline
+        [0, 3, 5, 6, 9, 10, 12, 15],  // an hourglass / star-like scatter
+      ] },
     ],
   },
   bazaar: {
-    title: 'Книга загадок',
+    title: 'Атлас Мандрівників',
 
     story: [
-      'Дивись, що я знайшов — стародавню книгу загадок!',
-      'Кажуть, той, хто розгадає всі п\'ять, отримає останній ключ.',
+      'Дивись, що я знайшов — стародавній Атлас Мандрівників!',
+      '"Лише той, хто уважно дивиться на світ, зможе знайти останній ключ."',
+      'Спробуємо пройти п\'ять випробувань?',
     ],
 
-    rulesLine: 'Обери правильну відповідь на кожній сторінці.',
-    missLine: 'Не та відповідь — спробуй ще раз.',
-    pageWinLines: ['Правильно!', 'Так, саме так!', 'Сторінка гортається...', 'Ще одна розгадана!'],
+    rulesLine: 'Уважно роздивись малюнок — відповідь завжди на ньому.',
     winLine: 'Останній ключ у нас!',
-
-    // Five riddles, easiest first. Each has exactly one correct option;
-    // order of the three options is shuffled at render time.
-    riddles: [
-      {
-        question: 'Я завжди показую шлях, але сам нікуди не йду. Що я?',
-        options: [
-          { icon: 'compassBody', label: 'Компас', correct: true },
-          { icon: 'coconut', label: 'Кокос' },
-          { icon: 'fishItem', label: 'Риба' },
-        ],
-      },
-      {
-        question: 'Мене можна знайти на пляжі, але я не камінь. Хто я?',
-        options: [
-          { icon: 'shell', label: 'Мушля', correct: true },
-          { icon: 'palmIcon', label: 'Пальма' },
-          { icon: 'anchorIcon', label: 'Якір' },
-        ],
-      },
-      {
-        question: 'Я росту високо, даю тінь і кокоси, але не вмію ходити. Що я?',
-        options: [
-          { icon: 'lanternItem', label: 'Ліхтар' },
-          { icon: 'palmIcon', label: 'Пальма', correct: true },
-          { icon: 'scroll', label: 'Сувій' },
-        ],
-      },
-      {
-        question: 'Я тримаюсь на дні моря, щоб корабель не поплив геть. Хто я?',
-        options: [
-          { icon: 'anchorIcon', label: 'Якір', correct: true },
-          { icon: 'emerald', label: 'Смарагд' },
-          { icon: 'banana', label: 'Банан' },
-        ],
-      },
-      {
-        question: 'Я світлю вночі, а вдень мовчу і чекаю темряви. Що я?',
-        options: [
-          { icon: 'scroll', label: 'Сувій' },
-          { icon: 'banana', label: 'Банан' },
-          { icon: 'lanternItem', label: 'Ліхтар', correct: true },
-        ],
-      },
-    ],
   },
 };

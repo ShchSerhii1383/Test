@@ -1,20 +1,27 @@
 import { ADVENTURE_CONFIG } from '../data/adventures.js';
-import { SCENES } from '../config/constants.js';
+import { ATLAS_PUZZLES } from '../data/atlasPuzzles.js';
+import { SCENES, MICKEY_STATES } from '../config/constants.js';
 import { icon } from '../components/icons.js';
 import { Camera } from '../systems/Camera.js';
 import { typeText, wait } from '../utils/typewriter.js';
 
 /**
- * BazaarScene — "Treasure Riddles"
- * --------------------------------
- * The third adventure: Mickey finds an ancient riddle book. Five riddles,
- * easiest first, each with three beautifully drawn answer cards. A correct
- * answer turns the page; there's no penalty for a wrong one, just "try
- * again" — matches the "no punishment" feel of every adventure here.
+ * BazaarScene — "Explorer's Atlas"
+ * ---------------------------------
+ * The third adventure: Mickey finds an ancient atlas guarded by a lock
+ * that only opens to whoever looks closely at the world. Five trials are
+ * drawn at random from a bank of twenty (five categories: logical route,
+ * find the error, sequence, odd one out, matching) — so no two
+ * playthroughs land on quite the same five.
  *
- * Replaces the earlier memory-matching version entirely: that mechanic
- * didn't stick with players, and a riddle book fits the "treasure map /
- * ancient story" feel of the island much better.
+ * Every puzzle's answer is meant to be readable straight off its own
+ * illustration rather than a memorized geography fact — see the design
+ * notes in data/atlasPuzzles.js before adding or editing any of them.
+ *
+ * Replaces the earlier riddle-book version entirely: same "no penalty,
+ * just try again" feel, same shared adventure rhythm (reveal -> story ->
+ * rules demo -> 3-2-1 -> the trials -> celebration -> Reward), but with
+ * real visual-reasoning puzzles instead of a fixed set of five riddles.
  */
 export class BazaarScene {
   /**
@@ -37,24 +44,18 @@ export class BazaarScene {
     this.rulesTextEl = sceneEl.querySelector('#bazaar-rules-text');
     this.rulesItemEl = sceneEl.querySelector('#bazaar-rules-item');
     this.countdownEl = sceneEl.querySelector('#bazaar-countdown');
-    this.pageEl = sceneEl.querySelector('#bazaar-book .bzr-book__page');
-    this.questionEl = sceneEl.querySelector('#bazaar-question');
-    this.optionsEl = sceneEl.querySelector('#bazaar-options');
-    this.roundDotEls = Array.from(sceneEl.querySelectorAll('#bazaar-round-dots .adventure-round-dot'));
-    this.backBtn = sceneEl.querySelector('#bazaar-back');
+    this.counterEl = sceneEl.querySelector('#atlas-counter');
+    this.bookEl = sceneEl.querySelector('#atlas-book');
+    this.pageLeftEl = sceneEl.querySelector('.atlas-book__page--left');
+    this.illustrationEl = sceneEl.querySelector('#atlas-illustration');
+    this.questionEl = sceneEl.querySelector('#atlas-question');
+    this.optionsEl = sceneEl.querySelector('#atlas-options');
+    this.keyEl = sceneEl.querySelector('#atlas-key');
 
-    this.backBtn.addEventListener('click', async () => {
-      // Blocked once the win sequence has started — otherwise a fast tap
-      // here races the win sequence's own goTo(REWARD) and can win,
-      // dumping the player back on the island without ever seeing the
-      // reward (the intermittent "finishes early" bug).
-      if (this._isFinishing) return;
-      await this.sceneManager.goTo(SCENES.ISLAND);
-    });
-
+    // No "back to island" escape hatch on purpose — once an adventure
+    // starts, the only way out is finishing it.
     this._runToken = 0;
     this._isFinishing = false;
-    this.backBtn.classList.remove('is-disabled');
     this._pendingResolve = null;
   }
 
@@ -91,7 +92,8 @@ export class BazaarScene {
     await this._runCountdown();
     if (token !== this._runToken) return;
 
-    await this._playRiddles(token);
+    const trials = this._pickTrials(5);
+    await this._playTrials(trials, token);
   }
 
   async exit() {
@@ -104,10 +106,13 @@ export class BazaarScene {
     this._isFinishing = false;
     this.optionsEl.innerHTML = '';
     this.questionEl.textContent = '';
+    this.illustrationEl.innerHTML = '';
     this.dialogEl.classList.add('dialog--hidden');
     this.rulesEl.classList.remove('is-visible');
     this.countdownEl.classList.remove('is-visible');
-    this.roundDotEls.forEach((dot) => dot.classList.remove('is-done', 'is-current'));
+    this.keyEl.classList.remove('is-visible');
+    this.bookEl.style.opacity = '';
+    this.bookEl.style.transform = '';
     this.camera.reset();
   }
 
@@ -156,25 +161,22 @@ export class BazaarScene {
     this.countdownEl.classList.remove('is-visible');
   }
 
-  /** Play all five riddles in order, then the finale. */
-  async _playRiddles(token) {
-    for (let i = 0; i < this.config.riddles.length; i++) {
-      console.log(`[Bazaar] starting riddle ${i + 1}/${this.config.riddles.length}`);
-      this._updateRoundDots(i);
-      const won = await this._playRiddle(this.config.riddles[i], token);
-      console.log(`[Bazaar] riddle ${i + 1} resolved with won=${won}`);
-      if (!won) return; // scene was exited mid-riddle
+  /** Draw `count` distinct puzzles from the 20-puzzle bank. */
+  _pickTrials(count) {
+    return [...ATLAS_PUZZLES].sort(() => Math.random() - 0.5).slice(0, count);
+  }
 
-      if (i < this.config.riddles.length - 1) {
-        const line = this.config.pageWinLines[i % this.config.pageWinLines.length];
-        this.dialogEl.classList.remove('dialog--hidden');
-        await typeText(this.dialogTextEl, line);
-        await this._turnPage();
-        this.dialogEl.classList.add('dialog--hidden');
-      }
+  /** Play all five trials in order, then the finale. */
+  async _playTrials(trials, token) {
+    for (let i = 0; i < trials.length; i++) {
+      console.log(`[Bazaar] starting trial ${i + 1}/${trials.length} (puzzle #${trials[i].id}, ${trials[i].category})`);
+      this.counterEl.textContent = `${i + 1} / ${trials.length}`;
+      const won = await this._playTrial(trials[i], token);
+      console.log(`[Bazaar] trial ${i + 1} resolved with won=${won}`);
+      if (!won) return; // scene was exited mid-trial
     }
 
-    console.log('[Bazaar] all riddles complete, checking token before win sequence', { token, current: this._runToken });
+    console.log('[Bazaar] all trials complete, checking token before win sequence', { token, current: this._runToken });
     if (token !== this._runToken) return;
 
     console.log('[Bazaar] calling _playWinSequence()');
@@ -182,32 +184,25 @@ export class BazaarScene {
     console.log('[Bazaar] _playWinSequence() returned normally');
   }
 
-  _updateRoundDots(currentIndex) {
-    this.roundDotEls.forEach((dot, i) => {
-      dot.classList.toggle('is-done', i < currentIndex);
-      dot.classList.toggle('is-current', i === currentIndex);
-    });
-  }
-
   /**
-   * One riddle: show the question and three shuffled answer cards, wait
-   * for a tap. Resolves true once the correct one is chosen, false if the
-   * scene was exited early.
+   * One trial: show the illustration and question, render the four
+   * (shuffled) answer cards, wait for the correct one to be tapped.
+   * A wrong tap gets a shake and a brief cooldown, never a penalty.
+   * Resolves true once solved, false if the scene was exited early.
    */
-  _playRiddle(riddle, token) {
+  _playTrial(puzzle, token) {
     return new Promise((resolve) => {
       this._pendingResolve = resolve;
 
-      this.questionEl.textContent = riddle.question;
+      this.illustrationEl.innerHTML = puzzle.illustration;
+      this.questionEl.textContent = puzzle.question;
       this.optionsEl.innerHTML = '';
-      this.optionsEl.style.pointerEvents = '';
 
-      const options = this._shuffle(riddle.options);
+      const options = [...puzzle.options].sort(() => Math.random() - 0.5);
       options.forEach((option) => {
         const el = document.createElement('button');
-        el.className = 'bzr-option';
-        el.innerHTML = icon(option.icon);
-        el.setAttribute('aria-label', option.label);
+        el.className = 'atlas-option';
+        el.textContent = option.label;
 
         el.addEventListener('click', () => {
           try {
@@ -216,19 +211,20 @@ export class BazaarScene {
             if (option.correct) {
               this.audio.win();
               el.classList.add('is-correct');
-              this.optionsEl.style.pointerEvents = 'none'; // block further taps while we turn the page
+              this.optionsEl.style.pointerEvents = 'none';
               this._pendingResolve = null;
-              resolve(true);
+              this._turnPage().then(() => resolve(true));
             } else {
               this.audio.nudge();
               el.classList.add('is-wrong');
-              setTimeout(() => el.classList.remove('is-wrong'), 350);
-              this.dialogEl.classList.remove('dialog--hidden');
-              typeText(this.dialogTextEl, this.config.missLine);
-              setTimeout(() => this.dialogEl.classList.add('dialog--hidden'), 1300);
+              this.optionsEl.style.pointerEvents = 'none'; // one-second cooldown before trying again
+              setTimeout(() => {
+                el.classList.remove('is-wrong');
+                this.optionsEl.style.pointerEvents = '';
+              }, 1000);
             }
           } catch (err) {
-            console.error('[Bazaar] riddle answer tap handler failed:', err);
+            console.error('[Bazaar] atlas answer tap handler failed:', err);
           }
         });
 
@@ -237,26 +233,28 @@ export class BazaarScene {
     });
   }
 
-  _shuffle(arr) {
-    return [...arr].sort(() => Math.random() - 0.5);
-  }
-
-  /** A short page-flip animation between riddles. */
+  /** A short page-flip on the left page between trials. */
   async _turnPage() {
     this.audio.tap();
-    this.pageEl.classList.add('is-turning');
+    await wait(500); // let the CORRECT stamp actually be seen first
+    this.pageLeftEl.classList.add('is-turning');
     await wait(600);
-    this.pageEl.classList.remove('is-turning');
+    this.pageLeftEl.classList.remove('is-turning');
   }
 
   async _playWinSequence() {
     console.log('[Bazaar] _playWinSequence: started');
     this._isFinishing = true;
-    this.backBtn.classList.add('is-disabled');
-    this._updateRoundDots(this.config.riddles.length);
     await wait(400);
 
+    this.bookEl.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    this.bookEl.style.opacity = '0.3';
+    this.bookEl.style.transform = 'scale(0.9)';
+
     this.audio.chest();
+    this.keyEl.classList.add('is-visible');
+    this.mickey.play(MICKEY_STATES.CELEBRATE);
+
     this.dialogEl.classList.remove('dialog--hidden');
     await typeText(this.dialogTextEl, this.config.winLine);
     await wait(1400);

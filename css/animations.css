@@ -441,9 +441,9 @@
 }
 
 /* ---- Bazaar: hanging lanterns swaying ---- */
-@keyframes bzr-lantern-sway {
-  0%, 100% { transform: rotate(-5deg); }
-  50% { transform: rotate(5deg); }
+@keyframes bzr-globe-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* ---- Bazaar: riddle book ---- */
@@ -491,4 +491,11 @@
   0% { transform: scale(1); }
   40% { transform: scale(1.18); }
   100% { transform: scale(1); }
+}
+
+/* ---- Bazaar: the golden key appearing at the very end ---- */
+@keyframes atlas-key-appear {
+  0% { transform: translate(-50%, -50%) scale(0) rotate(-30deg); opacity: 0; }
+  70% { transform: translate(-50%, -50%) scale(1.15) rotate(8deg); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
 }

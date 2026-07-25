@@ -45,20 +45,10 @@ export class MountainScene {
     this.gridEl = sceneEl.querySelector('#mountain-grid');
     this.roundDotEls = Array.from(sceneEl.querySelectorAll('.adventure-round-dot'));
     this.lightWaveEl = sceneEl.querySelector('#mountain-light-wave');
-    this.backBtn = sceneEl.querySelector('#mountain-back');
-
-    this.backBtn.addEventListener('click', async () => {
-      // Blocked once the win sequence has started — otherwise a fast tap
-      // here races the win sequence's own goTo(REWARD) and can win,
-      // dumping the player back on the island without ever seeing the
-      // reward (the intermittent "finishes early" bug).
-      if (this._isFinishing) return;
-      await this.sceneManager.goTo(SCENES.ISLAND);
-    });
-
+    // No "back to island" escape hatch on purpose — once an adventure
+    // starts, the only way out is finishing it.
     this._runToken = 0;
     this._isFinishing = false;
-    this.backBtn.classList.remove('is-disabled');
     this._hintTimer = null;
     this._pendingResolve = null;
   }
@@ -218,7 +208,7 @@ export class MountainScene {
       this.gridEl.innerHTML = '';
       this._setGridEnabled(true);
       const totalCells = round.grid * round.grid;
-      const correctSet = new Set(round.pattern ?? this._pickRandomCells(totalCells, round.revealCount));
+      const correctSet = new Set(this._pickPattern(round) ?? this._pickRandomCells(totalCells, round.revealCount));
       const found = new Set();
 
       const cellEls = this._renderGrid(round.grid, (index, el) => {
@@ -266,6 +256,16 @@ export class MountainScene {
    *  round-transition dialog can't do anything. */
   _setGridEnabled(enabled) {
     this.gridEl.style.pointerEvents = enabled ? '' : 'none';
+  }
+
+  /** Pick one of several symbol shapes at random, so a round with more than
+   *  one option (like round 3's "island symbol") doesn't play out the
+   *  same way every single time. */
+  _pickPattern(round) {
+    if (round.patterns) {
+      return round.patterns[Math.floor(Math.random() * round.patterns.length)];
+    }
+    return round.pattern;
   }
 
   _pickRandomCells(totalCells, count) {
@@ -365,7 +365,6 @@ export class MountainScene {
   async _playWinSequence() {
     console.log('[Mountain] _playWinSequence: started');
     this._isFinishing = true;
-    this.backBtn.classList.add('is-disabled');
     this._updateRoundDots(this.config.rounds.length);
     await wait(400);
     console.log('[Mountain] _playWinSequence: initial wait done');

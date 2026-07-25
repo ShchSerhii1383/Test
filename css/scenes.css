@@ -740,25 +740,8 @@
    version of this scene and have been replaced — search for "LAGOON: full
    cinematic adventure" below for the current styles.) */
 
-.back-hint {
-  position: absolute;
-  top: var(--space-md);
-  left: var(--space-md);
-  color: var(--color-text-dark);
-  background: rgba(255,255,255,0.7);
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  z-index: var(--z-dialog);
-  transition: opacity var(--duration-fast) var(--ease-soft);
-}
-
-/* Dimmed once the win sequence has taken over — tapping "back" here would
-   race the transition already under way, so it's blocked and shown as such. */
-.back-hint.is-disabled {
-  opacity: 0.35;
-  pointer-events: none;
-}
+/* (the "← Острів" back button was removed from every adventure — each one
+   is now a strict linear path with no escape hatch until it's finished.) */
 
 /* ---------------- Mountain scene ---------------- */
 
@@ -979,7 +962,7 @@
 
 .scene--bazaar {
   overflow: hidden;
-  background: linear-gradient(to bottom, #FFE0B5 0%, var(--color-sky-bottom) 80%);
+  background: linear-gradient(to bottom, #3A2E22 0%, #241C14 100%);
   /* Same camera mechanism as every other scene. */
   --cam-x: 0%;
   --cam-y: 0%;
@@ -995,22 +978,24 @@
 .bzr-layer--roofs { z-index: 2; pointer-events: none; }
 .bzr-layer--floor { z-index: 3; }
 
-.bzr-layer--sky .sun { position: absolute; top: 6%; right: 16%; }
+/* A soft warm glow, as if lantern-light is the only light in the room */
+.bzr-window-glow {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
+  height: 40%;
+  background: radial-gradient(ellipse, rgba(255, 200, 130, 0.18) 0%, transparent 70%);
+}
 
-.bzr-roofline { position: absolute; top: 0; left: 0; width: 100%; height: 16%; }
+/* ---- The study wall: map, globe, telescope ---- */
 
-.bzr-flag { position: absolute; top: 14%; width: 16px; height: 24px; transform-origin: top left; }
-.bzr-flag--1 { left: 15%; animation: mtn-flag-wave 2.4s var(--ease-soft) infinite; }
-.bzr-flag--2 { left: 48%; animation: mtn-flag-wave 2.8s var(--ease-soft) infinite 0.4s; }
-.bzr-flag--3 { left: 80%; animation: mtn-flag-wave 2.6s var(--ease-soft) infinite 0.8s; }
+.bzr-wall-map { position: absolute; top: 6%; left: 50%; transform: translateX(-50%); width: 60%; max-width: 320px; opacity: 0.9; }
+.bzr-globe { position: absolute; top: 10%; left: 8%; width: 50px; animation: bzr-globe-spin 14s linear infinite; }
+.bzr-telescope { position: absolute; top: 12%; right: 10%; width: 44px; }
 
-.bzr-lantern { position: absolute; top: 13%; width: 24px; height: 34px; transform-origin: top center; }
-.bzr-lantern--1 { left: 30%; animation: bzr-lantern-sway 3.2s var(--ease-soft) infinite; }
-.bzr-lantern--2 { left: 65%; animation: bzr-lantern-sway 3.6s var(--ease-soft) infinite 0.6s; }
-
-/* ---- The market floor ---- */
-
-.bzr-carpet { position: absolute; bottom: 4%; left: 50%; transform: translateX(-50%); width: 70%; height: 12%; }
+/* ---- The desk and its props ---- */
 
 .bzr-table {
   position: absolute;
@@ -1040,12 +1025,13 @@
 }
 
 .bzr-prop { position: absolute; pointer-events: none; }
-.bzr-prop--map { left: 10%; bottom: 30%; width: 44px; transform: rotate(-4deg); }
+.bzr-prop--books { left: 8%; bottom: 32%; width: 40px; }
 .bzr-prop--lantern-table { right: 12%; bottom: 34%; width: 24px; }
 .bzr-prop--compass-table { left: 20%; bottom: 42%; width: 34px; }
-.bzr-prop--quill { right: 22%; bottom: 40%; width: 24px; }
+.bzr-prop--rope { right: 22%; bottom: 38%; width: 30px; }
 .bzr-prop--coins { left: 14%; bottom: 22%; width: 38px; }
-.bzr-prop--candle { right: 16%; bottom: 22%; width: 18px; }
+.bzr-prop--chest { right: 16%; bottom: 22%; width: 34px; }
+.bzr-prop--candle { left: 44%; bottom: 40%; width: 18px; }
 .bzr-candle-flame { animation: bzr-candle-flicker 1.4s ease-in-out infinite; transform-origin: bottom center; }
 
 .bzr-mickey-spot { position: absolute; left: 6%; bottom: 6%; width: 80px; height: 130px; }
@@ -1062,7 +1048,7 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-md);
-  background: rgba(120, 70, 30, 0.18);
+  background: rgba(20, 14, 8, 0.35);
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--duration-medium) var(--ease-soft);
@@ -1074,82 +1060,151 @@
 .bzr-rules__item.is-glowing { animation: lagoon-demo-glow 1s var(--ease-soft) infinite; }
 .bzr-rules__item.is-collected { animation: lagoon-demo-collect 0.5s var(--ease-soft) forwards; }
 
-/* ---- The riddle book itself ---- */
+/* ---- The atlas's top panel: nameplate, round counter, small compass ---- */
 
-.bzr-book {
+.atlas-topbar {
   position: absolute;
-  bottom: 34%;
+  top: 3%;
   left: 50%;
   transform: translateX(-50%);
-  width: 260px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: var(--color-wood-light);
+  border: 2px solid var(--color-wood-dark);
+  border-radius: 8px;
+  padding: 4px var(--space-md);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.atlas-topbar__compass { width: 20px; height: 20px; animation: bzr-globe-spin 8s linear infinite; }
+.atlas-topbar__title { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: #4A3218; }
+.atlas-topbar__counter { font-family: var(--font-display); font-size: 12px; color: #4A3218; opacity: 0.8; }
+
+/* ---- The atlas book: an open two-page spread ---- */
+
+.atlas-book {
+  position: absolute;
+  top: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 88%;
+  max-width: 380px;
+  height: 62%;
+  display: flex;
   z-index: 15;
-}
-
-.bzr-book__page {
-  background: linear-gradient(to bottom, #F7E6C4 0%, #EBD5A6 100%);
-  border: 3px solid #B0894C;
+  box-shadow: 0 14px 28px rgba(0,0,0,0.4);
   border-radius: 6px;
-  padding: var(--space-md);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.25);
-  text-align: center;
+  overflow: hidden;
 }
 
-.bzr-book__page.is-turning {
+.atlas-book__page {
+  flex: 1;
+  background: linear-gradient(to bottom, #F7E6C4 0%, #EBD5A6 100%);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.atlas-book__page--left.is-turning {
   animation: bzr-page-turn 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
 }
 
-.bzr-book__question {
+.atlas-book__spine { width: 6px; background: var(--color-wood-dark); box-shadow: 0 0 6px rgba(0,0,0,0.4) inset; }
+
+.atlas-book__illustration { width: 100%; }
+.atlas-illustration { width: 100%; height: auto; }
+
+.atlas-book__question {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13px;
   color: #4A3218;
-  line-height: 1.4;
+  text-align: center;
+  line-height: 1.35;
   margin-bottom: var(--space-sm);
 }
 
-.bzr-book__options {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-sm);
+.atlas-book__options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-xs);
+  width: 100%;
 }
 
-/* Answer cards: not plain buttons — a small hover lift, shadow, and a
-   gold glow, matching the brief's "beautifully drawn cards" request. */
-.bzr-option {
-  width: 66px;
-  height: 82px;
+/* Answer cards: not plain buttons — a small lift, shadow, and a gold glow. */
+.atlas-option {
+  min-height: 44px;
   background: var(--color-text-light);
   border: 2px solid #D9B77C;
-  border-radius: 10px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-xs);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  padding: 4px 6px;
+  font-size: 10px;
+  font-family: var(--font-display);
+  color: #4A3218;
+  text-align: center;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
   transition: transform 0.2s var(--ease-soft), box-shadow 0.2s var(--ease-soft);
-}
-
-.bzr-option .icon { width: 36px; height: 36px; }
-
-.bzr-option:active {
-  transform: scale(0.94);
+  position: relative;
 }
 
 @media (hover: hover) {
-  .bzr-option:hover {
-    transform: translateY(-4px) scale(1.05);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2), 0 0 12px 2px var(--color-box-glow);
+  .atlas-option:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.2), 0 0 10px 2px var(--color-box-glow);
     border-color: var(--color-sun);
   }
 }
 
-.bzr-option.is-correct {
+.atlas-option:active { transform: scale(0.94); }
+
+.atlas-option.is-correct {
   animation: stone-flash 0.4s var(--ease-soft);
-  border-color: var(--color-sun);
+  border-color: #3A8067;
+  background: #E3F3EA;
 }
 
-.bzr-option.is-wrong {
+.atlas-option.is-correct::after {
+  content: '✓ CORRECT';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(58, 128, 103, 0.92);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  border-radius: 6px;
+}
+
+.atlas-option.is-wrong {
   animation: lagoon-decoy-wobble 0.3s var(--ease-soft);
+  border-color: #C4504F;
+}
+
+/* ---- The golden key, revealed once all five trials are solved ---- */
+
+.atlas-key {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  width: 70px;
+  z-index: 40;
+  opacity: 0;
+  filter: drop-shadow(0 0 10px var(--color-box-glow));
+}
+
+.atlas-key.is-visible {
+  animation: atlas-key-appear 1s cubic-bezier(0.3, 1.4, 0.5, 1) forwards;
 }
 
 /* ---------------- Reward scene (universal) ---------------- */
@@ -1923,15 +1978,6 @@
 .mtn-deco-crystal { position: absolute; width: 16px; z-index: 4; }
 .mtn-deco-crystal--1 { left: 12%; bottom: 8%; animation: mtn-crystal-shimmer 3s var(--ease-soft) infinite; }
 .mtn-deco-crystal--2 { right: 16%; bottom: 14%; animation: mtn-crystal-shimmer 3.6s var(--ease-soft) infinite 0.8s; }
-
-.bzr-fabric {
-  position: absolute;
-  top: 12%;
-  left: 44%;
-  width: 60px;
-  transform-origin: top center;
-  animation: mtn-flag-wave 3.4s var(--ease-soft) infinite;
-}
 
 .bzr-dust {
   position: absolute;
