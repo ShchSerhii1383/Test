@@ -38,6 +38,7 @@ export class LagoonScene {
     this.rulesDemoItemEl = sceneEl.querySelector('#lagoon-rules-demo-item');
     this.countdownEl = sceneEl.querySelector('#lagoon-countdown');
     this.fieldEl = sceneEl.querySelector('#lagoon-field');
+    this.panelEl = sceneEl.querySelector('#lagoon-panel');
     this.panelCardsEl = sceneEl.querySelector('#lagoon-panel-cards');
     this.roundDotEls = Array.from(sceneEl.querySelectorAll('#lagoon-round-dots .adventure-round-dot'));
     this.backBtn = sceneEl.querySelector('#lagoon-back');
@@ -88,6 +89,7 @@ export class LagoonScene {
     await this._runCountdown();
     if (token !== this._runToken) return;
 
+    this.panelEl.classList.add('is-visible');
     await this._playRounds(token);
   }
 
@@ -103,6 +105,7 @@ export class LagoonScene {
     this._isFinishing = false;
     this.fieldEl.innerHTML = '';
     this.panelCardsEl.innerHTML = '';
+    this.panelEl.classList.remove('is-visible');
     this.dialogEl.classList.add('dialog--hidden');
     this.rulesEl.classList.remove('is-visible');
     this.countdownEl.classList.remove('is-visible');
@@ -217,8 +220,14 @@ export class LagoonScene {
     this.fieldEl.style.pointerEvents = '';
 
     const targets = round.targets.map((t) => ({ ...t, isTarget: true }));
+
+    // Never let a decoy share an icon with one of this round's real
+    // targets — otherwise the player sees two identical-looking shells,
+    // say, and can't tell which one actually counts.
+    const targetIcons = new Set(round.targets.map((t) => t.icon));
+    const decoyPool = this.config.clutterTypes.filter((type) => !targetIcons.has(type));
     const decoys = Array.from({ length: round.clutterCount }, (_, i) => ({
-      icon: this.config.clutterTypes[i % this.config.clutterTypes.length],
+      icon: decoyPool[i % decoyPool.length],
       isTarget: false,
     }));
 
@@ -343,6 +352,7 @@ export class LagoonScene {
     this._isFinishing = true;
     this.backBtn.classList.add('is-disabled');
     this._updateRoundDots(this.config.rounds.length);
+    this.panelEl.classList.remove('is-visible');
     await wait(600);
 
     this.audio.chest();

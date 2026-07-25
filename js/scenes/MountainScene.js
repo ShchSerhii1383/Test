@@ -212,29 +212,36 @@ export class MountainScene {
       const found = new Set();
 
       const cellEls = this._renderGrid(round.grid, (index, el) => {
-        if (token !== this._runToken) return;
-        if (found.has(index)) return; // already solved, ignore further taps
+        try {
+          if (token !== this._runToken) return;
+          if (found.has(index)) return; // already solved, ignore further taps
 
-        if (correctSet.has(index)) {
-          this.audio.win();
-          el.classList.add('is-correct');
-          found.add(index);
-          clearTimeout(this._hintTimer);
+          if (correctSet.has(index)) {
+            this.audio.win();
+            el.classList.add('is-correct');
+            found.add(index);
+            clearTimeout(this._hintTimer);
 
-          if (found.size === correctSet.size) {
-            this._setGridEnabled(false); // no more taps can land while we transition to the next round
-            this._pendingResolve = null;
-            resolve(true);
+            if (found.size === correctSet.size) {
+              this._setGridEnabled(false); // no more taps can land while we transition to the next round
+              this._pendingResolve = null;
+              resolve(true);
+            } else {
+              this._startHintTimer(correctSet, found, cellEls, token);
+            }
           } else {
-            this._startHintTimer(correctSet, found, cellEls, token);
+            this.audio.nudge();
+            el.classList.add('is-wrong');
+            setTimeout(() => el.classList.remove('is-wrong'), 350);
+            this.dialogEl.classList.remove('dialog--hidden');
+            typeText(this.dialogTextEl, this.config.missLine);
+            setTimeout(() => this.dialogEl.classList.add('dialog--hidden'), 1300);
           }
-        } else {
-          this.audio.nudge();
-          el.classList.add('is-wrong');
-          setTimeout(() => el.classList.remove('is-wrong'), 350);
-          this.dialogEl.classList.remove('dialog--hidden');
-          typeText(this.dialogTextEl, this.config.missLine);
-          setTimeout(() => this.dialogEl.classList.add('dialog--hidden'), 1300);
+        } catch (err) {
+          // A crystal tap should never be able to take down the whole
+          // round silently — log it clearly so it's easy to find if this
+          // ever happens again, instead of it just looking like a crash.
+          console.error('MountainScene: crystal tap handler failed:', err);
         }
       });
 
@@ -279,11 +286,10 @@ export class MountainScene {
 
   _renderGrid(gridSize, onTap) {
     const positions = this._gridPositions(gridSize);
-    // Smaller grids can afford bigger crystals; a 4x4 grid packs cells
-    // much closer together (same total area, more of them), so the
-    // crystal itself needs to shrink or neighbors start overlapping —
-    // which was the actual cause of some cells becoming untappable
-    // (a later-rendered neighbor visually covered them).
+    // Smaller crystals for the denser 4x4 grid so they read as
+    // comfortably spaced rather than crowded — purely a visual choice now
+    // that the grid itself is perfectly symmetric (no jitter, so no
+    // overlap is possible regardless of size).
     const sizePx = gridSize <= 3 ? 46 : 32;
 
     return positions.map((pos, i) => {
@@ -306,47 +312,20 @@ export class MountainScene {
     });
   }
 
-  /** Evenly spaced grid, centered, with a touch of jitter so it feels hand-placed. */
+  /** A clean, evenly spaced grid — perfectly symmetric, so nothing can ever overlap. */
   _gridPositions(gridSize) {
     const positions = [];
     const spanX = 56; // percent of the scene width the grid occupies
     const spanY = 46;
     const startX = 34;
     const startY = 34;
-    // A 4x4 grid packs cells much closer together than a 3x3 one (same
-    // area, more cells) — the same jitter amount that looked natural on
-    // a 3x3 grid was enough to occasionally push two 4x4 neighbors close
-    // enough to overlap, letting one cover the other's tap area entirely.
-    const jitter = gridSize <= 3 ? 3 : 1.4;
-    // Below this distance (in the same % units as x/y), two crystals are
-    // considered too close — that's what let one hide behind another.
-    const minDistance = gridSize <= 3 ? 6 : 4;
 
     for (let r = 0; r < gridSize; r++) {
       for (let c = 0; c < gridSize; c++) {
-        const baseX = startX + (c / (gridSize - 1)) * spanX;
-        const baseY = startY + (r / (gridSize - 1)) * spanY;
-
-        // Try a few jittered positions and keep the first one that's not
-        // too close to an already-placed neighbor — falls back to the
-        // un-jittered exact grid spot if every attempt is too close,
-        // which is always guaranteed safe since the grid spacing itself
-        // is bigger than minDistance.
-        let candidate = { x: baseX, y: baseY };
-        for (let attempt = 0; attempt < 5; attempt++) {
-          const tryPos = {
-            x: baseX + (Math.random() - 0.5) * jitter,
-            y: baseY + (Math.random() - 0.5) * jitter,
-          };
-          const tooClose = positions.some(
-            (p) => Math.hypot(p.x - tryPos.x, p.y - tryPos.y) < minDistance
-          );
-          if (!tooClose) {
-            candidate = tryPos;
-            break;
-          }
-        }
-        positions.push(candidate);
+        positions.push({
+          x: startX + (c / (gridSize - 1)) * spanX,
+          y: startY + (r / (gridSize - 1)) * spanY,
+        });
       }
     }
     return positions;
