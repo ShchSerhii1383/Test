@@ -65,7 +65,8 @@ export class BazaarScene {
       // Never leave the player stranded on a broken scene: if the error
       // hit after they'd already won, still try to get them their reward;
       // otherwise just send them back to the island.
-      console.error('BazaarScene.enter() failed partway through:', err);
+      console.error('[Bazaar] enter() FALLBACK TRIGGERED — _enterInner() threw:', err);
+      console.log('[Bazaar] fallback: _isFinishing =', this._isFinishing, '-> going to', this._isFinishing ? 'REWARD' : 'ISLAND');
       if (this._isFinishing) {
         await this.sceneManager.goTo(SCENES.REWARD, { adventureId: 'bazaar' });
       } else {
@@ -158,8 +159,10 @@ export class BazaarScene {
   /** Play all five riddles in order, then the finale. */
   async _playRiddles(token) {
     for (let i = 0; i < this.config.riddles.length; i++) {
+      console.log(`[Bazaar] starting riddle ${i + 1}/${this.config.riddles.length}`);
       this._updateRoundDots(i);
       const won = await this._playRiddle(this.config.riddles[i], token);
+      console.log(`[Bazaar] riddle ${i + 1} resolved with won=${won}`);
       if (!won) return; // scene was exited mid-riddle
 
       if (i < this.config.riddles.length - 1) {
@@ -171,8 +174,12 @@ export class BazaarScene {
       }
     }
 
+    console.log('[Bazaar] all riddles complete, checking token before win sequence', { token, current: this._runToken });
     if (token !== this._runToken) return;
+
+    console.log('[Bazaar] calling _playWinSequence()');
     await this._playWinSequence();
+    console.log('[Bazaar] _playWinSequence() returned normally');
   }
 
   _updateRoundDots(currentIndex) {
@@ -203,21 +210,25 @@ export class BazaarScene {
         el.setAttribute('aria-label', option.label);
 
         el.addEventListener('click', () => {
-          if (token !== this._runToken) return;
+          try {
+            if (token !== this._runToken) return;
 
-          if (option.correct) {
-            this.audio.win();
-            el.classList.add('is-correct');
-            this.optionsEl.style.pointerEvents = 'none'; // block further taps while we turn the page
-            this._pendingResolve = null;
-            resolve(true);
-          } else {
-            this.audio.nudge();
-            el.classList.add('is-wrong');
-            setTimeout(() => el.classList.remove('is-wrong'), 350);
-            this.dialogEl.classList.remove('dialog--hidden');
-            typeText(this.dialogTextEl, this.config.missLine);
-            setTimeout(() => this.dialogEl.classList.add('dialog--hidden'), 1300);
+            if (option.correct) {
+              this.audio.win();
+              el.classList.add('is-correct');
+              this.optionsEl.style.pointerEvents = 'none'; // block further taps while we turn the page
+              this._pendingResolve = null;
+              resolve(true);
+            } else {
+              this.audio.nudge();
+              el.classList.add('is-wrong');
+              setTimeout(() => el.classList.remove('is-wrong'), 350);
+              this.dialogEl.classList.remove('dialog--hidden');
+              typeText(this.dialogTextEl, this.config.missLine);
+              setTimeout(() => this.dialogEl.classList.add('dialog--hidden'), 1300);
+            }
+          } catch (err) {
+            console.error('[Bazaar] riddle answer tap handler failed:', err);
           }
         });
 
@@ -239,6 +250,7 @@ export class BazaarScene {
   }
 
   async _playWinSequence() {
+    console.log('[Bazaar] _playWinSequence: started');
     this._isFinishing = true;
     this.backBtn.classList.add('is-disabled');
     this._updateRoundDots(this.config.riddles.length);
@@ -248,7 +260,9 @@ export class BazaarScene {
     this.dialogEl.classList.remove('dialog--hidden');
     await typeText(this.dialogTextEl, this.config.winLine);
     await wait(1400);
+    console.log('[Bazaar] _playWinSequence: win line shown, calling goTo(REWARD)');
 
     await this.sceneManager.goTo(SCENES.REWARD, { adventureId: 'bazaar' });
+    console.log('[Bazaar] _playWinSequence: goTo(REWARD) returned normally');
   }
 }

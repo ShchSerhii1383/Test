@@ -64,7 +64,7 @@ export class LagoonScene {
     try {
       await this._enterInner();
     } catch (err) {
-      console.error('LagoonScene.enter() failed partway through:', err);
+      console.error('[Lagoon] enter() FALLBACK TRIGGERED — _enterInner() threw:', err);
       if (this._isFinishing) {
         await this.sceneManager.goTo(SCENES.REWARD, { adventureId: 'lagoon' });
       } else {
@@ -161,8 +161,11 @@ export class LagoonScene {
   /** Play all three rounds in order, then the finale. */
   async _playRounds(token) {
     for (let i = 0; i < this.config.rounds.length; i++) {
+      console.log(`[Lagoon] starting round ${i + 1}/${this.config.rounds.length}`);
       this._updateRoundDots(i);
+
       const won = await this._playRound(this.config.rounds[i], token);
+      console.log(`[Lagoon] round ${i + 1} resolved with won=${won}`);
       if (!won) return; // scene was exited mid-round
 
       if (i < this.config.rounds.length - 1) {
@@ -175,8 +178,12 @@ export class LagoonScene {
       }
     }
 
+    console.log('[Lagoon] all rounds complete, checking token before win sequence', { token, current: this._runToken });
     if (token !== this._runToken) return;
+
+    console.log('[Lagoon] calling _playWinSequence()');
     await this._playWinSequence();
+    console.log('[Lagoon] _playWinSequence() returned normally');
   }
 
   _updateRoundDots(currentIndex) {
@@ -244,8 +251,12 @@ export class LagoonScene {
       el.setAttribute('aria-label', item.isTarget ? item.label : 'Дрібниця на пляжі');
 
       el.addEventListener('click', () => {
-        if (token !== this._runToken) return;
-        this._handleTap(item, el, round, found, resolve);
+        try {
+          if (token !== this._runToken) return;
+          this._handleTap(item, el, round, found, resolve);
+        } catch (err) {
+          console.error('[Lagoon] field item tap handler failed:', err);
+        }
       });
       this.fieldEl.appendChild(el);
     });
@@ -349,11 +360,13 @@ export class LagoonScene {
 
   /** All three rounds solved: the panel closes, Mickey celebrates. */
   async _playWinSequence() {
+    console.log('[Lagoon] _playWinSequence: started');
     this._isFinishing = true;
     this.backBtn.classList.add('is-disabled');
     this._updateRoundDots(this.config.rounds.length);
     this.panelEl.classList.remove('is-visible');
     await wait(600);
+    console.log('[Lagoon] _playWinSequence: initial wait done');
 
     this.audio.chest();
     this.camera.focus({ scale: 1.08, x: '0%', y: '-2%' }); // a small pull-back, not a push-in
@@ -361,7 +374,9 @@ export class LagoonScene {
     this.dialogEl.classList.remove('dialog--hidden');
     await typeText(this.dialogTextEl, this.config.winLine);
     await wait(1400);
+    console.log('[Lagoon] _playWinSequence: win line shown, calling goTo(REWARD)');
 
     await this.sceneManager.goTo(SCENES.REWARD, { adventureId: 'lagoon' });
+    console.log('[Lagoon] _playWinSequence: goTo(REWARD) returned normally');
   }
 }

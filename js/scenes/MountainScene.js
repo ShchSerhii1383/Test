@@ -70,7 +70,8 @@ export class MountainScene {
       // Never leave the player stranded on a broken scene: if the error
       // hit after they'd already won, still try to get them their reward;
       // otherwise just send them back to the island.
-      console.error('MountainScene.enter() failed partway through:', err);
+      console.error('[Mountain] enter() FALLBACK TRIGGERED — _enterInner() threw:', err);
+      console.log('[Mountain] fallback: _isFinishing =', this._isFinishing, '-> going to', this._isFinishing ? 'REWARD' : 'ISLAND');
       if (this._isFinishing) {
         await this.sceneManager.goTo(SCENES.REWARD, { adventureId: 'mountain' });
       } else {
@@ -169,22 +170,31 @@ export class MountainScene {
   /** Play all three rounds in order, then the finale. */
   async _playRounds(token) {
     for (let i = 0; i < this.config.rounds.length; i++) {
+      console.log(`[Mountain] starting round ${i + 1}/${this.config.rounds.length}`);
       this._updateRoundDots(i);
+
       const won = await this._playRound(this.config.rounds[i], token);
+      console.log(`[Mountain] round ${i + 1} resolved with won=${won}`);
       if (!won) return; // scene was exited mid-round
 
       if (i < this.config.rounds.length - 1) {
+        console.log(`[Mountain] round ${i + 1} -> transition dialog`);
         const line = this.config.roundWinLines[i % this.config.roundWinLines.length];
         this.dialogEl.classList.remove('dialog--hidden');
         await typeText(this.dialogTextEl, line);
         await wait(900);
         this.dialogEl.classList.add('dialog--hidden');
         await wait(400);
+        console.log(`[Mountain] round ${i + 1} transition dialog done`);
       }
     }
 
+    console.log('[Mountain] all rounds complete, checking token before win sequence', { token, current: this._runToken });
     if (token !== this._runToken) return;
+
+    console.log('[Mountain] calling _playWinSequence()');
     await this._playWinSequence();
+    console.log('[Mountain] _playWinSequence() returned normally');
   }
 
   _updateRoundDots(currentIndex) {
@@ -353,18 +363,23 @@ export class MountainScene {
 
   /** All three rounds solved: the mountain wakes up. */
   async _playWinSequence() {
+    console.log('[Mountain] _playWinSequence: started');
     this._isFinishing = true;
     this.backBtn.classList.add('is-disabled');
     this._updateRoundDots(this.config.rounds.length);
     await wait(400);
+    console.log('[Mountain] _playWinSequence: initial wait done');
 
     this.audio.chest();
     this.lightWaveEl.classList.add('is-visible');
+    console.log('[Mountain] _playWinSequence: light wave shown');
 
     this.dialogEl.classList.remove('dialog--hidden');
     await typeText(this.dialogTextEl, this.config.winLine);
     await wait(1400);
+    console.log('[Mountain] _playWinSequence: win line shown, calling goTo(REWARD)');
 
     await this.sceneManager.goTo(SCENES.REWARD, { adventureId: 'mountain' });
+    console.log('[Mountain] _playWinSequence: goTo(REWARD) returned normally');
   }
 }

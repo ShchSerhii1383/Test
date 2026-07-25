@@ -69,7 +69,7 @@ export class RewardScene {
       // Better to skip the gift-picking moment than strand the player on
       // a broken reward screen — at least the adventure still counts as
       // done and they're back somewhere they can keep playing.
-      console.error('RewardScene.enter() failed partway through:', err);
+      console.error('[Reward] enter() FALLBACK TRIGGERED — _enterInner() threw:', err);
       if (this._adventureId) {
         this.saveManager.markCompleted(this._adventureId);
       }
@@ -78,6 +78,7 @@ export class RewardScene {
   }
 
   async _enterInner(data = {}) {
+    console.log('[Reward] _enterInner: started', data);
     this._adventureId = data.adventureId ?? null;
     this._isBusy = false;
     const token = ++this._runToken;
@@ -85,13 +86,16 @@ export class RewardScene {
     // Same chest they tapped on the island, not a generic one — the theme
     // comes straight from which adventure just finished.
     renderChest(this.rewardArtEl, this._adventureId);
+    console.log('[Reward] chest theme rendered for', this._adventureId);
 
     this._resetVisualState();
     await this._runCountdown();
+    console.log('[Reward] countdown done');
     if (token !== this._runToken) return; // a newer visit started meanwhile
 
     this.boxEl.classList.add('is-visible');
     this.mickey.hush();
+    console.log('[Reward] _enterInner: finished, chest is now visible and tappable');
   }
 
 
@@ -134,24 +138,35 @@ export class RewardScene {
     if (this._isBusy) return; // ignore double-taps
     this._isBusy = true;
     const token = this._runToken;
+    console.log('[Reward] _openChest: tapped, starting open sequence');
 
     try {
       this.audio.chest();
       this.boxEl.classList.add('is-open');
       await wait(260);
-      if (token !== this._runToken) return;
+      if (token !== this._runToken) { console.log('[Reward] _openChest: stale token after lid delay, aborting'); return; }
 
       this.beamEl.classList.add('is-shining');
       this._scatterSparkles(14);
       await wait(900);
-      if (token !== this._runToken) return;
+      if (token !== this._runToken) { console.log('[Reward] _openChest: stale token after beam delay, aborting'); return; }
 
       this.boxEl.classList.add('is-gone');
       await wait(400);
-      if (token !== this._runToken) return;
+      if (token !== this._runToken) { console.log('[Reward] _openChest: stale token after chest-gone delay, aborting'); return; }
 
+      console.log('[Reward] _openChest: about to render cards');
       this._renderCards();
       this.cardsEl.classList.add('is-visible');
+      console.log('[Reward] _openChest: cards rendered and visible —', this.cardsEl.children.length, 'cards');
+    } catch (err) {
+      // This used to be a bare try/finally with no catch — an exception
+      // here (e.g. inside _renderCards) would silently become an
+      // unhandled rejection, since this runs from a click handler, not
+      // from the enter() chain that has its own try/catch. That meant
+      // "the chest opens but cards never appear" could fail completely
+      // silently. Now it's at least loud and clear about where it broke.
+      console.error('[Reward] _openChest: failed partway through:', err);
     } finally {
       // Whatever happened above, the scene stays usable.
       this._isBusy = false;
@@ -206,6 +221,7 @@ export class RewardScene {
     if (this._isBusy) return;
     this._isBusy = true;
     const token = this._runToken;
+    console.log('[Reward] _chooseGift: card tapped, gift =', gift.id);
 
     try {
       this.giftManager.claim(gift.id);
@@ -217,17 +233,18 @@ export class RewardScene {
       this.audio.tap();
       cardEl.classList.add('is-chosen');
       await wait(700); // let the flip land
-      if (token !== this._runToken) return;
+      if (token !== this._runToken) { console.log('[Reward] _chooseGift: stale token after flip, aborting'); return; }
 
       this.cardsEl.classList.remove('is-visible');
       await wait(900); // the cinematic pause
-      if (token !== this._runToken) return;
+      if (token !== this._runToken) { console.log('[Reward] _chooseGift: stale token after pause, aborting'); return; }
 
       this.revealIconEl.innerHTML = icon(gift.icon);
       this.revealTitleEl.textContent = gift.title;
       this.revealMessageEl.textContent = gift.message;
       this.revealEl.classList.add('is-visible');
       this.mickey.play(MICKEY_STATES.CELEBRATE);
+      console.log('[Reward] _chooseGift: reveal is now visible');
 
       // The reveal appears at the same screen spot the card grid just
       // occupied — an impatient rapid double-tap (pick the card, tap
@@ -237,12 +254,19 @@ export class RewardScene {
       setTimeout(() => {
         this.continueBtn.style.pointerEvents = '';
       }, 900);
+    } catch (err) {
+      // Same reasoning as _openChest: this is a click-handler call, not
+      // part of the enter() chain, so a silent try/finally here would
+      // have swallowed any error as an unhandled rejection with the
+      // reveal simply never appearing and no clue why.
+      console.error('[Reward] _chooseGift: failed partway through:', err);
     } finally {
       this._isBusy = false;
     }
   }
 
   _finish() {
+    console.log('[Reward] _finish: continue button tapped, returning to island');
     const finishedAdventure = this._adventureId;
     if (finishedAdventure) {
       this.saveManager.markCompleted(finishedAdventure);
