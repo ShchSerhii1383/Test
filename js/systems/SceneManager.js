@@ -31,6 +31,19 @@ export class SceneManager {
     /** @type {Map<string, {el: HTMLElement, instance: object}>} */
     this.scenes = new Map();
     this.currentSceneName = null;
+
+    /** @type {Array<(name: string, data: object|undefined) => void>}
+     * Fired synchronously right after currentSceneName flips to the new
+     * scene — i.e. as early as possible, before that scene's own (possibly
+     * slow) enter() runs. NavigationGuard uses this to arm/disarm the
+     * back-button trap the instant we're "in" lagoon/mountain/bazaar/reward,
+     * not just once their intro animations finish. */
+    this._changeListeners = [];
+  }
+
+  /** Register a callback invoked on every scene switch. */
+  onChange(fn) {
+    this._changeListeners.push(fn);
   }
 
   /**
@@ -81,6 +94,14 @@ export class SceneManager {
 
     next.el.classList.add('is-active');
     this.currentSceneName = name;
+
+    for (const listener of this._changeListeners) {
+      try {
+        listener(name, data);
+      } catch (err) {
+        console.error('[SceneManager] onChange listener threw:', err);
+      }
+    }
 
     if (typeof next.instance.enter === 'function') {
       await next.instance.enter(data);
