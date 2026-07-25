@@ -1848,3 +1848,31 @@
 .lagoon-compass-ray.is-visible {
   animation: lagoon-ray-burst 1.4s var(--ease-soft) forwards;
 }
+
+.lagoon-leaf--1 { top: 30%; left: -6%; animation: petal-drift 20s linear infinite 3s; }
+.lagoon-leaf--2 { top: 55%; left: -10%; animation: petal-drift 25s linear infinite 11s; }
+
+.mtn-deco-crystal { position: absolute; width: 16px; z-index: 4; }
+.mtn-deco-crystal--1 { left: 12%; bottom: 8%; animation: mtn-crystal-shimmer 3s var(--ease-soft) infinite; }
+.mtn-deco-crystal--2 { right: 16%; bottom: 14%; animation: mtn-crystal-shimmer 3.6s var(--ease-soft) infinite 0.8s; }
+
+.bzr-fabric {
+  position: absolute;
+  top: 12%;
+  left: 44%;
+  width: 60px;
+  transform-origin: top center;
+  animation: mtn-flag-wave 3.4s var(--ease-soft) infinite;
+}
+
+.bzr-dust {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-box-glow);
+  opacity: 0;
+}
+.bzr-dust--1 { top: 40%; left: 30%; animation: bzr-dust-float 6s ease-in-out infinite; }
+.bzr-dust--2 { top: 55%; left: 60%; animation: bzr-dust-float 7.5s ease-in-out infinite 1.5s; }
+.bzr-dust--3 { top: 35%; left: 70%; animation: bzr-dust-float 5.5s ease-in-out infinite 3s; }

@@ -230,6 +230,6 @@ export class RewardScene {
     if (finishedAdventure) {
       this.saveManager.markCompleted(finishedAdventure);
     }
-    this.sceneManager.goTo(SCENES.ISLAND, { returningFrom: finishedAdventure });
+    return this.sceneManager.goTo(SCENES.ISLAND, { returningFrom: finishedAdventure });
   }
 }

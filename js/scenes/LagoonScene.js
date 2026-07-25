@@ -300,6 +300,6 @@ export class LagoonScene {
     await typeText(this.dialogTextEl, this.config.winLine);
     await wait(1400);
 
-    this.sceneManager.goTo(SCENES.REWARD, { adventureId: 'lagoon' });
+    await this.sceneManager.goTo(SCENES.REWARD, { adventureId: 'lagoon' });
   }
 }

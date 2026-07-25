@@ -45,6 +45,7 @@ export class IslandScene {
 
     this.lighthouseEl = sceneEl.querySelector('#lighthouse');
     this.lighthouseEl.addEventListener('click', () => {
+      if (this._isTransitioning) return;
       this.audio.tap();
       this.sceneManager.goTo(SCENES.ALBUM);
     });
@@ -79,6 +80,11 @@ export class IslandScene {
     // completely invisible (not even dimmed/locked-looking) until the
     // moment they're meant to dramatically appear.
     this._materializedBoxes = new Set();
+
+    // True while Mickey is mid-run toward a box (or the lighthouse is
+    // being tapped) — blocks a second tap from firing a second, competing
+    // scene transition while the first is still under way.
+    this._isTransitioning = false;
   }
 
   /** Called by SceneManager right before this scene becomes visible. */
@@ -94,6 +100,7 @@ export class IslandScene {
   }
 
   async _enterInner(data) {
+    this._isTransitioning = false;
     this._syncBoxesWithSave();
 
     if (data.fromIntro) {
@@ -237,6 +244,8 @@ export class IslandScene {
   }
 
   handleBoxTap(adventureId, box) {
+    if (this._isTransitioning) return; // already on our way somewhere
+
     if (box.isLocked) {
       this.audio.nudge();
       box.shake();
@@ -268,6 +277,7 @@ export class IslandScene {
    * than a level-select screen that just swaps out.
    */
   async _runToBoxThenGo(box, sceneName) {
+    this._isTransitioning = true;
     clearTimeout(this._wanderTimer);
 
     // Two different coordinate spaces on purpose: the camera transforms the
@@ -307,6 +317,7 @@ export class IslandScene {
 
     this.sceneManager.goTo(sceneName);
     this.camera.reset();
+    this._isTransitioning = false;
 
     // Reset for next time we're back on the island.
     this.mickey.el.classList.remove('mickey--diving');

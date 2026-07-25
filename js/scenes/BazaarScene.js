@@ -46,6 +46,7 @@ export class BazaarScene {
     this.backBtn.addEventListener('click', () => this.sceneManager.goTo(SCENES.ISLAND));
 
     this._runToken = 0;
+    this._pendingResolve = null;
   }
 
   async enter() {
@@ -77,6 +78,8 @@ export class BazaarScene {
 
   async exit() {
     this._runToken += 1;
+    this._pendingResolve?.(false);
+    this._pendingResolve = null;
   }
 
   _resetState() {
@@ -168,6 +171,8 @@ export class BazaarScene {
    */
   _playRiddle(riddle, token) {
     return new Promise((resolve) => {
+      this._pendingResolve = resolve;
+
       this.questionEl.textContent = riddle.question;
       this.optionsEl.innerHTML = '';
       this.optionsEl.style.pointerEvents = '';
@@ -186,6 +191,7 @@ export class BazaarScene {
             this.audio.win();
             el.classList.add('is-correct');
             this.optionsEl.style.pointerEvents = 'none'; // block further taps while we turn the page
+            this._pendingResolve = null;
             resolve(true);
           } else {
             this.audio.nudge();
@@ -223,6 +229,6 @@ export class BazaarScene {
     await typeText(this.dialogTextEl, this.config.winLine);
     await wait(1400);
 
-    this.sceneManager.goTo(SCENES.REWARD, { adventureId: 'bazaar' });
+    await this.sceneManager.goTo(SCENES.REWARD, { adventureId: 'bazaar' });
   }
 }

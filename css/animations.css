@@ -479,3 +479,15 @@
   30% { opacity: 1; transform: scale(1.4); }
   100% { opacity: 0; transform: scale(1.1); }
 }
+
+/* ---- Mountain: decorative crystals shimmering on their own ---- */
+@keyframes mtn-crystal-shimmer {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+/* ---- Bazaar: dust motes drifting in the light ---- */
+@keyframes bzr-dust-float {
+  0%, 100% { opacity: 0; transform: translate(0, 0); }
+  50% { opacity: 0.5; transform: translate(10px, -16px); }
+}

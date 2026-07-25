@@ -51,6 +51,7 @@ export class MountainScene {
 
     this._runToken = 0;
     this._hintTimer = null;
+    this._pendingResolve = null;
   }
 
   async enter() {
@@ -84,6 +85,8 @@ export class MountainScene {
   async exit() {
     this._runToken += 1;
     clearTimeout(this._hintTimer);
+    this._pendingResolve?.(false);
+    this._pendingResolve = null;
   }
 
   _resetState() {
@@ -180,6 +183,10 @@ export class MountainScene {
    */
   _playRound(round, token) {
     return new Promise((resolve) => {
+      // exit() calls this if the scene is left mid-round, so the promise
+      // above always settles one way or another — never hangs forever.
+      this._pendingResolve = resolve;
+
       this.gridEl.innerHTML = '';
       this._setGridEnabled(true);
       const totalCells = round.grid * round.grid;
@@ -198,6 +205,7 @@ export class MountainScene {
 
           if (found.size === correctSet.size) {
             this._setGridEnabled(false); // no more taps can land while we transition to the next round
+            this._pendingResolve = null;
             resolve(true);
           } else {
             this._startHintTimer(correctSet, found, cellEls, token);
@@ -304,6 +312,6 @@ export class MountainScene {
     await typeText(this.dialogTextEl, this.config.winLine);
     await wait(1400);
 
-    this.sceneManager.goTo(SCENES.REWARD, { adventureId: 'mountain' });
+    await this.sceneManager.goTo(SCENES.REWARD, { adventureId: 'mountain' });
   }
 }
