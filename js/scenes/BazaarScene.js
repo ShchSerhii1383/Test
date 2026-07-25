@@ -43,9 +43,18 @@ export class BazaarScene {
     this.roundDotEls = Array.from(sceneEl.querySelectorAll('#bazaar-round-dots .adventure-round-dot'));
     this.backBtn = sceneEl.querySelector('#bazaar-back');
 
-    this.backBtn.addEventListener('click', () => this.sceneManager.goTo(SCENES.ISLAND));
+    this.backBtn.addEventListener('click', () => {
+      // Blocked once the win sequence has started — otherwise a fast tap
+      // here races the win sequence's own goTo(REWARD) and can win,
+      // dumping the player back on the island without ever seeing the
+      // reward (the intermittent "finishes early" bug).
+      if (this._isFinishing) return;
+      this.sceneManager.goTo(SCENES.ISLAND);
+    });
 
     this._runToken = 0;
+    this._isFinishing = false;
+    this.backBtn.classList.remove('is-disabled');
     this._pendingResolve = null;
   }
 
@@ -83,6 +92,7 @@ export class BazaarScene {
   }
 
   _resetState() {
+    this._isFinishing = false;
     this.optionsEl.innerHTML = '';
     this.questionEl.textContent = '';
     this.dialogEl.classList.add('dialog--hidden');
@@ -221,6 +231,8 @@ export class BazaarScene {
   }
 
   async _playWinSequence() {
+    this._isFinishing = true;
+    this.backBtn.classList.add('is-disabled');
     this._updateRoundDots(this.config.riddles.length);
     await wait(400);
 

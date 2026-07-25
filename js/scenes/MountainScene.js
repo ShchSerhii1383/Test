@@ -47,9 +47,18 @@ export class MountainScene {
     this.lightWaveEl = sceneEl.querySelector('#mountain-light-wave');
     this.backBtn = sceneEl.querySelector('#mountain-back');
 
-    this.backBtn.addEventListener('click', () => this.sceneManager.goTo(SCENES.ISLAND));
+    this.backBtn.addEventListener('click', () => {
+      // Blocked once the win sequence has started — otherwise a fast tap
+      // here races the win sequence's own goTo(REWARD) and can win,
+      // dumping the player back on the island without ever seeing the
+      // reward (the intermittent "finishes early" bug).
+      if (this._isFinishing) return;
+      this.sceneManager.goTo(SCENES.ISLAND);
+    });
 
     this._runToken = 0;
+    this._isFinishing = false;
+    this.backBtn.classList.remove('is-disabled');
     this._hintTimer = null;
     this._pendingResolve = null;
   }
@@ -90,6 +99,7 @@ export class MountainScene {
   }
 
   _resetState() {
+    this._isFinishing = false;
     this.gridEl.innerHTML = '';
     this.dialogEl.classList.add('dialog--hidden');
     this.rulesEl.classList.remove('is-visible');
@@ -246,6 +256,19 @@ export class MountainScene {
     correctSet.forEach((i) => cellEls[i].classList.remove('is-lit'));
   }
 
+  /**
+   * Five crystal colors to cycle through — blue, green, purple, gold,
+   * ruby — so the field reads as distinct gems instead of identical tiles.
+   * Purely visual: the game logic never checks color, only grid position.
+   */
+  static CRYSTAL_COLORS = [
+    { color: '#4FAFC4', light: '#A8E8F5' }, // blue
+    { color: '#4F9A5E', light: '#A8E8B8' }, // green
+    { color: '#8A5EC4', light: '#D0B8F5' }, // purple
+    { color: '#D9A227', light: '#FFE9A0' }, // gold
+    { color: '#C4504F', light: '#F5A8A8' }, // ruby
+  ];
+
   _renderGrid(gridSize, onTap) {
     const positions = this._gridPositions(gridSize);
     return positions.map((pos, i) => {
@@ -253,6 +276,11 @@ export class MountainScene {
       el.className = 'mtn-crystal';
       el.style.left = `${pos.x}%`;
       el.style.top = `${pos.y}%`;
+
+      const palette = MountainScene.CRYSTAL_COLORS[i % MountainScene.CRYSTAL_COLORS.length];
+      el.style.setProperty('--crystal-color', palette.color);
+      el.style.setProperty('--crystal-light', palette.light);
+
       el.innerHTML = '<span class="mtn-crystal__shape"></span>';
       el.setAttribute('aria-label', 'Кристал');
       el.addEventListener('click', () => onTap(i, el));
@@ -302,6 +330,8 @@ export class MountainScene {
 
   /** All three rounds solved: the mountain wakes up. */
   async _playWinSequence() {
+    this._isFinishing = true;
+    this.backBtn.classList.add('is-disabled');
     this._updateRoundDots(this.config.rounds.length);
     await wait(400);
 

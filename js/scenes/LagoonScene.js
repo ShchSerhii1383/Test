@@ -49,12 +49,21 @@ export class LagoonScene {
     this.compassRayEl = sceneEl.querySelector('.lagoon-compass-ray');
     this.backBtn = sceneEl.querySelector('#lagoon-back');
 
-    this.backBtn.addEventListener('click', () => this.sceneManager.goTo(SCENES.ISLAND));
+    this.backBtn.addEventListener('click', () => {
+      // Blocked once the win sequence has started — otherwise a fast tap
+      // here races the win sequence's own goTo(REWARD) and can win,
+      // dumping the player back on the island without ever seeing the
+      // reward (the intermittent "finishes early" bug).
+      if (this._isFinishing) return;
+      this.sceneManager.goTo(SCENES.ISLAND);
+    });
 
     /** @type {Set<string>} ids of targets found so far this visit */
     this._found = new Set();
     this._hintTimer = null;
     this._runToken = 0;
+    this._isFinishing = false;
+    this.backBtn.classList.remove('is-disabled');
   }
 
   async enter() {
@@ -92,6 +101,7 @@ export class LagoonScene {
   }
 
   _resetState() {
+    this._isFinishing = false;
     this._found.clear();
     this.fieldEl.innerHTML = '';
     this.tableSlotsEl.innerHTML = '';
@@ -164,6 +174,7 @@ export class LagoonScene {
   _scatterField() {
     this.fieldEl.innerHTML = '';
     this.fieldEl.style.pointerEvents = '';
+    this._renderTableSlots();
 
     const targets = this.config.targets.map((t) => ({ ...t, isTarget: true }));
     const decoys = Array.from({ length: this.config.clutterCount }, (_, i) => ({
@@ -185,6 +196,23 @@ export class LagoonScene {
 
       el.addEventListener('click', () => this._handleTap(item, el));
       this.fieldEl.appendChild(el);
+    });
+  }
+
+  /**
+   * A faint outline slot for each of the three targets, shown before any
+   * are found — so the player can see what they're looking for and watch
+   * their progress fill in, rather than the table starting completely
+   * empty with no hint of what "done" looks like.
+   */
+  _renderTableSlots() {
+    this.tableSlotsEl.innerHTML = '';
+    this.config.targets.forEach((target) => {
+      const slot = document.createElement('span');
+      slot.className = 'lagoon-table__slot';
+      slot.dataset.targetId = target.id;
+      slot.innerHTML = icon(target.icon);
+      this.tableSlotsEl.appendChild(slot);
     });
   }
 
@@ -239,11 +267,8 @@ export class LagoonScene {
     el.classList.add('is-collected');
 
     setTimeout(() => {
-      const slotIcon = document.createElement('span');
-      slotIcon.innerHTML = icon(target.icon);
-      slotIcon.className = 'is-placed';
-      this.tableSlotsEl.appendChild(slotIcon);
-      requestAnimationFrame(() => slotIcon.querySelector('.icon')?.classList.add('is-placed'));
+      const slot = this.tableSlotsEl.querySelector(`[data-target-id="${target.id}"]`);
+      slot?.classList.add('is-found');
       el.remove();
     }, 650);
 
@@ -289,6 +314,8 @@ export class LagoonScene {
 
   /** All three pieces found: the compass assembles, and we head to the reward. */
   async _playWinSequence() {
+    this._isFinishing = true;
+    this.backBtn.classList.add('is-disabled');
     await wait(500);
 
     this.compassFinalEl.innerHTML = icon('compassBody');

@@ -750,6 +750,14 @@
   border-radius: var(--radius-md);
   font-size: 14px;
   z-index: var(--z-dialog);
+  transition: opacity var(--duration-fast) var(--ease-soft);
+}
+
+/* Dimmed once the win sequence has taken over — tapping "back" here would
+   race the transition already under way, so it's blocked and shown as such. */
+.back-hint.is-disabled {
+  opacity: 0.35;
+  pointer-events: none;
 }
 
 /* ---------------- Mountain scene ---------------- */
@@ -940,8 +948,8 @@
 
 .mtn-crystal.is-lit .mtn-crystal__shape,
 .mtn-crystal.is-correct .mtn-crystal__shape {
-  background: linear-gradient(to bottom, #A8E8F5 0%, #4FAFC4 100%);
-  border-color: #2FA0AE;
+  background: linear-gradient(to bottom, var(--crystal-light, #A8E8F5) 0%, var(--crystal-color, #4FAFC4) 100%);
+  border-color: var(--crystal-color, #2FA0AE);
   opacity: 1;
 }
 
@@ -1679,17 +1687,43 @@
   gap: 6px;
 }
 
-.lagoon-table__slots .icon {
+/* Shown faint from the very start — a quiet reminder of what to look for,
+   rather than an empty table with no hint of what "done" looks like. */
+.lagoon-table__slot {
+  position: relative;
   width: 22px;
   height: 22px;
-  opacity: 0;
-  transform: scale(0.4);
-  transition: opacity 0.4s var(--ease-soft), transform 0.4s var(--ease-soft);
+  opacity: 0.3;
+  filter: grayscale(1);
+  transition: opacity 0.4s var(--ease-soft), filter 0.4s var(--ease-soft);
 }
 
-.lagoon-table__slots .icon.is-placed {
+.lagoon-table__slot .icon {
+  width: 100%;
+  height: 100%;
+}
+
+.lagoon-table__slot.is-found {
   opacity: 1;
-  transform: scale(1);
+  filter: none;
+  animation: lagoon-slot-found 0.5s var(--ease-soft);
+}
+
+/* A small checkmark badge, once that piece is actually found */
+.lagoon-table__slot.is-found::after {
+  content: '✓';
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 12px;
+  height: 12px;
+  background: var(--color-sun);
+  color: var(--color-text-dark);
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 12px;
+  text-align: center;
 }
 
 .lagoon-dialog {

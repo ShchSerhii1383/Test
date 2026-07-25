@@ -47,6 +47,9 @@ export class SceneManager {
     }
 
     const token = ++this._runToken;
+    const from = this.currentSceneName ?? '(none)';
+    console.log(`[SceneManager] ${from} -> ${name}`, data ?? '');
+
     const current = this.currentSceneName
       ? this.scenes.get(this.currentSceneName)
       : null;
@@ -55,11 +58,17 @@ export class SceneManager {
       if (typeof current.instance.exit === 'function') {
         await current.instance.exit();
       }
-      if (token !== this._runToken) return; // a newer goTo() took over while we were exiting
+      if (token !== this._runToken) {
+        console.log(`[SceneManager] ${from} -> ${name} abandoned — a newer transition took over`);
+        return;
+      }
       current.el.classList.remove('is-active');
     }
 
-    if (token !== this._runToken) return;
+    if (token !== this._runToken) {
+      console.log(`[SceneManager] ${from} -> ${name} abandoned — a newer transition took over`);
+      return;
+    }
     next.el.classList.add('is-active');
     this.currentSceneName = name;
 
