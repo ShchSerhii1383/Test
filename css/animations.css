@@ -618,8 +618,8 @@
 }
 
 /* ---- Mountain: the plate shaking on a wrong tap ---- */
-@keyframes mtn-plate-shake {
-  0%, 100% { transform: translateX(-50%) translateX(0); }
-  25% { transform: translateX(-50%) translateX(-6px); }
-  75% { transform: translateX(-50%) translateX(6px); }
+@keyframes mtn-grid-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
 }

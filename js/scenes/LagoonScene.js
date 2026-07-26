@@ -42,7 +42,6 @@ export class LagoonScene {
     this.fieldEl = sceneEl.querySelector('#lagoon-field');
     this.panelEl = sceneEl.querySelector('#lagoon-panel');
     this.panelCardsEl = sceneEl.querySelector('#lagoon-panel-cards');
-    this.roundDotEls = Array.from(sceneEl.querySelectorAll('#lagoon-round-dots .adventure-round-dot'));
 
     // No "back to island" escape hatch on purpose — once an adventure
     // starts, the only way out is finishing it: reveal -> story -> rules
@@ -58,6 +57,16 @@ export class LagoonScene {
     this._talkHintTimer = null;
     this._shimmerHintTimer = null;
     this._pendingResolve = null;
+  }
+
+  /** Runs before the scene becomes visible/tappable at all — blocks
+   *  input a beat earlier than enter() would get to it on its own,
+   *  closing even the theoretical gap between "scene is on screen" and
+   *  "input guard is active" (a real tap can't actually land in that
+   *  gap — JS is single-threaded and the two happen in the same
+   *  synchronous stretch — but this makes it true regardless). */
+  beforeEnter() {
+    this._setInputBlocked(true);
   }
 
   async enter() {
@@ -135,7 +144,6 @@ export class LagoonScene {
     this.dialogEl.classList.add('dialog--hidden');
     this.rulesEl.classList.remove('is-visible');
     this.countdownEl.classList.remove('is-visible');
-    this.roundDotEls.forEach((dot) => dot.classList.remove('is-done', 'is-current'));
     this.camera.reset();
   }
 
@@ -197,7 +205,6 @@ export class LagoonScene {
   async _playRounds(token) {
     for (let i = 0; i < this.config.rounds.length; i++) {
       debugLog(`[Lagoon] starting round ${i + 1}/${this.config.rounds.length}`);
-      this._updateRoundDots(i);
 
       const won = await this._playRound(this.config.rounds[i], token);
       debugLog(`[Lagoon] round ${i + 1} resolved with won=${won}`);
@@ -221,12 +228,6 @@ export class LagoonScene {
     debugLog('[Lagoon] _playWinSequence() returned normally');
   }
 
-  _updateRoundDots(currentIndex) {
-    this.roundDotEls.forEach((dot, i) => {
-      dot.classList.toggle('is-done', i < currentIndex);
-      dot.classList.toggle('is-current', i === currentIndex);
-    });
-  }
 
   /**
    * One round: show the panel cards for this round's targets (dimmed,
@@ -292,10 +293,7 @@ export class LagoonScene {
       el.style.transform = `rotate(${positions[i].rotation}deg)`;
       el.style.animationDelay = `${Math.random() * 8}s`; // not all targets pulse in sync
       el.innerHTML = icon(item.icon);
-      // Targets lean a little toward the larger end of the range — not a
-      // hard rule (that would make size itself the answer), just enough
-      // that the objects worth finding tend to sit a bit more forward.
-      const scale = item.isTarget ? Math.max(positions[i].scale, 0.8 + Math.random() * 0.25) : positions[i].scale;
+      const scale = positions[i].scale;
       const iconEl = el.querySelector('.icon');
       if (iconEl) iconEl.style.transform = `scale(${scale})`;
       el.setAttribute('aria-label', item.isTarget ? item.label : 'Дрібниця на пляжі');
@@ -319,26 +317,60 @@ export class LagoonScene {
    * rounds pack more items into the same beach area, which is exactly
    * what makes them feel "busier" and harder to scan at a glance.
    */
+  /** A genuinely chaotic scatter — no columns, no rows, no fixed grid.
+   *  Each item gets a fully random spot within the sand area, never on
+   *  Mickey; a soft minimum-distance check keeps most items readable
+   *  while still letting some sit close enough to overlap a neighbor,
+   *  the way real washed-up clutter does. */
   _generatePositions(count) {
-    const cols = 6;
-    const rows = Math.ceil(count / cols);
-    const cells = [];
+    const placed = [];
+    // Mickey's own spot (left:10%, bottom:30%, 90x150px) — items keep
+    // clear of this box entirely, with a little breathing room besides.
+    const mickeyZone = { left: 6, right: 30, top: 44, bottom: 96 };
 
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        cells.push({
-          left: 18 + c * ((88 - 18) / (cols - 1)) + (Math.random() - 0.5) * 6,
-          top: 44 + r * ((92 - 44) / Math.max(rows - 1, 1)) + (Math.random() - 0.5) * 5,
-          rotation: (Math.random() - 0.5) * 44,
-          // A much wider range than before (was 0.8-1.15) — the eye reads
-          // a field of near-identical sizes as "a row of icons"; real
-          // variance is what makes it read as things that just washed up.
-          scale: 0.55 + Math.random() * 0.5,
-        });
+    const isOnMickey = (x, y) =>
+      x > mickeyZone.left && x < mickeyZone.right && y > mickeyZone.top && y < mickeyZone.bottom;
+
+    for (let i = 0; i < count; i++) {
+      let best = null;
+      let bestMinDist = -1;
+
+      // A handful of random tries; keep whichever candidate ended up
+      // furthest from everything already placed. This isn't a hard
+      // "never overlap" rule — it just biases away from stacking
+      // directly on top of another item, while still allowing the
+      // occasional close, natural-looking overlap the design calls for.
+      for (let attempt = 0; attempt < 10; attempt++) {
+        const left = 12 + Math.random() * 76;
+        const top = 38 + Math.random() * 58;
+        if (isOnMickey(left, top)) continue;
+
+        const rotationMagnitude = 5 + Math.random() * 5; // exactly the requested 5-10°
+        const candidate = {
+          left,
+          top,
+          rotation: Math.random() < 0.5 ? -rotationMagnitude : rotationMagnitude,
+          scale: 0.95 + Math.random() * 0.1, // a subtle 95-105%, not a dramatic size difference
+        };
+        const minDist = placed.reduce((min, p) => {
+          const d = Math.hypot(p.left - candidate.left, (p.top - candidate.top) * 0.6);
+          return Math.min(min, d);
+        }, Infinity);
+
+        if (minDist > bestMinDist) {
+          bestMinDist = minDist;
+          best = candidate;
+        }
+        if (minDist > 14) break; // good enough, stop trying
       }
+
+      // Every attempt landed on Mickey (astronomically unlikely, but
+      // never leave an item unplaced) — fall back to a safe corner.
+      if (!best) best = { left: 70, top: 45, rotation: 6, scale: 1 };
+      placed.push(best);
     }
 
-    return this._shuffle(cells).slice(0, count);
+    return this._shuffle(placed);
   }
 
   _shuffle(arr) {
@@ -416,7 +448,6 @@ export class LagoonScene {
     debugLog('[Lagoon] _playWinSequence: started');
     this.state = 'WIN';
     this._setInputBlocked(true); // nothing should be tappable during the celebration either
-    this._updateRoundDots(this.config.rounds.length);
     this.panelEl.classList.remove('is-visible');
     await wait(600);
     debugLog('[Lagoon] _playWinSequence: initial wait done');

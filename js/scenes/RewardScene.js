@@ -183,7 +183,15 @@ export class RewardScene {
 
   /** The lid swings open, light pours out, sparkles scatter. */
   async _openChest() {
-    if (this._isBusy) return; // ignore double-taps
+    // Not just a double-tap guard: this refuses to act unless the scene
+    // is genuinely in the state that's supposed to allow it — the same
+    // discipline as every adventure's single _exit() gateway. CSS
+    // pointer-events already blocks a tap before the chest's own
+    // countdown finishes, but that's presentation, not logic; a tap that
+    // somehow reaches this handler early (a real-browser timing edge, or
+    // a future change to the CSS) still shouldn't be able to open the
+    // chest ahead of schedule.
+    if (this._isBusy || this.state !== 'CHEST') return;
     this._isBusy = true;
     const token = this._runToken;
     debugLog('6. chest opened');
@@ -289,7 +297,9 @@ export class RewardScene {
    * any animation in this scene.
    */
   async _chooseGift(gift, cardEl) {
-    if (this._isBusy) return;
+    // Same reasoning as _openChest — the state check is the real gate,
+    // CSS pointer-events is just the presentation layer on top of it.
+    if (this._isBusy || this.state !== 'CARDS') return;
     this._isBusy = true;
     const token = this._runToken;
     debugLog('[Reward] _chooseGift: card tapped, gift =', gift.id);
@@ -339,6 +349,12 @@ export class RewardScene {
   }
 
   _finish() {
+    // The most important state check of the three: this is the actual
+    // exit trigger. Refusing unless we're genuinely in REVEAL means a
+    // premature tap on "Далі" — before a gift has actually been chosen
+    // and shown — can never leave the scene early, regardless of
+    // whatever let the tap reach this handler in the first place.
+    if (this.state !== 'REVEAL') return;
     debugLog('[Reward] _finish: continue button tapped, returning to island');
     const finishedAdventure = this._adventureId;
     if (finishedAdventure) {

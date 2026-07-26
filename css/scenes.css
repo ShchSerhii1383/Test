@@ -89,6 +89,7 @@
   border-radius: 50%;
   background: radial-gradient(circle, var(--color-sun) 0%, var(--color-sun) 45%, var(--color-sun-glow) 100%);
   box-shadow: 0 0 60px 20px var(--color-sun-glow);
+  transition: opacity 3s ease;
 }
 
 .cloud {
@@ -377,6 +378,11 @@
   left: 65%;
   width: 44px;
   height: 40px;
+  /* .sea (its sibling) has an explicit z-index of its own — without one
+     here too, .sea's explicit value beats .boat's implicit "auto"
+     regardless of DOM order, which is exactly what put the ship under
+     the wave instead of on top of it. */
+  z-index: 3;
   transform-origin: bottom center;
   animation: boat-rock 3.6s var(--ease-soft) infinite;
 }
@@ -880,7 +886,7 @@
 
 /* ---- Mickey, dialog, rules ---- */
 
-.mtn-mickey-spot { position: absolute; left: 6%; bottom: 4%; width: 84px; height: 140px; }
+.mtn-mickey-spot { position: absolute; left: 3%; bottom: 2%; width: 70px; height: 118px; }
 .mtn-mickey-spot .mickey { position: relative; left: auto; bottom: auto; transform: none; height: 100%; }
 
 .mtn-dialog { position: absolute; top: 8%; left: 50%; transform: translateX(-50%); z-index: 20; max-width: 260px; }
@@ -929,14 +935,6 @@
   z-index: 20;
 }
 
-/* Lagoon's expedition panel already sits centered at the top — the
-   round dots move to the corner instead of stacking on top of it. */
-#lagoon-round-dots {
-  top: 3%;
-  left: auto;
-  right: 4%;
-  transform: none;
-}
 .adventure-round-dot {
   width: 10px;
   height: 10px;
@@ -1083,48 +1081,7 @@
   background: radial-gradient(ellipse, rgba(255, 200, 130, 0.18) 0%, transparent 70%);
 }
 
-/* ---- The study wall: map, globe, telescope ---- */
-
-.bzr-wall-map { position: absolute; top: 6%; left: 50%; transform: translateX(-50%); width: 60%; max-width: 320px; opacity: 0.9; }
-.bzr-globe { position: absolute; top: 10%; left: 8%; width: 50px; animation: bzr-globe-spin 14s linear infinite; }
-.bzr-telescope { position: absolute; top: 12%; right: 10%; width: 44px; }
-
-/* ---- The desk and its props ---- */
-
-.bzr-table {
-  position: absolute;
-  bottom: 20%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 8px;
-  height: 14%;
-}
-.bzr-table::before, .bzr-table::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  width: 8px;
-  height: 100%;
-  background: var(--color-wood-dark);
-}
-.bzr-table::before { left: -110px; }
-.bzr-table::after { left: 102px; }
-
-.bzr-table-top {
-  position: absolute;
-  bottom: 32%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 280px;
-}
-
 .bzr-prop { position: absolute; pointer-events: none; }
-.bzr-prop--books { left: 8%; bottom: 32%; width: 40px; }
-.bzr-prop--lantern-table { right: 12%; bottom: 34%; width: 24px; }
-.bzr-prop--compass-table { left: 20%; bottom: 42%; width: 34px; }
-.bzr-prop--rope { right: 22%; bottom: 38%; width: 30px; }
-.bzr-prop--coins { left: 14%; bottom: 22%; width: 38px; }
-.bzr-prop--chest { right: 16%; bottom: 22%; width: 34px; }
 .bzr-prop--candle { left: 44%; bottom: 40%; width: 18px; }
 .bzr-candle-flame { animation: bzr-candle-flicker 1.4s ease-in-out infinite; transform-origin: bottom center; }
 
@@ -1566,7 +1523,14 @@
   left: 50%;
   transform: translate(-50%, -50%);
   display: flex;
-  gap: var(--space-md);
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-sm);
+  /* Guaranteed to fit even a 320px-wide phone (3 x 94px cards + 2 x 8px
+     gaps = 298px) with room either side — if a device is ever narrower
+     than that, flex-wrap above lets the cards wrap to a second row
+     instead of running off the edge. */
+  width: min(94vw, 320px);
   /* Lives here, not on .reward-card-slot itself — perspective only
      creates real 3D depth for a rotateY() applied to a *child*, not for
      the element that declares it. */
@@ -1601,7 +1565,12 @@
 
 .reward-card-slot__open-btn {
   font-size: var(--text-sm);
-  padding: 4px 14px;
+  padding: 4px 8px;
+  width: 94px;
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .reward-card {
@@ -1886,12 +1855,14 @@
   inset: 0;
 }
 
-.lagoon-layer--sky { z-index: 1; }
+.lagoon-layer--sky {
+  z-index: 1;
+  background: linear-gradient(to bottom, #6FC6F0 0%, #C9EEFF 100%);
+}
 .lagoon-layer--horizon { z-index: 2; }
 .lagoon-layer--sea { z-index: 3; pointer-events: none; }
 .lagoon-layer--beach { z-index: 4; }
 
-.lagoon-layer--sky .sun { position: absolute; top: 8%; right: 12%; }
 
 .lagoon-layer--horizon .sea-far { bottom: 55%; height: 10%; }
 .lagoon-layer--horizon .distant-island--1 { bottom: 62%; }
@@ -2299,6 +2270,8 @@
 .lagoon-field-overlay { position: absolute; pointer-events: none; z-index: 11; }
 .lagoon-field-overlay--1 { left: 32%; bottom: 30%; width: 34px; transform: rotate(-8deg); }
 .lagoon-field-overlay--2 { right: 22%; bottom: 20%; width: 46px; }
+.lagoon-field-overlay--3 { left: 55%; bottom: 45%; width: 30px; transform: rotate(12deg); }
+.lagoon-field-overlay--4 { left: 14%; bottom: 15%; width: 42px; transform: rotate(-4deg); }
 
 /* ---- Mountain: crystal activation — glow, pulse, particles, light beam ---- */
 
@@ -2421,6 +2394,7 @@
 .scene--island.day-stage--night .island-moon { opacity: 1; }
 .scene--island.day-stage--night .moon-path { opacity: 0.5; }
 .scene--island.day-stage--night .firefly { opacity: 0.85; }
+.scene--island.day-stage--night .sun { opacity: 0; }
 
 .island-stars { position: absolute; inset: 0; z-index: 1; }
 .island-moon { position: absolute; top: 8%; left: 12%; width: 46px; z-index: 1; }
@@ -2495,16 +2469,7 @@
 .footprint--l { left: 0; bottom: 0; transform: rotate(-8deg); }
 .footprint--r { left: 11px; bottom: 3px; transform: rotate(8deg); }
 
-/* ---- Mountain: the stone altar the crystal grid sits on ---- */
-.mtn-altar {
-  position: absolute;
-  top: 32%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 72%;
-  max-width: 340px;
-  z-index: 3;
-}
+
 
 /* ---- Island: a tiny ship silhouette barely drifting on the horizon ---- */
 .distant-ship {
@@ -2545,8 +2510,8 @@
 }
 
 /* ---- Mountain: the whole plate shakes on a wrong tap ---- */
-.mtn-altar.is-shaking {
-  animation: mtn-plate-shake 0.4s ease-in-out;
+.mtn-grid.is-shaking {
+  animation: mtn-grid-shake 0.4s ease-in-out;
 }
 
 /* ---- Mountain: HUD (title, round counter, progress bar) ---- */

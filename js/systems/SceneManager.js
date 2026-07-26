@@ -5,8 +5,11 @@
  * Scenes never switch themselves — they ask the manager to do it,
  * so there's only ever one source of truth for "where are we right now".
  *
- * Each registered scene may implement any of: enter(), exit().
- * Both are optional and both may be async.
+ * Each registered scene may implement any of: beforeEnter(), enter(), exit().
+ * beforeEnter() is synchronous and runs before the scene becomes is-active —
+ * for anything that must be true the instant the scene is visible/tappable,
+ * not just by the time enter() gets around to it (e.g. an input guard).
+ * enter()/exit() are both optional and both may be async.
  *
  * IMPORTANT lesson learned: this was briefly rewritten as a strict promise
  * queue (every goTo() chained onto the last one). That looked safer on
@@ -82,6 +85,9 @@ export class SceneManager {
       current.el.classList.remove('is-active');
     }
 
+    if (typeof next.instance.beforeEnter === 'function') {
+      next.instance.beforeEnter();
+    }
     next.el.classList.add('is-active');
     this.currentSceneName = name;
 

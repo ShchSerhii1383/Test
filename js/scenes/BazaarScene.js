@@ -75,6 +75,16 @@ export class BazaarScene {
     this._pendingResolve = null;
   }
 
+  /** Runs before the scene becomes visible/tappable at all — blocks
+   *  input a beat earlier than enter() would get to it on its own,
+   *  closing even the theoretical gap between "scene is on screen" and
+   *  "input guard is active" (a real tap can't actually land in that
+   *  gap — JS is single-threaded and the two happen in the same
+   *  synchronous stretch — but this makes it true regardless). */
+  beforeEnter() {
+    this._setInputBlocked(true);
+  }
+
   async enter() {
     try {
       await this._enterInner();

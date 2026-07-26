@@ -48,7 +48,6 @@ export class MountainScene {
     this.rulesCrystal2El = sceneEl.querySelector('#mountain-rules-crystal-2');
     this.countdownEl = sceneEl.querySelector('#mountain-countdown');
     this.gridEl = sceneEl.querySelector('#mountain-grid');
-    this.plateEl = sceneEl.querySelector('.mtn-altar');
     this.hudRoundEl = sceneEl.querySelector('#mountain-hud-round');
     this.hudProgressEl = sceneEl.querySelector('#mountain-hud-progress');
     this.lightWaveEl = sceneEl.querySelector('#mountain-light-wave');
@@ -63,6 +62,16 @@ export class MountainScene {
     this._hintTimer = null;
     this._pendingResolve = null;
     this._cellEls = null; // the 9 crystal elements, built once and reused across every round
+  }
+
+  /** Runs before the scene becomes visible/tappable at all — blocks
+   *  input a beat earlier than enter() would get to it on its own,
+   *  closing even the theoretical gap between "scene is on screen" and
+   *  "input guard is active" (a real tap can't actually land in that
+   *  gap — JS is single-threaded and the two happen in the same
+   *  synchronous stretch — but this makes it true regardless). */
+  beforeEnter() {
+    this._setInputBlocked(true);
   }
 
   async enter() {
@@ -217,7 +226,13 @@ export class MountainScene {
         await wait(900);
         this.dialogEl.classList.add('dialog--hidden');
         await wait(400);
-        this._cellEls.forEach((el) => el.classList.remove('is-solved'));
+        // Every crystal goes back to its true idle state before the next
+        // round's sequence starts — not just "found this round", but
+        // every highlight/effect class that could possibly still be on
+        // it, so nothing carries over between rounds.
+        this._cellEls.forEach((el) => {
+          el.classList.remove('is-solved', 'is-correct', 'is-lit', 'is-hinting', 'is-activating', 'is-wrong');
+        });
       }
     }
 
@@ -297,10 +312,10 @@ export class MountainScene {
               clearTimeout(this._hintTimer);
               this.audio.nudge();
               this._setGridEnabled(false);
-              this.plateEl.classList.remove('is-shaking');
-              void this.plateEl.offsetWidth;
-              this.plateEl.classList.add('is-shaking');
-              cellEls.forEach((c) => c.classList.remove('is-solved', 'is-correct'));
+              this.gridEl.classList.remove('is-shaking');
+              void this.gridEl.offsetWidth;
+              this.gridEl.classList.add('is-shaking');
+              cellEls.forEach((c) => c.classList.remove('is-solved', 'is-correct', 'is-lit', 'is-hinting', 'is-activating', 'is-wrong'));
 
               this.dialogEl.classList.remove('dialog--hidden');
               typeText(this.dialogTextEl, this.config.missLine);
@@ -427,10 +442,10 @@ export class MountainScene {
    *  and everything else in the scene. */
   _gridPositions() {
     const positions = [];
-    const spanX = 60;
-    const spanY = 40;
-    const startX = 20;
-    const startY = 36;
+    const spanX = 52;
+    const spanY = 36;
+    const startX = 24;
+    const startY = 38;
 
     for (let r = 0; r < 3; r++) {
       for (let c = 0; c < 3; c++) {
