@@ -347,23 +347,6 @@
 .scene--island .layer--fg { z-index: 6; pointer-events: none; }
 .scene--island .layer--fg > * { pointer-events: auto; }
 
-/* Phone-tilt parallax — --tilt-x/--tilt-y come from TiltParallax.js
-   (deviceorientation), each layer just picks its own multiplier for how
-   much it reacts. Falls back to 0 (no movement) wherever the browser or
-   person never granted the sensor, so this is purely additive. */
-.scene--island .layer--far-bg {
-  transform: translate(calc(var(--tilt-x, 0) * 2px), calc(var(--tilt-y, 0) * 2px));
-}
-.scene--island .layer--mid {
-  transform: translate(calc(var(--tilt-x, 0) * 5px), calc(var(--tilt-y, 0) * 4px));
-}
-.scene--island .layer--island {
-  transform: translate(calc(var(--tilt-x, 0) * 8px), calc(var(--tilt-y, 0) * 5px));
-}
-.scene--island .layer--fg {
-  transform: translate(calc(var(--tilt-x, 0) * 14px), calc(var(--tilt-y, 0) * 9px));
-}
-
 /* A very soft vignette — just enough to focus the eye toward the middle
    of the island, never a visible dark ring. */
 .scene--island .vignette {
@@ -944,6 +927,15 @@
   display: flex;
   gap: 8px;
   z-index: 20;
+}
+
+/* Lagoon's expedition panel already sits centered at the top — the
+   round dots move to the corner instead of stacking on top of it. */
+#lagoon-round-dots {
+  top: 3%;
+  left: auto;
+  right: 4%;
+  transform: none;
 }
 .adventure-round-dot {
   width: 10px;
@@ -2371,8 +2363,15 @@
 /* One class on the scene root re-colors everything below it — every wave,
    cloud, and prop already reads its color from these same custom
    properties, so a single override cascades through the whole scene
-   without touching a single other rule. Morning is just the base
-   palette already defined in variables.css (no override needed). */
+   without touching a single other rule. */
+
+.scene--island.day-stage--morning {
+  --color-sky-top: #6FC6F0;
+  --color-sky-bottom: #C9EEFF;
+  --color-sea-deep: #157A8C;
+  --color-sea-mid: #2FA0AE;
+  --color-sea-light: #6FD0D6;
+}
 
 .scene--island.day-stage--afternoon {
   --color-sky-top: #FFC97A;

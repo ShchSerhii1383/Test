@@ -91,9 +91,7 @@ export const ADVENTURE_CONFIG = {
     // and the round restarts.
     rounds: [
       { grid: 3, sequenceLength: 3 },
-      { grid: 3, sequenceLength: 4 },
       { grid: 3, sequenceLength: 5 },
-      { grid: 3, sequenceLength: 6 },
       { grid: 3, sequenceLength: 7 },
     ],
   },

@@ -247,17 +247,32 @@ export class MountainScene {
 
       const attempt = () => {
         let nextIndex = 0;
-        this._setGridEnabled(false);
+        let isDisplaying = true;
+        // The grid stays tappable through the whole display — an
+        // impatient tap gets a clear "not yet" nudge instead of being
+        // silently swallowed by a disabled button.
+        this._setGridEnabled(true);
 
         this._showSequence(sequence, cellEls).then(() => {
           if (token !== this._runToken) return;
-          this._setGridEnabled(true);
+          isDisplaying = false;
           this._startHintTimer(sequence, () => nextIndex, cellEls, token);
         });
 
         const onTap = (index, el) => {
           try {
             if (token !== this._runToken) return;
+
+            if (isDisplaying) {
+              // Tapped before the sequence finished showing — a quick,
+              // honest "not yet" rather than nothing happening at all.
+              this.audio.nudge();
+              el.classList.remove('is-wrong');
+              void el.offsetWidth;
+              el.classList.add('is-wrong');
+              setTimeout(() => el.classList.remove('is-wrong'), 300);
+              return;
+            }
 
             if (index === sequence[nextIndex]) {
               this.audio.crystalTone(MountainScene.CRYSTALS[index].tone);
@@ -354,9 +369,9 @@ export class MountainScene {
     for (const index of sequence) {
       this.audio.crystalTone(MountainScene.CRYSTALS[index].tone);
       cellEls[index].classList.add('is-lit');
-      await wait(600);
+      await wait(500);
       cellEls[index].classList.remove('is-lit');
-      await wait(300);
+      await wait(220);
     }
     this.mickey.play(MICKEY_STATES.IDLE);
   }

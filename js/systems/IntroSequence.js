@@ -9,7 +9,6 @@ import {
 import { MICKEY_STATES } from '../config/constants.js';
 import { wait } from '../utils/typewriter.js';
 import { Camera } from './Camera.js';
-import { TiltParallax } from './TiltParallax.js';
 
 /**
  * IntroSequence
@@ -44,7 +43,6 @@ export class IntroSequence {
     this.inputEl = document.getElementById('team-name-input');
     this.registeredEl = document.getElementById('scroll-registered');
     this.stampEl = document.getElementById('stamp');
-    this.tilt = new TiltParallax(document.querySelector('.app'));
     this.buttonEl = document.getElementById('start-adventure');
     this.buttonLabelEl = document.getElementById('start-adventure-label');
 
@@ -157,7 +155,6 @@ export class IntroSequence {
     await this._waitForStart();
 
     this.audio.unlock();
-    this.tilt.start(); // same real user gesture iOS requires for the permission prompt
     this.titleCardEl.classList.remove('is-visible');
     await wait(500);
   }
