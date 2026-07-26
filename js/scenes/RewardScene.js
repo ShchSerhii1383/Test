@@ -263,7 +263,7 @@ export class RewardScene {
       // guaranteed way to choose it, same reasoning as the chest's own
       // open button above.
       const openBtn = document.createElement('button');
-      openBtn.className = 'reward-card-slot__open-btn wooden-button';
+      openBtn.className = 'reward-card-slot__open-btn wooden-button is-visible';
       openBtn.textContent = 'Відкрити';
 
       const choose = () => this._chooseGift(gift, cardEl);

@@ -28,5 +28,7 @@ export const MICKEY_STATES = {
   POINT: 'point',
   SURPRISE: 'surprise',
   CELEBRATE: 'celebrate',
+  READING: 'reading',
+  TELESCOPE: 'telescope',
 };
 

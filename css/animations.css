@@ -513,3 +513,67 @@
   80% { transform: translate(-50%, -50%) scale(0.95) rotate(-8deg); }
   100% { transform: translate(-50%, -50%) scale(1) rotate(-8deg); opacity: 1; }
 }
+
+/* ---- Island: living light — slow warmth drift + sunlit dust ---- */
+@keyframes sky-mood-drift {
+  0%, 100% { opacity: 0.6; transform: translate(0, 0); }
+  50% { opacity: 1; transform: translate(-3%, 2%); }
+}
+
+@keyframes sky-dust-float {
+  0%, 100% { opacity: 0; transform: translate(0, 0); }
+  50% { opacity: 0.5; transform: translate(8px, -14px); }
+}
+
+/* ---- Mountain: crystal activation sequence ---- */
+/* Stage 1+2 combined on the glow ring: flares in, then fades — reads as
+   "glow" building into the moment. */
+@keyframes crystal-glow-flare {
+  0% { opacity: 0; transform: scale(0.6); }
+  35% { opacity: 0.9; transform: scale(1.3); }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+
+/* Stage 2: a stronger pulse than the plain stone-flash, timed to peak
+   right as the glow is brightest. */
+@keyframes crystal-activate-pulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  30% { transform: scale(1.22); filter: brightness(1.4); }
+  55% { transform: scale(0.96); filter: brightness(1.1); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+/* Stage 3: each particle gets its own outward direction/distance via
+   --particle-x/--particle-y, set once per spark from JS. */
+@keyframes crystal-particle-burst {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--particle-x, 20px)), calc(-50% + var(--particle-y, -20px))) scale(0.3); }
+}
+
+/* Stage 4: a brief beam shoots upward after the pulse has landed —
+   transform:scaleY() on a fixed-height element, not an animated height,
+   so this stays on the GPU compositor like everything else in the game. */
+@keyframes crystal-light-beam {
+  0%, 40% { opacity: 0; transform: translateX(-50%) scaleY(0); }
+  60% { opacity: 0.8; transform: translateX(-50%) scaleY(0.73); }
+  100% { opacity: 0; transform: translateX(-50%) scaleY(1); }
+}
+
+/* ---- Lagoon: a barely-perceptible pulse on target items only ---- */
+@keyframes lagoon-subtle-pulse {
+  0%, 92%, 100% { filter: brightness(1); }
+  96% { filter: brightness(1.12); }
+}
+
+/* ---- Island: night — fireflies and twinkling stars ---- */
+@keyframes firefly-drift {
+  0%, 100% { transform: translate(0, 0); opacity: 0.4; }
+  25% { transform: translate(14px, -10px); opacity: 0.9; }
+  50% { transform: translate(4px, -20px); opacity: 0.5; }
+  75% { transform: translate(-10px, -8px); opacity: 0.85; }
+}
+
+@keyframes star-twinkle {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}

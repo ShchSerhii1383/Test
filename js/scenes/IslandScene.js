@@ -196,12 +196,29 @@ export class IslandScene {
     });
 
     this._syncGrowth();
+    this._syncDayStage();
 
     if (this.saveManager.hasCompletedAll(ADVENTURE_ORDER)) {
       this.lighthouseEl.hidden = false;
       // Small delay so it doesn't pop in the instant the box marks complete.
       requestAnimationFrame(() => this.lighthouseEl.classList.add('is-visible'));
     }
+  }
+
+  /**
+   * The island moves through the day as the adventures get finished —
+   * morning at the start, afternoon after Lagoon, sunset after Mountain,
+   * night once everything is done. One class on the scene root; every
+   * color everywhere else already reads from CSS custom properties, so
+   * this is the only place that needs to know the stage exists.
+   */
+  _syncDayStage() {
+    const completedCount = ADVENTURE_ORDER.filter((id) => this.saveManager.isCompleted(id)).length;
+    const stageNames = ['morning', 'afternoon', 'sunset', 'night'];
+    const stage = stageNames[Math.min(completedCount, stageNames.length - 1)];
+
+    stageNames.forEach((s) => this.sceneEl.classList.remove(`day-stage--${s}`));
+    this.sceneEl.classList.add(`day-stage--${stage}`);
   }
 
   /**
@@ -389,10 +406,25 @@ export class IslandScene {
 
     const gesture = () => {
       if (this.mickey.el.classList.contains('mickey--idle')) {
-        const direction = Math.random() < 0.5 ? '-1' : '1';
-        this.mickey.el.style.setProperty('--glance-dir', direction);
-        this.mickey.el.classList.add('is-glancing');
-        setTimeout(() => this.mickey.el.classList.remove('is-glancing'), 1400);
+        const roll = Math.random();
+
+        if (roll < 0.6) {
+          // Most of the time: a quick glance to one side.
+          const direction = Math.random() < 0.5 ? '-1' : '1';
+          this.mickey.el.style.setProperty('--glance-dir', direction);
+          this.mickey.el.classList.add('is-glancing');
+          setTimeout(() => this.mickey.el.classList.remove('is-glancing'), 1400);
+        } else {
+          // Occasionally: he checks his map or scans the horizon with the
+          // telescope, then goes back to idle on his own.
+          const pose = roll < 0.8 ? MICKEY_STATES.READING : MICKEY_STATES.TELESCOPE;
+          this.mickey.play(pose);
+          setTimeout(() => {
+            if (this.mickey.el.classList.contains(`mickey--${pose}`)) {
+              this.mickey.play(MICKEY_STATES.IDLE);
+            }
+          }, 2600);
+        }
       }
 
       this._gestureTimer = setTimeout(gesture, 4000 + Math.random() * 5000);

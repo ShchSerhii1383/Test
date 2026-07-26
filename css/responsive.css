@@ -1,18 +1,108 @@
 /*
   responsive.css
   --------------
-  Mobile-first: base styles above already target small phones (~390px).
-  These breakpoints only adjust scale for larger phones and tablets/desktop.
+  A real breakpoint system, not just a couple of ad-hoc overrides.
+  Base styles above are mobile-first (~390px, iPhone-ish). These layers
+  adjust scale and — where a design brief specifically called for it —
+  layout and decoration density, as screens get bigger.
+
+  Breakpoints:
+    Small phones   up to 430px   (iPhone SE/mini through 16 Pro)
+    Large phones   431–767px     (Plus/Max sizes, small Android tablets)
+    Tablets        768–1024px
+    Desktop        1025px+
+
+  Where it matters more than a breakpoint: clamp()/min()/max() so text and
+  spacing scale continuously instead of jumping at fixed widths.
 */
 
-/* Slightly larger phones */
-@media (min-width: 430px) {
-  .sun { width: 100px; height: 100px; }
+/* ---------------- Fluid scaling, independent of breakpoints ---------------- */
+
+.dialog p,
+#lagoon-dialog-text,
+#mountain-dialog-text,
+#bazaar-dialog-text {
+  font-size: clamp(14px, 3.6vw, 17px);
 }
 
-/* Tablets and up */
-@media (min-width: 768px) {
+.journal-page__story,
+.journal-page__question {
+  font-size: clamp(12px, 3.2vw, 15px);
+}
+
+/* ---------------- Small phones: up to 430px ---------------- */
+/* This is the primary target — most players open the gift link on a
+   phone, and a tall 19.5:9-ish screen (iPhone 16 Pro included) has a lot
+   of vertical room the base layout doesn't fully use yet. Each scene's
+   "one thing to look at" gets more of that room; everything decorative
+   around it gets quieter, not louder. */
+@media (max-width: 430px) {
+
+  /* Lagoon: the expedition panel should never compete with the beach for
+     attention — capped well under a fifth of the screen height. */
+  .lagoon-panel {
+    top: 2%;
+    max-height: 18vh;
+    overflow: visible;
+  }
+  .lagoon-panel__title { font-size: 15px; }
+  .lagoon-card { width: 46px; }
+  .lagoon-card__name { font-size: 8px; }
+
+  /* Mountain: hide the far decorative layers that read as "look at this
+     whole mountain" — on a phone the crystal grid IS the scene. */
+  .mtn-ruins,
+  .mtn-bridge,
+  .mtn-eagle,
+  .mtn-flag--2 {
+    display: none;
+  }
+  .mtn-peaks { height: 22%; opacity: 0.6; }
+
+  /* Bazaar: Mickey moves to the top-left on a phone — bottom-left sits
+     right where a thumb naturally rests while holding the phone to tap
+     the book below it. The book itself gets the room he leaves behind. */
+  .bzr-mickey-spot {
+    top: 2%;
+    left: 3%;
+    bottom: auto;
+    width: 56px;
+    height: 90px;
+  }
+  .bzr-globe,
+  .bzr-telescope,
+  .bzr-wall-map {
+    display: none;
+  }
+  .journal-book {
+    top: 9%;
+    height: 74%;
+  }
+  .journal-topbar { top: 1%; }
+
+  /* Reward: three cards need real thumb-sized tap targets, not a
+     shrink-to-fit row. */
+  .reward-card { width: 82px; height: 108px; }
+}
+
+/* ---------------- Large phones: 431–767px ---------------- */
+@media (min-width: 431px) and (max-width: 767px) {
+  .sun { width: 100px; height: 100px; }
+  .journal-book { max-width: 420px; }
+}
+
+/* ---------------- Tablets: 768–1024px ---------------- */
+@media (min-width: 768px) and (max-width: 1024px) {
   .scene--island .land { height: 26%; }
   .box { width: 68px; height: 60px; }
   .dialog { font-size: 17px; max-width: 320px; }
+}
+
+/* ---------------- Desktop: 1025px and up ---------------- */
+@media (min-width: 1025px) {
+  .scene--island .land { height: 24%; }
+  .box { width: 72px; height: 64px; }
+  .dialog { font-size: 18px; max-width: 360px; }
+  .journal-book { max-width: 520px; }
+  .lagoon-panel { max-width: 360px; }
 }

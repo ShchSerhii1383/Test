@@ -18,6 +18,20 @@
   pointer-events: auto;
 }
 
+/* Performance: a scene that isn't shown has no business animating. Before
+   this, every wave/cloud/dust/glow/shimmer keyframe in every scene kept
+   running at all times, even fully hidden ones — seven scenes' worth of
+   ambient animation, most of it invisible, all of it still costing CPU
+   and GPU. This is the single cheapest win available: freeze everything
+   the instant a scene stops being the one on screen, thaw it the instant
+   it becomes active again. Nothing else has to change for this to work —
+   every animation in the game already goes through a class the browser
+   can pause without JS ever finding out. */
+.scene:not(.is-active),
+.scene:not(.is-active) * {
+  animation-play-state: paused !important;
+}
+
 /* ---------------- Island scene ---------------- */
 
 .scene--island {
@@ -42,6 +56,29 @@
   z-index: var(--z-sky);
   background: linear-gradient(to bottom, var(--color-sky-top) 0%, var(--color-sky-bottom) 60%);
 }
+
+/* A slow, subtle warmth drift over the whole island — not a day/night
+   cycle, just enough that the light never sits perfectly still. Pure
+   opacity animation, so it costs almost nothing to run. */
+.sky-mood {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 70% 15%, rgba(255, 214, 150, 0.16) 0%, transparent 65%);
+  animation: sky-mood-drift 75s ease-in-out infinite;
+}
+
+.sky-dust {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--color-sun);
+  opacity: 0;
+}
+
+.sky-dust--1 { top: 22%; left: 55%; animation: sky-dust-float 9s ease-in-out infinite; }
+.sky-dust--2 { top: 30%; left: 68%; animation: sky-dust-float 11s ease-in-out infinite 2.5s; }
+.sky-dust--3 { top: 18%; left: 62%; animation: sky-dust-float 8s ease-in-out infinite 5s; }
 
 .sun {
   position: absolute;
@@ -930,10 +967,18 @@
   display: block;
   width: 100%;
   height: 100%;
+  /* Default clip-path (used only if a shape class below somehow isn't
+     applied) — the shape classes are what actually render each color's
+     own distinct gem cut. */
   clip-path: polygon(50% 0%, 100% 35%, 82% 100%, 18% 100%, 0% 35%);
-  background: linear-gradient(to bottom, #B8C4C9 0%, #8B929A 100%);
-  border: 2px solid #6E767D;
-  opacity: 0.55;
+  /* Muted tint of the crystal's OWN true color rather than a uniform
+     grey — even before it's ever lit or found, every crystal already
+     looks like a distinct gem, not an identical blank tile. */
+  background: linear-gradient(to bottom,
+    color-mix(in srgb, var(--crystal-light, #B8C4C9) 30%, #A9A29A) 0%,
+    color-mix(in srgb, var(--crystal-color, #8B929A) 35%, #7A756E) 100%);
+  border: 2px solid color-mix(in srgb, var(--crystal-color, #6E767D) 40%, #6E767D);
+  opacity: 0.7;
   transition: opacity var(--duration-fast) var(--ease-soft);
 }
 
@@ -942,6 +987,25 @@
   background: linear-gradient(to bottom, var(--crystal-light, #A8E8F5) 0%, var(--crystal-color, #4FAFC4) 100%);
   border-color: var(--crystal-color, #2FA0AE);
   opacity: 1;
+}
+
+/* Five gem cuts, one per crystal color — shape carries the same identity
+   as color, so the field reads clearly even for someone who can't easily
+   tell two similar hues apart. */
+.mtn-crystal--shape-0 .mtn-crystal__shape { /* blue: hexagon */
+  clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+}
+.mtn-crystal--shape-1 .mtn-crystal__shape { /* green: pentagon gem-cut */
+  clip-path: polygon(50% 0%, 100% 35%, 82% 100%, 18% 100%, 0% 35%);
+}
+.mtn-crystal--shape-2 .mtn-crystal__shape { /* purple: diamond */
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+.mtn-crystal--shape-3 .mtn-crystal__shape { /* gold: octagon (emerald cut) */
+  clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+}
+.mtn-crystal--shape-4 .mtn-crystal__shape { /* ruby: pointed prism */
+  clip-path: polygon(50% 100%, 6% 30%, 26% 0%, 74% 0%, 94% 30%);
 }
 
 .mtn-crystal.is-lit { animation: stone-flash 0.5s var(--ease-soft); }
@@ -2156,4 +2220,169 @@
   opacity: 1;
   transform: translate(-50%, 90px);
   pointer-events: auto;
+}
+
+/* ---- Lagoon: decorative overlap so the field doesn't read as a scan-line ---- */
+.lagoon-field-overlay { position: absolute; pointer-events: none; z-index: 11; }
+.lagoon-field-overlay--1 { left: 32%; bottom: 30%; width: 34px; transform: rotate(-8deg); }
+.lagoon-field-overlay--2 { right: 22%; bottom: 20%; width: 46px; }
+
+/* ---- Mountain: crystal activation — glow, pulse, particles, light beam ---- */
+
+.mtn-crystal__glow-ring {
+  position: absolute;
+  inset: -60%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--crystal-light, #A8E8F5) 0%, transparent 65%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.mtn-crystal__beam {
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  width: 10px;
+  height: 60px;
+  transform: translateX(-50%) scaleY(0);
+  transform-origin: bottom center;
+  background: linear-gradient(to top, var(--crystal-color, #4FAFC4), transparent);
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.mtn-crystal.is-activating .mtn-crystal__glow-ring {
+  animation: crystal-glow-flare 0.9s var(--ease-soft) forwards;
+}
+
+.mtn-crystal.is-activating .mtn-crystal__beam {
+  animation: crystal-light-beam 0.9s var(--ease-soft) forwards;
+}
+
+.mtn-crystal.is-activating .mtn-crystal__shape {
+  animation: crystal-activate-pulse 0.9s var(--ease-soft) forwards;
+}
+
+.mtn-crystal-particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--particle-color, var(--color-box-glow));
+  box-shadow: 0 0 4px var(--particle-color, var(--color-box-glow));
+  animation: crystal-particle-burst 0.7s var(--ease-soft) forwards;
+  pointer-events: none;
+}
+
+/* A barely-there pulse on target items only — much subtler and more
+   frequent than the louder hint-shimmer (which only kicks in once
+   someone's genuinely stuck). This one just quietly helps a child's eye
+   catch the right thing without an adult really noticing it's there. */
+.lagoon-item--subtle-pulse {
+  animation: lagoon-subtle-pulse 8s ease-in-out infinite;
+}
+
+/* ================= Island: day cycle ================= */
+/* One class on the scene root re-colors everything below it — every wave,
+   cloud, and prop already reads its color from these same custom
+   properties, so a single override cascades through the whole scene
+   without touching a single other rule. Morning is just the base
+   palette already defined in variables.css (no override needed). */
+
+.scene--island.day-stage--afternoon {
+  --color-sky-top: #FFC97A;
+  --color-sky-bottom: #FFE8C2;
+  --color-sea-deep: #0F6B7D;
+  --color-sea-mid: #2590A0;
+  --color-sea-light: #5FC0C8;
+  transition: none;
+}
+
+.scene--island.day-stage--sunset {
+  --color-sky-top: #FF8A5C;
+  --color-sky-bottom: #FFC9A0;
+  --color-sea-deep: #7A4A6B;
+  --color-sea-mid: #C97A6B;
+  --color-sea-light: #FFB88A;
+}
+
+.scene--island.day-stage--night {
+  --color-sky-top: #16213A;
+  --color-sky-bottom: #2A3A5C;
+  --color-sea-deep: #0A1A30;
+  --color-sea-mid: #16304A;
+  --color-sea-light: #234A64;
+}
+
+/* Every stage's own transition duration for the sky/sea colors — slow
+   enough to feel like the day genuinely passing, not a light switch. */
+.scene--island .sky,
+.scene--island .sea-far,
+.scene--island .wave {
+  transition: background 3s ease, opacity 3s ease;
+}
+
+/* ---- Night-only decorations: hidden everywhere else, shown only here ---- */
+
+.island-stars,
+.island-moon,
+.moon-path,
+.firefly {
+  opacity: 0;
+  transition: opacity 3s ease;
+  pointer-events: none;
+}
+
+.scene--island.day-stage--night .island-stars { opacity: 0.9; }
+.scene--island.day-stage--night .island-moon { opacity: 1; }
+.scene--island.day-stage--night .moon-path { opacity: 0.5; }
+.scene--island.day-stage--night .firefly { opacity: 0.85; }
+
+.island-stars { position: absolute; inset: 0; z-index: 1; }
+.island-moon { position: absolute; top: 8%; left: 12%; width: 46px; z-index: 1; }
+.moon-path {
+  position: absolute;
+  bottom: 30%;
+  left: 4%;
+  width: 22%;
+  height: 8%;
+  background: linear-gradient(to bottom, rgba(200, 220, 255, 0.5), transparent);
+  border-radius: 50%;
+  filter: blur(3px);
+  z-index: 2;
+}
+
+.firefly {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #D9F26A;
+  box-shadow: 0 0 6px 2px #D9F26A;
+}
+.firefly--1 { bottom: 22%; left: 30%; animation: firefly-drift 7s ease-in-out infinite; }
+.firefly--2 { bottom: 26%; left: 62%; animation: firefly-drift 9s ease-in-out infinite 2s; }
+.firefly--3 { bottom: 18%; left: 48%; animation: firefly-drift 8s ease-in-out infinite 4s; }
+
+/* Star twinkle, applied per-star from inline SVG opacity animation delay */
+.island-star { animation: star-twinkle 3s ease-in-out infinite; }
+
+/* ---- Island: torches, unlit until night ---- */
+.island-torch { position: absolute; width: 22px; z-index: 5; }
+.island-torch--1 { left: 16%; bottom: 10%; }
+.island-torch--2 { right: 14%; bottom: 9%; }
+
+.island-torch__flame {
+  opacity: 0;
+  transition: opacity 3s ease;
+  transform-origin: bottom center;
+}
+
+.scene--island.day-stage--night .island-torch__flame {
+  opacity: 1;
+  animation: bzr-candle-flicker 1.2s ease-in-out infinite;
 }

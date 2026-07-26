@@ -30,6 +30,16 @@ body {
   height: 100vh;
   height: 100dvh; /* modern mobile viewport, avoids the address-bar jump */
   overflow: hidden;
+  box-sizing: border-box;
+  /* Keeps every scene's content clear of the Dynamic Island, camera
+     notches, and the bottom home-indicator strip on modern phones — one
+     fix here instead of hand-adjusting dozens of individual top/bottom
+     positions across every scene. env() resolves to 0 on devices/browsers
+     without a safe area, so this is free everywhere else. */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 button {
@@ -37,6 +47,11 @@ button {
   border: none;
   background: none;
   cursor: pointer;
+  /* Extra insurance on top of the viewport meta tag's user-scalable=no:
+     tells the browser this element only ever needs plain taps, never a
+     double-tap-zoom or pinch gesture, so there's no ambiguity to wait
+     out before firing the click. */
+  touch-action: manipulation;
 }
 
 /* Respect people who've asked for less motion */

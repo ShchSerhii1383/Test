@@ -261,7 +261,7 @@ export class MountainScene {
 
           if (correctSet.has(index)) {
             this.audio.win();
-            el.classList.add('is-correct');
+            this._activateCrystal(el);
             found.add(index);
             clearTimeout(this._hintTimer);
 
@@ -278,7 +278,7 @@ export class MountainScene {
             setTimeout(() => el.classList.remove('is-wrong'), 350);
             this.dialogEl.classList.remove('dialog--hidden');
             typeText(this.dialogTextEl, this.config.missLine);
-            setTimeout(() => this.dialogEl.classList.add('dialog--hidden'), 1300);
+            setTimeout(() => { if (token === this._runToken) this.dialogEl.classList.add('dialog--hidden'); }, 1300);
           }
         } catch (err) {
           // A crystal tap should never be able to take down the whole
@@ -299,6 +299,40 @@ export class MountainScene {
    *  round-transition dialog can't do anything. */
   _setGridEnabled(enabled) {
     this.gridEl.style.pointerEvents = enabled ? '' : 'none';
+  }
+
+  /**
+   * The full activation moment for a correctly-tapped crystal: a glow
+   * that flares up, a pulse, a small burst of particles in the crystal's
+   * own color, and a brief beam of light — instead of just swapping a
+   * class. The four stages are timed to overlap slightly (real light
+   * doesn't wait politely for the previous effect to finish), driven by
+   * one CSS class plus a handful of short-lived particle elements.
+   */
+  _activateCrystal(el) {
+    el.classList.add('is-correct', 'is-activating');
+    this._scatterCrystalParticles(el);
+    setTimeout(() => el.classList.remove('is-activating'), 900);
+  }
+
+  /** A handful of small sparks in the crystal's own color, flying outward
+   *  and fading — removed once their animation finishes so they never
+   *  pile up across taps. */
+  _scatterCrystalParticles(el) {
+    const color = el.style.getPropertyValue('--crystal-color') || '#4FAFC4';
+    const count = 6;
+
+    for (let i = 0; i < count; i++) {
+      const particle = document.createElement('span');
+      particle.className = 'mtn-crystal-particle';
+      const angle = (360 / count) * i + (Math.random() * 20 - 10);
+      const distance = 26 + Math.random() * 14;
+      particle.style.setProperty('--particle-color', color);
+      particle.style.setProperty('--particle-x', `${Math.cos((angle * Math.PI) / 180) * distance}px`);
+      particle.style.setProperty('--particle-y', `${Math.sin((angle * Math.PI) / 180) * distance}px`);
+      el.appendChild(particle);
+      setTimeout(() => particle.remove(), 700);
+    }
   }
 
   /** Pick one of several symbol shapes at random, so a round with more than
@@ -339,25 +373,26 @@ export class MountainScene {
 
   _renderGrid(gridSize, onTap) {
     const positions = this._gridPositions(gridSize);
-    // Smaller crystals for the denser 4x4 grid so they read as
-    // comfortably spaced rather than crowded — purely a visual choice now
-    // that the grid itself is perfectly symmetric (no jitter, so no
-    // overlap is possible regardless of size).
-    const sizePx = gridSize <= 3 ? 46 : 32;
+    // Crystals stay the same size in every round — the grid's own span
+    // widens for a denser 4x4 layout instead (see _gridPositions), so the
+    // mountain never reads as "shrinking" between rounds. Only where the
+    // crystals sit changes, not how big they (or the mountain) are.
+    const sizePx = 40;
 
     return positions.map((pos, i) => {
       const el = document.createElement('button');
-      el.className = 'mtn-crystal';
+      const paletteIndex = i % MountainScene.CRYSTAL_COLORS.length;
+      const palette = MountainScene.CRYSTAL_COLORS[paletteIndex];
+      el.className = `mtn-crystal mtn-crystal--shape-${paletteIndex}`;
       el.style.left = `${pos.x}%`;
       el.style.top = `${pos.y}%`;
       el.style.width = `${sizePx}px`;
       el.style.height = `${sizePx * 1.13}px`; // keeps the same width:height ratio as the CSS default
 
-      const palette = MountainScene.CRYSTAL_COLORS[i % MountainScene.CRYSTAL_COLORS.length];
       el.style.setProperty('--crystal-color', palette.color);
       el.style.setProperty('--crystal-light', palette.light);
 
-      el.innerHTML = '<span class="mtn-crystal__shape"></span>';
+      el.innerHTML = '<span class="mtn-crystal__shape"></span><span class="mtn-crystal__glow-ring"></span><span class="mtn-crystal__beam"></span>';
       el.setAttribute('aria-label', 'Кристал');
       el.addEventListener('click', () => onTap(i, el));
       this.gridEl.appendChild(el);
@@ -368,10 +403,14 @@ export class MountainScene {
   /** A clean, evenly spaced grid — perfectly symmetric, so nothing can ever overlap. */
   _gridPositions(gridSize) {
     const positions = [];
-    const spanX = 56; // percent of the scene width the grid occupies
-    const spanY = 46;
-    const startX = 34;
-    const startY = 34;
+    // A 4x4 round spreads across more of the scene than a 3x3 one, so
+    // same-sized crystals still get comfortable room — verified safe
+    // (no overlap, and no columns pushed off-screen) even on a 360px
+    // narrow screen.
+    const spanX = gridSize <= 3 ? 56 : 66;
+    const spanY = gridSize <= 3 ? 46 : 58;
+    const startX = gridSize <= 3 ? 34 : 17;
+    const startY = gridSize <= 3 ? 34 : 28;
 
     for (let r = 0; r < gridSize; r++) {
       for (let c = 0; c < gridSize; c++) {
@@ -394,7 +433,7 @@ export class MountainScene {
 
       this.dialogEl.classList.remove('dialog--hidden');
       await typeText(this.dialogTextEl, this.config.hintLine);
-      setTimeout(() => this.dialogEl.classList.add('dialog--hidden'), 2200);
+      setTimeout(() => { if (token === this._runToken) this.dialogEl.classList.add('dialog--hidden'); }, 2200);
 
       const hintIndex = remaining[Math.floor(Math.random() * remaining.length)];
       cellEls[hintIndex].classList.add('is-hinting');

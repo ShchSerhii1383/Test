@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Secret Island</title>
   <link rel="stylesheet" href="css/fonts.css" />
   <link rel="stylesheet" href="css/variables.css" />
@@ -28,11 +28,50 @@
         <div class="sky">
           <div class="sun"></div>
 
+          <!-- A slow warmth/brightness drift on top of whatever the current
+               day-stage's base colors are (see .day-stage--* below) — the
+               island genuinely moves from morning to night as adventures
+               are finished, this is just the extra "never sits still"
+               shimmer layered on top of that. -->
+          <div class="sky-mood"></div>
+
+          <!-- Stars + moon + moon-path — invisible except during the
+               night stage (after all three adventures are done). -->
+          <svg class="island-stars" viewBox="0 0 300 200" preserveAspectRatio="none" aria-hidden="true">
+            <circle class="island-star" cx="30" cy="20" r="1.2" fill="#FFF8ED" style="animation-delay:0s" />
+            <circle class="island-star" cx="70" cy="40" r="1" fill="#FFF8ED" style="animation-delay:0.6s" />
+            <circle class="island-star" cx="110" cy="15" r="1.4" fill="#FFF8ED" style="animation-delay:1.2s" />
+            <circle class="island-star" cx="150" cy="35" r="1" fill="#FFF8ED" style="animation-delay:1.8s" />
+            <circle class="island-star" cx="190" cy="18" r="1.3" fill="#FFF8ED" style="animation-delay:2.4s" />
+            <circle class="island-star" cx="230" cy="45" r="1" fill="#FFF8ED" style="animation-delay:0.3s" />
+            <circle class="island-star" cx="260" cy="22" r="1.4" fill="#FFF8ED" style="animation-delay:1.5s" />
+            <circle class="island-star" cx="45" cy="60" r="0.9" fill="#FFF8ED" style="animation-delay:2.1s" />
+            <circle class="island-star" cx="130" cy="65" r="0.9" fill="#FFF8ED" style="animation-delay:0.9s" />
+            <!-- a faint Milky Way-ish band -->
+            <ellipse cx="150" cy="35" rx="140" ry="10" fill="#FFF8ED" opacity="0.05" />
+          </svg>
+          <svg class="island-moon" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="20" cy="20" r="16" fill="#F3EEDD" />
+            <circle cx="26" cy="15" r="3" fill="#E3DCC4" opacity="0.6" />
+            <circle cx="16" cy="25" r="2" fill="#E3DCC4" opacity="0.5" />
+          </svg>
+          <div class="moon-path"></div>
+
           <!-- Soft warm light rays, low behind the clouds -->
           <svg class="light-rays" viewBox="0 0 300 200" preserveAspectRatio="none" aria-hidden="true">
             <path d="M 210 0 L 300 0 L 250 200 L 190 200 Z" fill="var(--color-light-ray)" opacity="0.14" />
             <path d="M 240 0 L 300 40 L 270 200 L 230 200 Z" fill="var(--color-light-ray)" opacity="0.1" />
           </svg>
+
+          <!-- A few dust motes catching the sunlight -->
+          <span class="sky-dust sky-dust--1"></span>
+          <span class="sky-dust sky-dust--2"></span>
+          <span class="sky-dust sky-dust--3"></span>
+
+          <!-- Fireflies, only out at night -->
+          <span class="firefly firefly--1"></span>
+          <span class="firefly firefly--2"></span>
+          <span class="firefly firefly--3"></span>
 
           <!-- Clouds in three sizes, all drifting at their own slow pace -->
           <div class="cloud cloud--1"></div>
@@ -340,6 +379,16 @@
             <span class="lighthouse__light"></span>
           </button>
 
+          <!-- Two torches — just poles by day, lit and flickering once night falls -->
+          <svg class="island-torch island-torch--1" viewBox="0 0 20 50" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <line x1="10" y1="14" x2="10" y2="48" stroke="var(--color-wood-dark)" stroke-width="3" />
+            <path d="M10 14c-4 3-6 7-4 11 2-2 3-3 4-3 1 0 2 1 4 3 2-4 0-8-4-11z" fill="#FFB25E" class="island-torch__flame" />
+          </svg>
+          <svg class="island-torch island-torch--2" viewBox="0 0 20 50" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <line x1="10" y1="14" x2="10" y2="48" stroke="var(--color-wood-dark)" stroke-width="3" />
+            <path d="M10 14c-4 3-6 7-4 11 2-2 3-3 4-3 1 0 2 1 4 3 2-4 0-8-4-11z" fill="#FFB25E" class="island-torch__flame" />
+          </svg>
+
           <!-- Ambient critters: decorative, timed, no effect on the game -->
           <svg class="critter crab" id="crab" viewBox="0 0 40 26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <ellipse cx="20" cy="14" rx="12" ry="8" fill="#E8734A" />
@@ -445,6 +494,9 @@
       <!-- LAYER 1: sky — sun, clouds -->
       <div class="lagoon-layer lagoon-layer--sky">
         <div class="sun"></div>
+        <div class="sky-mood"></div>
+        <span class="sky-dust sky-dust--1"></span>
+        <span class="sky-dust sky-dust--2"></span>
         <div class="cloud cloud--1"></div>
         <div class="cloud cloud--2"></div>
         <div class="cloud cloud--3"></div>
@@ -648,6 +700,15 @@
              generated by LagoonScene.js at runtime -->
         <div class="lagoon-field" id="lagoon-field"></div>
 
+        <!-- Purely decorative, sits above the field — a couple of natural
+             overlaps so items don't read as laid out for easy scanning. -->
+        <svg class="lagoon-field-overlay lagoon-field-overlay--1" viewBox="0 0 30 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M15 2c8 3 12 10 12 16-6 2-14 0-18-6C6 8 8 3 15 2z" fill="var(--color-palm-dark)" opacity="0.85" />
+        </svg>
+        <svg class="lagoon-field-overlay lagoon-field-overlay--2" viewBox="0 0 40 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <ellipse cx="20" cy="10" rx="20" ry="8" fill="var(--color-sand-dark)" opacity="0.7" />
+        </svg>
+
         <!-- Blocks every tap while active — used during the story, rules
              demo, countdown and win-sequence, so nothing on screen can be
              accidentally triggered while the player is just watching. -->
@@ -661,6 +722,8 @@
       <!-- LAYER 1: cold sky, thin clouds -->
       <div class="mtn-layer mtn-layer--sky">
         <div class="sun"></div>
+        <span class="sky-dust sky-dust--1"></span>
+        <span class="sky-dust sky-dust--2"></span>
         <div class="cloud cloud--1"></div>
         <div class="cloud cloud--2"></div>
       </div>

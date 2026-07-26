@@ -85,6 +85,14 @@
   transform-origin: 50% 90%;
 }
 
+/* Hidden until their own state calls for them — see the READING /
+   TELESCOPE states further down. */
+.mickey__map,
+.mickey__telescope {
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-soft);
+}
+
 /* ---- Always-on life ---- */
 /* He blinks no matter what state he's in, so he never looks frozen. */
 .mickey__eyes {
@@ -175,6 +183,46 @@
 
 .mickey--diving .mickey__svg {
   animation: mickey-dive 0.5s var(--ease-soft) forwards;
+}
+
+/* reading a map: both arms hold it up in front, head tilted down at it —
+   a held pose, so he keeps breathing rather than freezing mid-gesture. */
+.mickey--reading .mickey__map {
+  opacity: 1;
+}
+
+.mickey--reading .mickey__arm--left {
+  transform: rotate(20deg);
+}
+
+.mickey--reading .mickey__arm--right {
+  transform: rotate(-20deg);
+}
+
+.mickey--reading .mickey__head {
+  transform: rotate(4deg);
+}
+
+.mickey--reading .mickey__svg {
+  animation: mickey-bob var(--duration-ambient) var(--ease-soft) infinite;
+}
+
+/* looking through the telescope: one arm raised to the eye, head tilted
+   to meet it. */
+.mickey--telescope .mickey__telescope {
+  opacity: 1;
+}
+
+.mickey--telescope .mickey__arm--right {
+  transform: rotate(-85deg);
+}
+
+.mickey--telescope .mickey__head {
+  transform: rotate(-6deg);
+}
+
+.mickey--telescope .mickey__svg {
+  animation: mickey-bob var(--duration-ambient) var(--ease-soft) infinite;
 }
 
 /* A brief glance to one side, layered on top of idle. --glance-dir (set

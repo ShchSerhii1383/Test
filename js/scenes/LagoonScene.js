@@ -277,10 +277,15 @@ export class LagoonScene {
 
     items.forEach((item, i) => {
       const el = document.createElement('button');
-      el.className = 'lagoon-item';
+      el.className = item.isTarget ? 'lagoon-item lagoon-item--subtle-pulse' : 'lagoon-item';
       el.style.left = `${positions[i].left}%`;
       el.style.top = `${positions[i].top}%`;
-      el.style.transform = `rotate(${positions[i].rotation}deg) scale(${positions[i].scale})`;
+      // Targets lean a little toward the larger end of the range — not a
+      // hard rule (that would make size itself the answer), just enough
+      // that the objects worth finding tend to sit a bit more forward.
+      const scale = item.isTarget ? Math.max(positions[i].scale, 0.8 + Math.random() * 0.25) : positions[i].scale;
+      el.style.transform = `rotate(${positions[i].rotation}deg) scale(${scale})`;
+      el.style.animationDelay = `${Math.random() * 8}s`; // not all targets pulse in sync
       el.innerHTML = icon(item.icon);
       el.setAttribute('aria-label', item.isTarget ? item.label : 'Дрібниця на пляжі');
 
@@ -313,8 +318,11 @@ export class LagoonScene {
         cells.push({
           left: 18 + c * ((88 - 18) / (cols - 1)) + (Math.random() - 0.5) * 6,
           top: 44 + r * ((92 - 44) / Math.max(rows - 1, 1)) + (Math.random() - 0.5) * 5,
-          rotation: (Math.random() - 0.5) * 40,
-          scale: 0.8 + Math.random() * 0.35,
+          rotation: (Math.random() - 0.5) * 44,
+          // A much wider range than before (was 0.8-1.15) — the eye reads
+          // a field of near-identical sizes as "a row of icons"; real
+          // variance is what makes it read as things that just washed up.
+          scale: 0.55 + Math.random() * 0.5,
         });
       }
     }
@@ -375,7 +383,7 @@ export class LagoonScene {
       const line = this.config.hintLines[Math.floor(Math.random() * this.config.hintLines.length)];
       this.dialogEl.classList.remove('dialog--hidden');
       await typeText(this.dialogTextEl, line);
-      setTimeout(() => this.dialogEl.classList.add('dialog--hidden'), 2400);
+      setTimeout(() => { if (token === this._runToken) this.dialogEl.classList.add('dialog--hidden'); }, 2400);
     }, this.config.hintTalkDelayMs);
 
     this._shimmerHintTimer = setTimeout(() => {
