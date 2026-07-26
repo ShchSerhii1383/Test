@@ -214,6 +214,16 @@ export class AudioManager {
     this._tone(659, 0.22, { delay: 0.12 });
   }
 
+  /** A soft, bell-like crystal chime at any pitch — used for Mountain's
+   *  9 crystals, each with its own tone, so the sequence can be
+   *  memorized by ear as well as by eye. A quiet high overtone on top
+   *  of the main tone is what gives it a "crystal" rather than plain
+   *  sine-wave character. */
+  crystalTone(frequency) {
+    this._tone(frequency, 0.4, { volume: 0.5 });
+    this._tone(frequency * 2, 0.25, { volume: 0.15, delay: 0.02 });
+  }
+
   /** The chest opening: a warm chord that opens upward. */
   chest() {
     this._tone(392, 0.5, { volume: 0.8 });

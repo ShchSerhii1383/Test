@@ -8,6 +8,7 @@ import { QuestionCard } from '../components/QuestionCard.js';
 import { AnswerCard } from '../components/AnswerCard.js';
 import { StampAnimation } from '../components/StampAnimation.js';
 import { typeText, wait } from '../utils/typewriter.js';
+import { debugLog } from '../utils/debugLog.js';
 
 /**
  * BazaarScene — "Explorer's Journal"
@@ -82,7 +83,7 @@ export class BazaarScene {
       // hit after they'd already won, still try to get them their reward;
       // otherwise just send them back to the island.
       console.error('[Bazaar] enter() FALLBACK TRIGGERED — _enterInner() threw:', err);
-      console.log('[Bazaar] fallback: state =', this.state, '-> going to', this.state === 'WIN' ? 'REWARD' : 'ISLAND');
+      debugLog('[Bazaar] fallback: state =', this.state, '-> going to', this.state === 'WIN' ? 'REWARD' : 'ISLAND');
       if (this.state === 'WIN') {
         await this._exit(SCENES.REWARD, { adventureId: 'bazaar' });
       } else {
@@ -208,20 +209,20 @@ export class BazaarScene {
   async _playQuestions(token) {
     let question = this.questions.current();
     while (question) {
-      console.log(`[Bazaar] question ${this.questions.currentNumber()}/${this.questions.total()}`);
+      debugLog(`[Bazaar] question ${this.questions.currentNumber()}/${this.questions.total()}`);
       const won = await this._playQuestion(question, token);
-      console.log(`[Bazaar] question ${this.questions.currentNumber()} resolved with won=${won}`);
+      debugLog(`[Bazaar] question ${this.questions.currentNumber()} resolved with won=${won}`);
       if (!won) return; // scene was exited mid-question
 
       question = this.questions.advance();
     }
 
-    console.log('[Bazaar] all questions complete, checking token before win sequence', { token, current: this._runToken });
+    debugLog('[Bazaar] all questions complete, checking token before win sequence', { token, current: this._runToken });
     if (token !== this._runToken) return;
 
-    console.log('[Bazaar] calling _playWinSequence()');
+    debugLog('[Bazaar] calling _playWinSequence()');
     await this._playWinSequence();
-    console.log('[Bazaar] _playWinSequence() returned normally');
+    debugLog('[Bazaar] _playWinSequence() returned normally');
   }
 
   /**
@@ -281,7 +282,7 @@ export class BazaarScene {
 
   /** All five questions solved: the journal closes, the key appears. */
   async _playWinSequence() {
-    console.log('[Bazaar] _playWinSequence: started');
+    debugLog('[Bazaar] _playWinSequence: started');
     this.state = 'WIN';
     this._setInputBlocked(true); // nothing should be tappable during the celebration either
     await wait(400);
@@ -297,9 +298,9 @@ export class BazaarScene {
     this.dialogEl.classList.remove('dialog--hidden');
     await typeText(this.dialogTextEl, this.config.winLine);
     await wait(1400);
-    console.log('[Bazaar] _playWinSequence: win line shown, calling _exit(REWARD)');
+    debugLog('[Bazaar] _playWinSequence: win line shown, calling _exit(REWARD)');
 
     await this._exit(SCENES.REWARD, { adventureId: 'bazaar' });
-    console.log('[Bazaar] _playWinSequence: _exit(REWARD) returned normally');
+    debugLog('[Bazaar] _playWinSequence: _exit(REWARD) returned normally');
   }
 }

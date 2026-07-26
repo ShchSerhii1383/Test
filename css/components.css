@@ -292,7 +292,7 @@
   left: 50%;
   transform: translateX(-50%);
   color: var(--color-text-light);
-  font-size: 15px;
+  font-size: var(--text-base);
   letter-spacing: 0.02em;
   white-space: nowrap;
   opacity: 0;
@@ -354,7 +354,7 @@
 
 .scroll__title {
   font-family: var(--font-display);
-  font-size: 17px;
+  font-size: var(--text-lg);
   color: #6B4A22;
   margin-bottom: var(--space-md);
   letter-spacing: 0.03em;
@@ -368,7 +368,7 @@
   border-bottom: 2px dashed #C09A5E;
   padding: var(--space-xs) var(--space-sm);
   font-family: var(--font-hand);
-  font-size: 26px;
+  font-size: var(--text-display);
   color: #3A2A14;
   text-align: center;
   outline: none;
@@ -376,11 +376,11 @@
 
 .scroll__input::placeholder {
   color: #B49463;
-  font-size: 16px;
+  font-size: var(--text-base);
 }
 
 .scroll__registered {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: #6B4A22;
   opacity: 0;
   margin-top: var(--space-sm);
@@ -423,7 +423,7 @@
   border: 3px solid #8A5A3B;
   border-radius: 10px;
   color: var(--color-text-light);
-  font-size: 17px;
+  font-size: var(--text-lg);
   font-weight: 700;
   padding: var(--space-sm) var(--space-xl);
   box-shadow: 0 5px 0 #7A4A2B, 0 8px 14px rgba(0,0,0,0.25);
@@ -477,7 +477,7 @@
 
 .titlecard__logo {
   font-family: var(--font-display);
-  font-size: 34px;
+  font-size: var(--text-display);
   font-weight: 700;
   color: var(--color-text-light);
   text-shadow: 0 3px 12px rgba(0,0,0,0.35);
@@ -492,7 +492,7 @@
 
 .titlecard__tagline {
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: var(--color-text-light);
   opacity: 0.85;
   margin-bottom: var(--space-sm);

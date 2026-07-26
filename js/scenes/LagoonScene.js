@@ -3,6 +3,7 @@ import { SCENES } from '../config/constants.js';
 import { icon } from '../components/icons.js';
 import { Camera } from '../systems/Camera.js';
 import { typeText, wait } from '../utils/typewriter.js';
+import { debugLog } from '../utils/debugLog.js';
 
 /**
  * LagoonScene — "The Explorer's Collection"
@@ -64,7 +65,7 @@ export class LagoonScene {
       await this._enterInner();
     } catch (err) {
       console.error('[Lagoon] enter() FALLBACK TRIGGERED — _enterInner() threw:', err);
-      console.log('[Lagoon] fallback: state =', this.state, '-> going to', this.state === 'WIN' ? 'REWARD' : 'ISLAND');
+      debugLog('[Lagoon] fallback: state =', this.state, '-> going to', this.state === 'WIN' ? 'REWARD' : 'ISLAND');
       if (this.state === 'WIN') {
         await this._exit(SCENES.REWARD, { adventureId: 'lagoon' });
       } else {
@@ -195,11 +196,11 @@ export class LagoonScene {
   /** Play all three rounds in order, then the finale. */
   async _playRounds(token) {
     for (let i = 0; i < this.config.rounds.length; i++) {
-      console.log(`[Lagoon] starting round ${i + 1}/${this.config.rounds.length}`);
+      debugLog(`[Lagoon] starting round ${i + 1}/${this.config.rounds.length}`);
       this._updateRoundDots(i);
 
       const won = await this._playRound(this.config.rounds[i], token);
-      console.log(`[Lagoon] round ${i + 1} resolved with won=${won}`);
+      debugLog(`[Lagoon] round ${i + 1} resolved with won=${won}`);
       if (!won) return; // scene was exited mid-round
 
       if (i < this.config.rounds.length - 1) {
@@ -212,12 +213,12 @@ export class LagoonScene {
       }
     }
 
-    console.log('[Lagoon] all rounds complete, checking token before win sequence', { token, current: this._runToken });
+    debugLog('[Lagoon] all rounds complete, checking token before win sequence', { token, current: this._runToken });
     if (token !== this._runToken) return;
 
-    console.log('[Lagoon] calling _playWinSequence()');
+    debugLog('[Lagoon] calling _playWinSequence()');
     await this._playWinSequence();
-    console.log('[Lagoon] _playWinSequence() returned normally');
+    debugLog('[Lagoon] _playWinSequence() returned normally');
   }
 
   _updateRoundDots(currentIndex) {
@@ -280,13 +281,23 @@ export class LagoonScene {
       el.className = item.isTarget ? 'lagoon-item lagoon-item--subtle-pulse' : 'lagoon-item';
       el.style.left = `${positions[i].left}%`;
       el.style.top = `${positions[i].top}%`;
+      // Rotation is safe on the button itself (doesn't shrink its hit
+      // area) — but the visual size variance below is deliberately kept
+      // OFF the button and applied to the icon graphic inside it instead.
+      // CSS transform:scale() shrinks the actual tappable area along with
+      // the visuals, and this scale range goes as low as 0.55 — on the
+      // button itself that would leave some items with a ~24px hit box
+      // well under the 44px minimum. The button stays 44x44 always; only
+      // the icon inside it gets smaller or bigger.
+      el.style.transform = `rotate(${positions[i].rotation}deg)`;
+      el.style.animationDelay = `${Math.random() * 8}s`; // not all targets pulse in sync
+      el.innerHTML = icon(item.icon);
       // Targets lean a little toward the larger end of the range — not a
       // hard rule (that would make size itself the answer), just enough
       // that the objects worth finding tend to sit a bit more forward.
       const scale = item.isTarget ? Math.max(positions[i].scale, 0.8 + Math.random() * 0.25) : positions[i].scale;
-      el.style.transform = `rotate(${positions[i].rotation}deg) scale(${scale})`;
-      el.style.animationDelay = `${Math.random() * 8}s`; // not all targets pulse in sync
-      el.innerHTML = icon(item.icon);
+      const iconEl = el.querySelector('.icon');
+      if (iconEl) iconEl.style.transform = `scale(${scale})`;
       el.setAttribute('aria-label', item.isTarget ? item.label : 'Дрібниця на пляжі');
 
       el.addEventListener('click', () => {
@@ -402,13 +413,13 @@ export class LagoonScene {
 
   /** All three rounds solved: the panel closes, Mickey celebrates. */
   async _playWinSequence() {
-    console.log('[Lagoon] _playWinSequence: started');
+    debugLog('[Lagoon] _playWinSequence: started');
     this.state = 'WIN';
     this._setInputBlocked(true); // nothing should be tappable during the celebration either
     this._updateRoundDots(this.config.rounds.length);
     this.panelEl.classList.remove('is-visible');
     await wait(600);
-    console.log('[Lagoon] _playWinSequence: initial wait done');
+    debugLog('[Lagoon] _playWinSequence: initial wait done');
 
     this.audio.chest();
     this.camera.focus({ scale: 1.08, x: '0%', y: '-2%' }); // a small pull-back, not a push-in
@@ -416,12 +427,12 @@ export class LagoonScene {
     this.dialogEl.classList.remove('dialog--hidden');
     await typeText(this.dialogTextEl, this.config.winLine);
     await wait(1400);
-    console.log('1. Win animation finished');
-    console.log('[Lagoon] _playWinSequence: win line shown, calling _exit(REWARD)');
+    debugLog('1. Win animation finished');
+    debugLog('[Lagoon] _playWinSequence: win line shown, calling _exit(REWARD)');
 
-    console.log('2. Calling _exit(REWARD)');
+    debugLog('2. Calling _exit(REWARD)');
     await this._exit(SCENES.REWARD, { adventureId: 'lagoon' });
-    console.log('3. _exit returned');
-    console.log('[Lagoon] _playWinSequence: _exit(REWARD) returned normally');
+    debugLog('3. _exit returned');
+    debugLog('[Lagoon] _playWinSequence: _exit(REWARD) returned normally');
   }
 }

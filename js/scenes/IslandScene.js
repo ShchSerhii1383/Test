@@ -382,10 +382,13 @@ export class IslandScene {
     clearTimeout(this._wanderTimer);
 
     const wander = () => {
+      this._dropFootprints(this.mickey.el.style.left, this.mickey.el.style.bottom);
+
       const spot = this._wanderSpots[Math.floor(Math.random() * this._wanderSpots.length)];
       this.mickey.el.style.left = spot.left;
       this.mickey.el.style.bottom = spot.bottom;
       this.mickey.el.style.top = 'auto';
+      this._checkWildlifeReaction();
 
       this._wanderTimer = setTimeout(wander, 6000 + Math.random() * 4000);
     };
@@ -393,6 +396,50 @@ export class IslandScene {
     this._wanderTimer = setTimeout(wander, 5000 + Math.random() * 3000);
 
     this._startIdleGestures();
+  }
+
+  /**
+   * Leaves a small pair of footprints where Mickey just was, fading out
+   * over about 12 seconds — long enough to notice a trail behind him,
+   * short enough that it reads as the tide washing them away rather than
+   * permanent marks. Purely decorative, and self-cleaning: each pair
+   * removes itself from the DOM once its own fade finishes, so nothing
+   * accumulates over a long idle session.
+   */
+  _dropFootprints(left, bottom) {
+    if (!left || !bottom) return; // nowhere to drop them yet (first move)
+
+    const footprints = document.createElement('div');
+    footprints.className = 'footprints';
+    footprints.style.left = left;
+    footprints.style.bottom = bottom;
+    footprints.innerHTML = '<span class="footprint footprint--l"></span><span class="footprint footprint--r"></span>';
+    this.sceneEl.querySelector('.layer--island').appendChild(footprints);
+
+    setTimeout(() => footprints.remove(), 12000);
+  }
+
+  /**
+   * The crab notices Mickey, not just the clock — a real distance check
+   * against his current on-screen position rather than another blind
+   * timer, so the island reads as reacting to him being there, not just
+   * looping regardless. Purely decorative: nothing here can affect the
+   * boxes, the adventures, or any game state.
+   */
+  _checkWildlifeReaction() {
+    const crabEl = this.sceneEl.querySelector('#crab');
+    if (!crabEl || crabEl.classList.contains('is-startled')) return;
+
+    const mickeyRect = this.mickey.el.getBoundingClientRect();
+    const crabRect = crabEl.getBoundingClientRect();
+    const dx = (crabRect.left + crabRect.width / 2) - (mickeyRect.left + mickeyRect.width / 2);
+    const dy = (crabRect.top + crabRect.height / 2) - (mickeyRect.top + mickeyRect.height / 2);
+    const distance = Math.hypot(dx, dy);
+
+    if (distance < 130) {
+      crabEl.classList.add('is-startled');
+      setTimeout(() => crabEl.classList.remove('is-startled'), 1100);
+    }
   }
 
   /**

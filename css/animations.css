@@ -36,8 +36,8 @@
 }
 
 @keyframes box-pulse {
-  0%, 100% { opacity: 0; transform: scale(0.9); }
-  50% { opacity: 0.6; transform: scale(1.1); }
+  0%, 100% { opacity: 0.15; transform: scale(0.92); }
+  50% { opacity: 0.85; transform: scale(1.25); }
 }
 
 @keyframes box-hover-bounce {
@@ -317,6 +317,14 @@
   100% { opacity: 0.75; transform: translateX(-50%) scaleY(1); }
 }
 
+/* Same beats as beam-open, but keeps each side beam's own rotation
+   through the whole animation instead of snapping upright. */
+@keyframes beam-open-side {
+  0% { opacity: 0; transform: translateX(-50%) rotate(var(--beam-angle, 0deg)) scaleY(0); }
+  40% { opacity: 0.7; }
+  100% { opacity: 0.5; transform: translateX(-50%) rotate(var(--beam-angle, 0deg)) scaleY(1); }
+}
+
 @keyframes sparkle-float {
   0% { opacity: 0; transform: translate(0, 0) scale(0.4); }
   25% { opacity: 1; }
@@ -576,4 +584,42 @@
 @keyframes star-twinkle {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 1; }
+}
+
+/* ---- Island: the crab startled by Mickey getting close ---- */
+@keyframes crab-startled-flee {
+  0% { opacity: 1; transform: translateX(0) scaleX(-1); }
+  100% { opacity: 0; transform: translateX(-30vw) scaleX(-1); }
+}
+
+/* ---- Island: footprints fading as if the tide washed them away ---- */
+@keyframes footprints-wash-away {
+  0%, 20% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+
+/* ---- Island: the distant ship's barely-there drift ---- */
+@keyframes distant-ship-drift {
+  0% { transform: translateX(-8vw); }
+  100% { transform: translateX(8vw); }
+}
+
+/* ---- Island: cloud shadows crossing the sand ---- */
+@keyframes cloud-shadow-drift {
+  0% { left: -20%; opacity: 0; }
+  10%, 90% { opacity: 0.7; }
+  100% { left: 110%; opacity: 0; }
+}
+
+/* ---- Bazaar: candlelight flickering on the wall ---- */
+@keyframes bzr-wall-glow-flicker {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
+/* ---- Mountain: the plate shaking on a wrong tap ---- */
+@keyframes mtn-plate-shake {
+  0%, 100% { transform: translateX(-50%) translateX(0); }
+  25% { transform: translateX(-50%) translateX(-6px); }
+  75% { transform: translateX(-50%) translateX(6px); }
 }

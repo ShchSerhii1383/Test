@@ -2,6 +2,7 @@ import { SCENES, MICKEY_STATES } from '../config/constants.js';
 import { wait } from '../utils/typewriter.js';
 import { icon } from '../components/icons.js';
 import { renderChest } from '../components/chestSprite.js';
+import { debugLog } from '../utils/debugLog.js';
 
 /**
  * RewardScene
@@ -38,6 +39,8 @@ export class RewardScene {
     this.openBtn = sceneEl.querySelector('#reward-open-btn');
     this.rewardArtEl = sceneEl.querySelector('.reward-box__art');
     this.beamEl = sceneEl.querySelector('#reward-beam');
+    this.beamLeftEl = sceneEl.querySelector('#reward-beam-left');
+    this.beamRightEl = sceneEl.querySelector('#reward-beam-right');
     this.sparklesEl = sceneEl.querySelector('#reward-sparkles');
     this.cardsEl = sceneEl.querySelector('#reward-cards');
     this.revealEl = sceneEl.querySelector('#reward-reveal');
@@ -100,8 +103,8 @@ export class RewardScene {
   }
 
   async _enterInner(data = {}) {
-    console.log('4. enter()');
-    console.log('[Reward] _enterInner: started', data);
+    debugLog('4. enter()');
+    debugLog('[Reward] _enterInner: started', data);
     this._resetState();
     this._adventureId = data.adventureId ?? null;
     this._isBusy = false;
@@ -121,19 +124,19 @@ export class RewardScene {
     // Same chest they tapped on the island, not a generic one — the theme
     // comes straight from which adventure just finished.
     renderChest(this.rewardArtEl, this._adventureId);
-    console.log('[Reward] chest theme rendered for', this._adventureId);
+    debugLog('[Reward] chest theme rendered for', this._adventureId);
 
     this._resetVisualState();
     await this._runCountdown();
-    console.log('5. countdown finished');
-    console.log('[Reward] countdown done');
+    debugLog('5. countdown finished');
+    debugLog('[Reward] countdown done');
     if (token !== this._runToken) return; // a newer visit started meanwhile
 
     this.state = 'CHEST';
     this.boxEl.classList.add('is-visible');
     this.openBtn.classList.add('is-visible');
     this.mickey.hush();
-    console.log('[Reward] _enterInner: finished, chest is now visible and tappable');
+    debugLog('[Reward] _enterInner: finished, chest is now visible and tappable');
   }
 
 
@@ -152,6 +155,8 @@ export class RewardScene {
     this.boxEl.classList.remove('is-visible', 'is-open', 'is-gone');
     this.openBtn.classList.remove('is-visible');
     this.beamEl.classList.remove('is-shining');
+    this.beamLeftEl.classList.remove('is-shining');
+    this.beamRightEl.classList.remove('is-shining');
     this.sparklesEl.innerHTML = '';
     this.cardsEl.classList.remove('is-visible');
     this.cardsEl.innerHTML = '';
@@ -181,32 +186,34 @@ export class RewardScene {
     if (this._isBusy) return; // ignore double-taps
     this._isBusy = true;
     const token = this._runToken;
-    console.log('6. chest opened');
-    console.log('[Reward] _openChest: tapped, starting open sequence');
+    debugLog('6. chest opened');
+    debugLog('[Reward] _openChest: tapped, starting open sequence');
 
     try {
       this.audio.chest();
       this.boxEl.classList.add('is-open');
       this.openBtn.classList.remove('is-visible');
       await wait(260);
-      if (token !== this._runToken) { console.log('[Reward] _openChest: stale token after lid delay, aborting'); return; }
+      if (token !== this._runToken) { debugLog('[Reward] _openChest: stale token after lid delay, aborting'); return; }
 
       this.beamEl.classList.add('is-shining');
+      this.beamLeftEl.classList.add('is-shining');
+      this.beamRightEl.classList.add('is-shining');
       this._scatterSparkles(14);
       await wait(900);
-      if (token !== this._runToken) { console.log('[Reward] _openChest: stale token after beam delay, aborting'); return; }
+      if (token !== this._runToken) { debugLog('[Reward] _openChest: stale token after beam delay, aborting'); return; }
 
       this.boxEl.classList.add('is-gone');
       await wait(400);
-      if (token !== this._runToken) { console.log('[Reward] _openChest: stale token after chest-gone delay, aborting'); return; }
+      if (token !== this._runToken) { debugLog('[Reward] _openChest: stale token after chest-gone delay, aborting'); return; }
 
-      console.log('7. cards rendered');
-      console.log('[Reward] _openChest: about to render cards');
+      debugLog('7. cards rendered');
+      debugLog('[Reward] _openChest: about to render cards');
       this._renderCards();
       this.cardsEl.classList.add('is-visible');
       this.state = 'CARDS';
-      console.log('8. cards visible');
-      console.log('[Reward] _openChest: cards rendered and visible —', this.cardsEl.children.length, 'cards');
+      debugLog('8. cards visible');
+      debugLog('[Reward] _openChest: cards rendered and visible —', this.cardsEl.children.length, 'cards');
     } catch (err) {
       // This used to be a bare try/finally with no catch — an exception
       // here (e.g. inside _renderCards) would silently become an
@@ -285,7 +292,7 @@ export class RewardScene {
     if (this._isBusy) return;
     this._isBusy = true;
     const token = this._runToken;
-    console.log('[Reward] _chooseGift: card tapped, gift =', gift.id);
+    debugLog('[Reward] _chooseGift: card tapped, gift =', gift.id);
 
     try {
       this.giftManager.claim(gift.id);
@@ -298,11 +305,11 @@ export class RewardScene {
       this.audio.tap();
       cardEl.classList.add('is-chosen');
       await wait(700); // let the flip land
-      if (token !== this._runToken) { console.log('[Reward] _chooseGift: stale token after flip, aborting'); return; }
+      if (token !== this._runToken) { debugLog('[Reward] _chooseGift: stale token after flip, aborting'); return; }
 
       this.cardsEl.classList.remove('is-visible');
       await wait(900); // the cinematic pause
-      if (token !== this._runToken) { console.log('[Reward] _chooseGift: stale token after pause, aborting'); return; }
+      if (token !== this._runToken) { debugLog('[Reward] _chooseGift: stale token after pause, aborting'); return; }
 
       this.revealIconEl.innerHTML = icon(gift.icon);
       this.revealTitleEl.textContent = gift.title;
@@ -310,7 +317,7 @@ export class RewardScene {
       this.revealEl.classList.add('is-visible');
       this.mickey.play(MICKEY_STATES.CELEBRATE);
       this.state = 'REVEAL';
-      console.log('[Reward] _chooseGift: reveal is now visible');
+      debugLog('[Reward] _chooseGift: reveal is now visible');
 
       // The reveal appears at the same screen spot the card grid just
       // occupied — an impatient rapid double-tap (pick the card, tap
@@ -332,7 +339,7 @@ export class RewardScene {
   }
 
   _finish() {
-    console.log('[Reward] _finish: continue button tapped, returning to island');
+    debugLog('[Reward] _finish: continue button tapped, returning to island');
     const finishedAdventure = this._adventureId;
     if (finishedAdventure) {
       this.saveManager.markCompleted(finishedAdventure);

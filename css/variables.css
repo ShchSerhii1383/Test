@@ -56,6 +56,24 @@
   --color-shadow-soft: rgba(0,0,0,0.12);
   --color-shadow-strong: rgba(0,0,0,0.22);
 
+  /* A shadow scale instead of a hand-picked rgba() per component — small
+     for buttons/cards, medium for boxes/panels, large for the book/chest
+     and other "this is the main thing on screen" elements. */
+  --shadow-sm: 0 2px 4px var(--color-shadow-soft);
+  --shadow-md: 0 4px 10px var(--color-shadow-soft);
+  --shadow-lg: 0 10px 22px var(--color-shadow-strong);
+
+  /* Six steps instead of ~18 one-off pixel values scattered across every
+     component. Nothing here goes below 12px — the smallest label in the
+     game was 8px before this, hard to read even for an adult, let alone
+     the actual audience. */
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-display: 34px;
+
   /* ---- Characters ---- */
   --color-mickey-body: #4A3F6B;
   --color-mickey-skin: #F6C9A0;

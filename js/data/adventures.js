@@ -68,33 +68,33 @@ export const ADVENTURE_CONFIG = {
     ],
   },
   mountain: {
-    title: 'Гора кристалів',
+    title: 'Mountain of Crystals',
 
     story: [
-      'Колись ця гора світилася всю ніч...',
-      'Але після бурі кристали переплуталися, і магія заснула.',
-      'Спробуємо її розбудити?',
+      'Перед нами стародавній кам\'яний механізм.',
+      'Кажуть, що він реагує лише на тих, хто здатний запам\'ятати шлях світла.',
+      'Дивіться уважно — гора сама покаже правильний порядок.',
     ],
 
-    rulesLine: 'Запам\'ятай, які кристали світяться — і торкнись саме їх.',
+    rulesLine: 'Запам\'ятай порядок, у якому світяться кристали — і повтори точно той самий порядок.',
 
-    hintLine: 'Здається, один кристал досі чекає на дотик.',
+    hintLine: 'Здається, наступний крок ще чекає на дотик.',
     hintDelayMs: 11000,
-    missLine: 'Не той — спробуй ще.',
-    roundWinLines: ['Так тримати!', 'Правильно!', 'Ще один крок...'],
+    missLine: 'Не той — дивись послідовність ще раз.',
+    roundWinLines: ['Так тримати!', 'Правильно!', 'Ще один крок...', 'Майже готово!'],
     winLine: 'Гора прокинулась!',
 
-    // Three rounds, each a bit bigger. `pattern` is fixed (a real shape,
-    // used for round 3's "island symbol"); when `pattern` is omitted the
-    // scene picks that many random cells itself.
+    // Every round uses the same 3x3 stone plate — the scale never
+    // changes between rounds, only the sequence length. No sequence is
+    // ever pre-made: a fresh random order (no repeats) is drawn each
+    // time a round starts, and again each time the player gets it wrong
+    // and the round restarts.
     rounds: [
-      { grid: 3, revealCount: 4 },
-      { grid: 4, revealCount: 6 },
-      { grid: 4, patterns: [
-        [1, 2, 5, 6, 8, 9, 10, 11],   // a simple mountain-peak silhouette
-        [1, 2, 4, 7, 8, 11, 13, 14],  // a diamond outline
-        [0, 3, 5, 6, 9, 10, 12, 15],  // an hourglass / star-like scatter
-      ] },
+      { grid: 3, sequenceLength: 3 },
+      { grid: 3, sequenceLength: 4 },
+      { grid: 3, sequenceLength: 5 },
+      { grid: 3, sequenceLength: 6 },
+      { grid: 3, sequenceLength: 7 },
     ],
   },
   bazaar: {

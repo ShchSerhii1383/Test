@@ -27,6 +27,8 @@
  * scene no-op guard and clear logging; it does not need to force every
  * call through a single global queue.
  */
+import { debugLog } from '../utils/debugLog.js';
+
 export class SceneManager {
   constructor() {
     /** @type {Map<string, {el: HTMLElement, instance: object}>} */
@@ -67,7 +69,7 @@ export class SceneManager {
     }
 
     const from = this.currentSceneName ?? '(none)';
-    console.log(`[SceneManager] ${from} -> ${name}`, data ?? '');
+    debugLog(`[SceneManager] ${from} -> ${name}`, data ?? '');
 
     const current = this.currentSceneName
       ? this.scenes.get(this.currentSceneName)

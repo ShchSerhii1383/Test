@@ -17,4 +17,12 @@ export const CONFIG = {
    * Set to false if you'd rather progress carried over between visits.
    */
   RESET_PROGRESS_ON_LOAD: true,
+
+  /**
+   * Every scene logs its step-by-step progress (countdown, chest, cards,
+   * scene transitions...) to help track down exactly where a bug happens.
+   * That's noise for a normal playthrough — flip this to true only while
+   * actively debugging.
+   */
+  DEBUG: false,
 };
