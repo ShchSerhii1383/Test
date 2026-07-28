@@ -384,6 +384,9 @@ export class IslandScene {
     await this.sceneManager.goTo(SCENES.CONSTELLATION);
   }
 
+  /**
+   * The moment the island itself reacts, instead of the change having
+   * already happened silently before the player got here. Mickey's
    * "Молодці!" lands, then the camera just... holds, wide, for a couple
    * of seconds — and that's exactly when the sky actually crossfades to
    * its next stage and the newest plant sprouts. Only after this beat
