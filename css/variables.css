@@ -88,6 +88,19 @@
   --color-box-wood: #C98A4B;
   --color-box-wood-dark: #A5692F;
   --color-box-glow: #FFE9A8;
+  /* Starlight/moonlight white. Deliberately its own token even though it
+     currently matches --color-text-light: they mean different things, and
+     the night sky should be able to shift without dragging body text with
+     it. Used by every star, the moon and the shooting star. */
+  --color-starlight: #FFF8ED;
+  /* The matte gold of the reward cards' and journal's borders. */
+  --color-gold: #C9A24A;
+  /* Firefly green — the only living light on the island at night. */
+  --color-firefly: #D9F26A;
+  /* The same warm light as --color-box-glow, in channels — rgba() can't
+     take a hex custom property, and every glow/shadow in the game needs
+     to be this exact light, not a near-miss of it. */
+  --color-box-glow-rgb: 255, 233, 168;
 
   /* ---- Type ----
      Rounded and friendly, never the browser default. The fallbacks matter:

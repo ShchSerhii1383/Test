@@ -71,4 +71,35 @@ button {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+
+  /* The rule above is right for atmosphere but wrong for affordances.
+     Several cues that tell the player what's interactive are infinite
+     animations over an invisible base state (opacity: 0) with no
+     fill-mode — cut them short and they snap back to invisible, so the
+     player is left with no idea which chest is playable or that the
+     lighthouse is waiting. These restore each cue as a static, steady
+     state: visible, just not pulsing. */
+  .box--available .box__glow {
+    opacity: 0.7 !important;
+    transform: scale(1.1) !important;
+  }
+
+  .lighthouse.is-visible {
+    opacity: 1 !important;
+  }
+
+  .reward-box.is-visible {
+    opacity: 1 !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+  }
+
+  /* The five constellation stars and the crystal hint both rely on a
+     pulse to say "this one" — keep them plainly lit instead. */
+  .cst-star {
+    opacity: 1 !important;
+  }
+
+  .mtn-crystal.is-hinting {
+    filter: brightness(1.5) !important;
+  }
 }

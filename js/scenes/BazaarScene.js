@@ -302,6 +302,7 @@ export class BazaarScene {
     this.bookEl.style.transform = 'scale(0.9)';
 
     this.audio.chest();
+    this.audio.bazaarSignature();
     this.keyEl.classList.add('is-visible');
     this.mickey.play(MICKEY_STATES.CELEBRATE);
 

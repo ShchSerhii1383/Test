@@ -33,10 +33,18 @@
 import { debugLog } from '../utils/debugLog.js';
 
 export class SceneManager {
-  constructor() {
+  /**
+   * @param {import('./AudioManager.js').AudioManager} [audio] - optional.
+   *   When present, every scene change also cross-fades the ambient mix
+   *   to suit where the player now is. Done here rather than in each
+   *   scene so no scene has to know anything about audio, and so a new
+   *   scene can never be forgotten.
+   */
+  constructor(audio = null) {
     /** @type {Map<string, {el: HTMLElement, instance: object}>} */
     this.scenes = new Map();
     this.currentSceneName = null;
+    this.audio = audio;
   }
 
   /**
@@ -90,6 +98,7 @@ export class SceneManager {
     }
     next.el.classList.add('is-active');
     this.currentSceneName = name;
+    this.audio?.setAmbientMix?.(name);
 
     if (typeof next.instance.enter === 'function') {
       await next.instance.enter(data);

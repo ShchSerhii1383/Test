@@ -47,17 +47,17 @@
           <!-- Stars + moon + moon-path — invisible except during the
                night stage (after all three adventures are done). -->
           <svg class="island-stars" viewBox="0 0 300 200" preserveAspectRatio="none" aria-hidden="true">
-            <circle class="island-star" cx="30" cy="20" r="1.2" fill="#FFF8ED" style="animation-delay:0s" />
-            <circle class="island-star" cx="70" cy="40" r="1" fill="#FFF8ED" style="animation-delay:0.6s" />
-            <circle class="island-star" cx="110" cy="15" r="1.4" fill="#FFF8ED" style="animation-delay:1.2s" />
-            <circle class="island-star" cx="150" cy="35" r="1" fill="#FFF8ED" style="animation-delay:1.8s" />
-            <circle class="island-star" cx="190" cy="18" r="1.3" fill="#FFF8ED" style="animation-delay:2.4s" />
-            <circle class="island-star" cx="230" cy="45" r="1" fill="#FFF8ED" style="animation-delay:0.3s" />
-            <circle class="island-star" cx="260" cy="22" r="1.4" fill="#FFF8ED" style="animation-delay:1.5s" />
-            <circle class="island-star" cx="45" cy="60" r="0.9" fill="#FFF8ED" style="animation-delay:2.1s" />
-            <circle class="island-star" cx="130" cy="65" r="0.9" fill="#FFF8ED" style="animation-delay:0.9s" />
+            <circle class="island-star" cx="30" cy="20" r="1.2" fill="var(--color-starlight)" style="animation-delay:0s" />
+            <circle class="island-star" id="memory-star-lagoon" cx="70" cy="40" r="1" fill="var(--color-starlight)" style="animation-delay:0.6s" />
+            <circle class="island-star" cx="110" cy="15" r="1.4" fill="var(--color-starlight)" style="animation-delay:1.2s" />
+            <circle class="island-star" cx="150" cy="35" r="1" fill="var(--color-starlight)" style="animation-delay:1.8s" />
+            <circle class="island-star" id="memory-star-mountain" cx="190" cy="18" r="1.3" fill="var(--color-starlight)" style="animation-delay:2.4s" />
+            <circle class="island-star" cx="230" cy="45" r="1" fill="var(--color-starlight)" style="animation-delay:0.3s" />
+            <circle class="island-star" cx="260" cy="22" r="1.4" fill="var(--color-starlight)" style="animation-delay:1.5s" />
+            <circle class="island-star" id="memory-star-bazaar" cx="45" cy="60" r="0.9" fill="var(--color-starlight)" style="animation-delay:2.1s" />
+            <circle class="island-star" cx="130" cy="65" r="0.9" fill="var(--color-starlight)" style="animation-delay:0.9s" />
             <!-- a faint Milky Way-ish band -->
-            <ellipse cx="150" cy="35" rx="140" ry="10" fill="#FFF8ED" opacity="0.05" />
+            <ellipse cx="150" cy="35" rx="140" ry="10" fill="var(--color-starlight)" opacity="0.05" />
           </svg>
           <svg class="island-moon" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <circle cx="20" cy="20" r="16" fill="#F3EEDD" />
@@ -123,7 +123,7 @@
           <svg class="boat__svg" viewBox="0 0 50 46" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <path d="M 6 32 Q 25 40, 44 32 L 38 40 Q 25 44, 12 40 Z" fill="#C98A4B" stroke="#A5692F" stroke-width="1.5" />
             <line x1="25" y1="32" x2="25" y2="4" stroke="#8A5A3B" stroke-width="2" stroke-linecap="round" />
-            <path d="M 25 6 L 25 28 L 6 28 Z" fill="#FFF8ED" stroke="#E3C083" stroke-width="1" />
+            <path d="M 25 6 L 25 28 L 6 28 Z" fill="var(--color-starlight)" stroke="#E3C083" stroke-width="1" />
             <path d="M 25 10 L 25 28 L 40 26 Z" fill="#FF9F6B" opacity="0.9" />
           </svg>
         </div>
@@ -166,6 +166,13 @@
                place instead of two independent backdrops. -->
           <span class="cloud-shadow cloud-shadow--1"></span>
           <span class="cloud-shadow cloud-shadow--2"></span>
+
+          <!-- A rare passing overcast: for a few seconds the sun goes
+               behind a cloud, the whole island cools slightly and the
+               shadows soften. Nothing else in the game acknowledges
+               weather at all, which is what makes the island read as a
+               picture rather than a place. -->
+          <div class="overcast-veil" id="overcast-veil"></div>
 
           <!-- Shoreline transition: foam right at the water's edge, then
                wet sand, then dry sand further up the beach. -->
@@ -290,6 +297,7 @@
               <circle cx="44" cy="16" r="3" fill="#FFB25E" />
             </svg>
           </div>
+          <span class="growth-firefly growth-firefly--1"></span>
 
           <div class="growth growth--2">
             <svg viewBox="0 0 50 46" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -301,6 +309,7 @@
               <circle cx="37" cy="23" r="5.5" fill="#F2A0C4" />
             </svg>
           </div>
+          <span class="growth-firefly growth-firefly--2"></span>
 
           <div class="growth growth--3">
             <svg viewBox="0 0 56 60" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -311,10 +320,13 @@
               <path d="M28 28 Q 34 12, 44 8" stroke="#245B4F" stroke-width="5" stroke-linecap="round" fill="none" />
             </svg>
           </div>
+          <span class="growth-firefly growth-firefly--3"></span>
 
           <!-- Paths connecting the boxes, drawn under everything else on land -->
           <svg class="paths" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M 22 78 Q 40 55, 50 62 T 78 50" />
+            <path class="paths__segment paths__segment--1" id="path-segment-1" d="M 22 78 Q 40 55, 50 62" />
+            <path class="paths__segment paths__segment--2" id="path-segment-2" d="M 50 62 Q 60 69, 78 50" />
+            <path class="paths__segment paths__segment--3" id="path-segment-3" d="M 78 50 Q 45 80, 8 74" />
           </svg>
 
           <!-- A short wooden boardwalk laid over a soft patch of the path -->
@@ -400,6 +412,7 @@
           <button class="lighthouse" id="lighthouse" aria-label="Альбом пригод" hidden>
             <span class="lighthouse__tower"></span>
             <span class="lighthouse__light"></span>
+            <span class="lighthouse__beam"></span>
           </button>
 
           <!-- Two torches — just poles by day, lit and flickering once night falls -->
@@ -410,6 +423,31 @@
           <svg class="island-torch island-torch--2" viewBox="0 0 20 50" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <line x1="10" y1="14" x2="10" y2="48" stroke="var(--color-wood-dark)" stroke-width="3" />
             <path d="M10 14c-4 3-6 7-4 11 2-2 3-3 4-3 1 0 2 1 4 3 2-4 0-8-4-11z" fill="#FFB25E" class="island-torch__flame" />
+          </svg>
+
+          <!-- Three small path lanterns, scattered along the walking path
+               rather than clustered in one spot — reads as "a path that
+               was walked", filling the space where the boxes used to be
+               instead of leaving it empty. Only lit at night. -->
+          <svg class="path-lantern path-lantern--1" viewBox="0 0 14 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <line x1="7" y1="6" x2="7" y2="22" stroke="var(--color-wood-dark)" stroke-width="2" />
+            <path d="M4 3h6l-1 6H5z" fill="#FFE9A8" stroke="#B8894F" stroke-width="1" class="path-lantern__flame" />
+          </svg>
+          <svg class="path-lantern path-lantern--2" viewBox="0 0 14 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <line x1="7" y1="6" x2="7" y2="22" stroke="var(--color-wood-dark)" stroke-width="2" />
+            <path d="M4 3h6l-1 6H5z" fill="#FFE9A8" stroke="#B8894F" stroke-width="1" class="path-lantern__flame" />
+          </svg>
+          <svg class="path-lantern path-lantern--3" viewBox="0 0 14 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <line x1="7" y1="6" x2="7" y2="22" stroke="var(--color-wood-dark)" stroke-width="2" />
+            <path d="M4 3h6l-1 6H5z" fill="#FFE9A8" stroke="#B8894F" stroke-width="1" class="path-lantern__flame" />
+          </svg>
+
+          <!-- A small campfire beside Mickey's usual spot — "the journey
+               is done, we can exhale" — and a warm, natural light source
+               for the night composition. -->
+          <svg class="island-campfire" viewBox="0 0 30 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M4 18 L26 18 L20 10 L15 14 L10 8 L6 14Z" fill="#6B4A2F" opacity="0.7" />
+            <path d="M15 2c-3 3-4 6-2 9 1-1 2-2 2-2s1 1 2 2c2-3 1-6-2-9z" fill="#FFB25E" class="island-campfire__flame" />
           </svg>
 
           <!-- Ambient critters: decorative, timed, no effect on the game -->
@@ -846,16 +884,6 @@
 
         <div class="lagoon-countdown" id="mountain-countdown"></div>
 
-        <!-- Round indicator: three small dots showing progress through the three rounds -->
-        <!-- HUD: title, round counter, thin progress bar -->
-        <div class="mtn-hud">
-          <p class="mtn-hud__title">Mountain of Crystals</p>
-          <p class="mtn-hud__round" id="mountain-hud-round">Round 1 / 5</p>
-          <div class="mtn-hud__track">
-            <div class="mtn-hud__fill" id="mountain-hud-progress"></div>
-          </div>
-        </div>
-
         <!-- The crystal grid — generated by MountainScene.js -->
         <div class="mtn-grid" id="mountain-grid"></div>
 
@@ -888,7 +916,7 @@
       <div class="bzr-layer bzr-layer--floor">
 
         <svg class="bzr-prop bzr-prop--candle" viewBox="0 0 20 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <rect x="6" y="12" width="8" height="22" rx="2" fill="#FFF8ED" stroke="#D9C9A8" stroke-width="1" />
+          <rect x="6" y="12" width="8" height="22" rx="2" fill="var(--color-starlight)" stroke="#D9C9A8" stroke-width="1" />
           <path d="M10 12 Q6 6 10 2 Q14 6 10 12Z" fill="#FFB25E" class="bzr-candle-flame" />
         </svg>
 
@@ -978,13 +1006,54 @@
 
     <!-- ================= REWARD SCENE (universal) ================= -->
     <section id="scene-reward" class="scene scene--reward" aria-label="Подарунок">
+
+      <!-- A soft, blurred suggestion of the island behind everything —
+           not a screenshot of the real scene (out of scope for a
+           canvas-free build), just enough hazy shape and color that the
+           reward moment reads as "the camera pulled in close on the
+           island", not "a UI screen appeared out of nowhere". -->
+      <div class="reward-backdrop">
+        <svg class="reward-backdrop__art" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <ellipse cx="200" cy="260" rx="260" ry="70" fill="#2FA0AE" opacity="0.5" />
+          <ellipse cx="120" cy="240" rx="90" ry="30" fill="#3A8067" opacity="0.6" />
+          <ellipse cx="260" cy="250" rx="110" ry="26" fill="#3A8067" opacity="0.5" />
+          <path d="M100 200 L100 120 Q120 100 140 120 L140 200Z" fill="#2C5C4E" opacity="0.5" />
+          <path d="M260 210 L260 130 Q280 108 300 130 L300 210Z" fill="#2C5C4E" opacity="0.4" />
+        </svg>
+        <div class="reward-backdrop__fog"></div>
+      </div>
+
+      <!-- The dark, vignetted cinematic overlay — camera "focusing" on
+           the chest. Never a flat black screen: the backdrop above
+           always shows through. -->
+      <div class="reward-focus-overlay"></div>
+
+      <!-- Small gold particles drifting slowly through the whole scene,
+           independent of the chest's own sparkle burst. -->
+      <div class="reward-ambient-particles" id="reward-ambient-particles"></div>
+
       <div class="reward-stage">
 
         <!-- Step 1: countdown -->
         <div class="reward-countdown" id="reward-countdown"></div>
 
+        <!-- Step 1.5: the ancient symbol this adventure just earned.
+             Lives here rather than in each adventure scene: all three
+             pass through Reward, so one element and one code path
+             covers the whole story thread. -->
+        <div class="reward-symbol" id="reward-symbol">
+          <svg class="reward-symbol__glyph" viewBox="0 0 28 26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path id="reward-symbol-path" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <p class="reward-symbol__name" id="reward-symbol-name"></p>
+        </div>
+
         <!-- Step 2: the chest — the same one they tapped on the island -->
         <button class="reward-box" id="reward-box" aria-label="Відкрити скриню">
+          <span class="reward-box__glow-crack reward-box__glow-crack--1"></span>
+          <span class="reward-box__glow-crack reward-box__glow-crack--2"></span>
+          <span class="reward-box__glow-crack reward-box__glow-crack--3"></span>
           <span class="reward-beam" id="reward-beam"></span>
           <span class="reward-beam reward-beam--side reward-beam--left" id="reward-beam-left"></span>
           <span class="reward-beam reward-beam--side reward-beam--right" id="reward-beam-right"></span>
@@ -1005,49 +1074,187 @@
           <div class="reward-reveal__icon" id="reward-reveal-icon"></div>
           <h2 id="reward-reveal-title"></h2>
           <p id="reward-reveal-message"></p>
-          <button class="wooden-button is-visible" id="reward-continue">Далі →</button>
+          <button class="wooden-button" id="reward-continue">Продовжити пригоду →</button>
         </div>
 
       </div>
     </section>
 
     <!-- ================= ALBUM SCENE ================= -->
-    <section id="scene-album" class="scene scene--album" aria-label="Альбом пригод">
-      <div class="album-stage">
-        <p class="album-intro" id="album-intro"></p>
+    <!-- ================= SECRET QUEST: THE FINAL CONSTELLATION ================= -->
+    <section id="scene-constellation" class="scene scene--constellation" aria-label="Фінальне сузір'я">
 
-        <!-- One card per completed adventure's gift, filled in at runtime -->
-        <div class="album-grid" id="album-grid"></div>
+      <!-- The whole scene shifts upward on entry, which reads as the camera
+           slowly rising toward the sky while Mickey stays down below. -->
+      <div class="cst-world" id="cst-world">
 
-        <!-- Only shown if the player found the decorative secrets -->
-        <div class="album-bonus" id="album-bonus" hidden>
-          <span class="album-bonus__icon" id="album-bonus-icon"></span>
-          <div>
-            <p class="album-bonus__title" id="album-bonus-title"></p>
-            <p class="album-bonus__message" id="album-bonus-message"></p>
+        <div class="cst-sky">
+          <!-- Layered depth, all moving at their own slow pace: the
+               Milky Way sits furthest back, then small stars, then
+               larger ones, then thin cloud, then the moon. The
+               constellation itself is the frontmost layer. -->
+          <div class="cst-milkyway"></div>
+          <div class="cst-moon"></div>
+          <div class="cst-cloud cst-cloud--1"></div>
+          <div class="cst-cloud cst-cloud--2"></div>
+
+          <!-- ~30 identical small stars, generated by ConstellationScene.js
+               so their scatter differs every time. The five that matter
+               are added on top of these, at fixed positions. -->
+          <div class="cst-starfield" id="cst-starfield"></div>
+          <div class="cst-starfield cst-starfield--big" id="cst-starfield-big"></div>
+
+          <!-- A fixed-aspect square box so the constellation keeps its
+               shape on any screen — percentages inside here are safe,
+               percentages against the raw viewport would skew the star. -->
+          <div class="cst-figure" id="cst-figure">
+            <svg class="cst-lines" id="cst-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <path class="cst-lines__drawn" id="cst-lines-drawn" fill="none" />
+              <path class="cst-lines__live" id="cst-lines-live" fill="none" />
+            </svg>
+            <div class="cst-stars" id="cst-stars"></div>
+            <div class="cst-glow" id="cst-glow"></div>
           </div>
+
+          <!-- The soft beam that descends onto the island once the
+               constellation is lit. -->
+          <div class="cst-beam" id="cst-beam"></div>
         </div>
 
-        <button class="wooden-button is-visible" id="album-continue">До фіналу →</button>
+        <!-- The island below: a dark silhouette, its torches and fireflies
+             still going, with Mickey standing in the middle of it. -->
+        <div class="cst-island">
+          <svg class="cst-island__art" viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 120 L0 66 Q60 40 130 52 Q200 30 270 50 Q340 38 400 62 L400 120Z" fill="#0E2A34" />
+            <path d="M60 60 L60 20 Q72 8 84 20 L84 60Z" fill="#0A2028" />
+            <path d="M310 58 L310 22 Q322 10 334 22 L334 58Z" fill="#0A2028" />
+          </svg>
+          <span class="cst-firefly cst-firefly--1"></span>
+          <span class="cst-firefly cst-firefly--2"></span>
+          <span class="cst-firefly cst-firefly--3"></span>
+          <div class="cst-mickey-spot" id="cst-mickey-spot"></div>
+        </div>
+      </div>
+
+      <!-- Bursts once, at the moment the constellation is completed and
+           the whole sky wakes up — the one genuinely triumphant beat
+           left in an otherwise deliberately calm ending. -->
+      <canvas id="confetti-canvas" class="confetti-canvas" aria-hidden="true"></canvas>
+
+      <!-- The legend, typed in before the sky work begins -->
+      <div class="cst-legend dialog--hidden" id="cst-legend">
+        <p class="cst-legend__text" id="cst-legend-text"></p>
       </div>
     </section>
 
-    <!-- ================= FINALE SCENE ================= -->
-    <section id="scene-finale" class="scene scene--finale" aria-label="Фінал">
-      <div class="finale-sunset">
-        <div class="finale-sun"></div>
-      </div>
+    <section id="scene-album" class="scene scene--album" aria-label="Подорож завершено">
 
-      <div class="finale-content">
-        <div id="finale-mickey" class="mickey mickey--celebrate finale-mickey"></div>
+      <!-- The island is still alive behind the journal — this scene is
+           never a static end-card. Waves move, stars twinkle, fireflies
+           drift, torches flicker, the ship rocks, and now and then a
+           star falls. -->
+      <div class="album-world">
+        <div class="album-sky">
+          <div class="album-starfield" id="album-starfield"></div>
+          <div class="album-moon"></div>
+          <div class="album-shooting-star" id="album-shooting-star"></div>
+        </div>
 
-        <div class="finale-card">
-          <h2 id="finale-title"></h2>
-          <p id="finale-message"></p>
+        <div class="album-sea">
+          <div class="album-moonpath"></div>
+          <span class="album-wave album-wave--1"></span>
+          <span class="album-wave album-wave--2"></span>
+          <svg class="album-ship" viewBox="0 0 40 26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M4 16 L36 16 L31 23 L9 23 Z" fill="#123040" />
+            <line x1="20" y1="2" x2="20" y2="16" stroke="#123040" stroke-width="1.6" />
+            <path d="M20 3 L30 13 L20 13 Z" fill="#1B4358" />
+          </svg>
+        </div>
+
+        <div class="album-land">
+          <svg class="album-land__art" viewBox="0 0 400 110" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 110 L0 58 Q70 32 140 46 Q210 24 280 44 Q345 34 400 56 L400 110Z" fill="#0F2C36" />
+          </svg>
+          <svg class="album-palm album-palm--1" viewBox="0 0 40 70" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M20 70 Q17 45 20 24" stroke="#0A2028" stroke-width="4" fill="none" stroke-linecap="round" />
+            <path d="M20 24 Q6 16 0 24 M20 24 Q34 16 40 24 M20 24 Q14 8 22 2" stroke="#0A2028" stroke-width="4" fill="none" stroke-linecap="round" />
+          </svg>
+          <svg class="album-palm album-palm--2" viewBox="0 0 40 70" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M20 70 Q23 45 20 24" stroke="#0A2028" stroke-width="4" fill="none" stroke-linecap="round" />
+            <path d="M20 24 Q6 16 0 24 M20 24 Q34 16 40 24 M20 24 Q26 8 18 2" stroke="#0A2028" stroke-width="4" fill="none" stroke-linecap="round" />
+          </svg>
+          <span class="album-torch album-torch--1"></span>
+          <span class="album-torch album-torch--2"></span>
+          <span class="album-firefly album-firefly--1"></span>
+          <span class="album-firefly album-firefly--2"></span>
+          <span class="album-firefly album-firefly--3"></span>
+          <div class="album-fog"></div>
+          <div class="album-mickey-spot" id="album-mickey-spot"></div>
         </div>
       </div>
 
-      <canvas id="confetti-canvas" class="confetti-canvas" aria-hidden="true"></canvas>
+      <!-- The journal itself, opening onto the closing page -->
+      <div class="album-journal" id="album-journal">
+
+        <!-- Mickey's compass, set down beside the journal while he
+             writes — the same one that pointed at the constellation. -->
+        <svg class="album-compass" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="22" cy="22" r="19" fill="#D9A24B" stroke="#8A5A3B" stroke-width="2.5" />
+          <circle cx="22" cy="22" r="13" fill="var(--color-starlight)" stroke="#B8894F" stroke-width="1.5" />
+          <path class="album-compass__needle" d="M22 11 L25 22 L22 33 L19 22 Z" fill="#E8734A" />
+          <circle cx="22" cy="22" r="2" fill="#8A5A3B" />
+        </svg>
+
+        <div class="album-journal__page">
+          <h1 class="album-journal__title" id="album-journal-title"></h1>
+          <p class="album-journal__subtitle" id="album-journal-subtitle"></p>
+          <div class="album-journal__rule"></div>
+          <p class="album-journal__tagline" id="album-journal-tagline"></p>
+
+          <!-- Polaroids of the journey, dropped onto the page one by one -->
+          <div class="album-photos" id="album-photos"></div>
+
+          <div class="album-letter" id="album-letter"></div>
+
+          <button class="wooden-button album-continue" id="album-continue"></button>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ================= FINALE SCENE ================= -->
+    <!-- The little scene after the screen has already gone dark -->
+    <section id="scene-finale" class="scene scene--finale" aria-label="Фінал">
+
+      <!-- The night island one last time, small and far away -->
+      <div class="finale-world" id="finale-world">
+        <div class="finale-starfield" id="finale-starfield"></div>
+
+        <!-- The same constellation the player drew, flaring once in the sky -->
+        <svg class="finale-constellation" id="finale-constellation" viewBox="0 0 100 100" aria-hidden="true">
+          <path d="M 50 8 L 74.7 84 L 10.1 37 L 89.9 37 L 25.3 84 L 50 8"
+                fill="none" stroke="var(--color-box-glow)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="50" cy="8" r="1.6" fill="var(--color-box-glow)" />
+          <circle cx="89.9" cy="37" r="1.6" fill="var(--color-box-glow)" />
+          <circle cx="74.7" cy="84" r="1.6" fill="var(--color-box-glow)" />
+          <circle cx="25.3" cy="84" r="1.6" fill="var(--color-box-glow)" />
+          <circle cx="10.1" cy="37" r="1.6" fill="var(--color-box-glow)" />
+        </svg>
+
+        <div class="finale-sea">
+          <span class="finale-wave finale-wave--1"></span>
+          <span class="finale-wave finale-wave--2"></span>
+        </div>
+
+        <div class="finale-island">
+          <svg class="finale-island__art" viewBox="0 0 200 50" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 50 L0 30 Q40 16 80 24 Q120 12 160 22 Q182 18 200 28 L200 50Z" fill="#0A1E28" />
+          </svg>
+          <div id="finale-mickey" class="mickey mickey--wave finale-mickey"></div>
+        </div>
+      </div>
+
+      <p class="finale-last-line" id="finale-last-line"></p>
     </section>
 
     <!-- ============ OPENING SEQUENCE OVERLAY ============ -->

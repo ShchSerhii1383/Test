@@ -25,6 +25,33 @@ const VOLUMES = {
   sea: 0.05,      // barely there, as asked
   music: 0.16,
   effects: 0.13,
+  wind: 0.045,
+};
+
+/**
+ * How loud each ambient layer sits in each scene, as a multiplier of its
+ * base volume. Until this existed, every scene shared one mix: the beach
+ * played identically on a mountain, in a candlelit study and under the
+ * night sky, which is the single biggest reason the sound didn't
+ * reinforce where you were.
+ *
+ * `birds` and `ukulele` double as probabilities — the schedulers keep
+ * running but skip a turn based on these, so a scene can thin them out
+ * rather than only having them fully on or fully off.
+ */
+const AMBIENT_MIXES = {
+  island:       { sea: 1,    birds: 1,   ukulele: 1,   wind: 0 },
+  // Ankle-deep in the water rather than looking at it from the shore.
+  lagoon:       { sea: 1.9,  birds: 0.7, ukulele: 0.4, wind: 0 },
+  // The scene people look at least like it sounds: rock and mist, not surf.
+  mountain:     { sea: 0.12, birds: 0.1, ukulele: 0,   wind: 1 },
+  // Meant to be the quietest place in the game — reading by candlelight.
+  bazaar:       { sea: 0.08, birds: 0,   ukulele: 0,   wind: 0.15 },
+  reward:       { sea: 0.5,  birds: 0.3, ukulele: 0.3, wind: 0 },
+  // Night, everything finished, the most intimate moment there is.
+  constellation:{ sea: 0.55, birds: 0,   ukulele: 0,   wind: 0.2 },
+  album:        { sea: 0.65, birds: 0,   ukulele: 0.25, wind: 0.1 },
+  finale:       { sea: 0.75, birds: 0,   ukulele: 0,   wind: 0.1 },
 };
 
 export class AudioManager {
@@ -32,6 +59,8 @@ export class AudioManager {
     this.ctx = null;
     this.isMuted = false;
     this.isUnlocked = false;
+    this._mix = AMBIENT_MIXES.island; // until a scene says otherwise
+    this._pendingScene = null;
     this.musicEl = null;
   }
 
@@ -52,9 +81,14 @@ export class AudioManager {
       this.masterGain.connect(this.ctx.destination);
 
       this._startSea();
+      this._startWind();
       this._scheduleBirds();
       this._scheduleUkulele();
       this.isUnlocked = true;
+
+      // Whatever scene we're already on gets its own mix immediately,
+      // rather than everyone starting on the island's.
+      this.setAmbientMix(this._pendingScene ?? 'island');
     } catch (err) {
       console.warn('AudioManager: audio unavailable, continuing without sound.', err);
     }
@@ -102,12 +136,97 @@ export class AudioManager {
   }
 
   /**
+   * Wind: noise again, but shaped completely differently to the sea —
+   * a narrow band-pass that whistles rather than washes, with a slow
+   * wander in pitch. Silent everywhere except the mountain (and a
+   * breath of it at night), so it reads as altitude, not weather.
+   */
+  _startWind() {
+    const ctx = this.ctx;
+
+    // Its own noise buffer, and deliberately whiter than the sea's brown
+    // noise: water washes, wind whistles. Same technique, different
+    // character, so the two never blur into one texture.
+    const seconds = 3;
+    const buffer = ctx.createBuffer(1, ctx.sampleRate * seconds, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < data.length; i++) {
+      const white = Math.random() * 2 - 1;
+      last = (last + 0.09 * white) / 1.09;
+      data[i] = last * 2.2;
+    }
+
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    noise.loop = true;
+    noise.start();
+
+    const band = ctx.createBiquadFilter();
+    band.type = 'bandpass';
+    band.frequency.value = 620;
+    band.Q.value = 0.9;
+
+    // A slow drift across the band so it never sits on one note.
+    const drift = ctx.createOscillator();
+    drift.frequency.value = 0.07;
+    const driftDepth = ctx.createGain();
+    driftDepth.gain.value = 260;
+    drift.connect(driftDepth).connect(band.frequency);
+    drift.start();
+
+    this.windGain = ctx.createGain();
+    this.windGain.gain.value = 0; // silent until a scene asks for it
+
+    noise.connect(band).connect(this.windGain).connect(this.masterGain);
+  }
+
+  /**
+   * Fades the ambient layers to suit the scene being entered. Called
+   * from SceneManager, so every scene is covered automatically and no
+   * scene has to know anything about audio.
+   *
+   * The sea and wind are real gain ramps (a genuine cross-fade, not a
+   * cut); birds and ukulele are timer-driven one-shots, so their mix
+   * value acts as a probability the scheduler checks each turn.
+   */
+  setAmbientMix(sceneName) {
+    const mix = AMBIENT_MIXES[sceneName];
+    if (!mix) return;
+
+    this._mix = mix;
+
+    // Remember it even if audio isn't unlocked yet, so the first scene
+    // doesn't briefly play the wrong mix once it is.
+    this._pendingScene = sceneName;
+    if (!this.ctx || !this.isUnlocked) return;
+
+    const now = this.ctx.currentTime;
+    const FADE = 1.6; // long enough to feel like walking somewhere else
+
+    if (this.seaGain) {
+      this.seaGain.gain.cancelScheduledValues(now);
+      this.seaGain.gain.setValueAtTime(this.seaGain.gain.value, now);
+      this.seaGain.gain.linearRampToValueAtTime(VOLUMES.sea * mix.sea, now + FADE);
+    }
+    if (this.windGain) {
+      this.windGain.gain.cancelScheduledValues(now);
+      this.windGain.gain.setValueAtTime(this.windGain.gain.value, now);
+      this.windGain.gain.linearRampToValueAtTime(VOLUMES.wind * mix.wind, now + FADE);
+    }
+  }
+
+  /**
    * A bird call, now and then, at a random interval — never on a beat, so
    * it never turns into background noise you tune out.
    */
   _scheduleBirds() {
     const chirp = () => {
-      if (!this.isMuted) this._birdCall();
+      // The scene's mix acts as a probability: a place with few birds
+      // still hears one occasionally, a place with none never does —
+      // without needing a separate on/off switch per scene.
+      const chance = this._mix?.birds ?? 1;
+      if (!this.isMuted && Math.random() < chance) this._birdCall();
       this._birdTimer = setTimeout(chirp, 5000 + Math.random() * 9000);
     };
     this._birdTimer = setTimeout(chirp, 3000 + Math.random() * 4000);
@@ -135,7 +254,8 @@ export class AudioManager {
    */
   _scheduleUkulele() {
     const strum = () => {
-      if (!this.isMuted) this._ukulelePhrase();
+      const chance = this._mix?.ukulele ?? 1;
+      if (!this.isMuted && Math.random() < chance) this._ukulelePhrase();
       this._ukuleleTimer = setTimeout(strum, 14000 + Math.random() * 10000);
     };
     this._ukuleleTimer = setTimeout(strum, 9000 + Math.random() * 5000);
@@ -222,6 +342,41 @@ export class AudioManager {
   crystalTone(frequency) {
     this._tone(frequency, 0.4, { volume: 0.5 });
     this._tone(frequency * 2, 0.25, { volume: 0.15, delay: 0.02 });
+  }
+
+  /** Lagoon's own musical signature: bright, quick, watery — a rising
+   *  major triad. Played once, at the moment Lagoon is actually won. */
+  lagoonSignature() {
+    this._tone(523, 0.22, { volume: 0.55 });
+    this._tone(659, 0.22, { delay: 0.14, volume: 0.55 });
+    this._tone(784, 0.35, { delay: 0.28, volume: 0.55 });
+  }
+
+  /** Mountain's own musical signature: solid, resonant, low — an
+   *  ascending fifth and octave, like the crystal tones but grounded. */
+  mountainSignature() {
+    this._tone(261, 0.3, { volume: 0.55 });
+    this._tone(392, 0.3, { delay: 0.16, volume: 0.55 });
+    this._tone(523, 0.4, { delay: 0.32, volume: 0.55 });
+  }
+
+  /** Bazaar's own musical signature: warm, a little wistful — a
+   *  descending phrase, like closing a journal after a good story. */
+  bazaarSignature() {
+    this._tone(440, 0.26, { volume: 0.5 });
+    this._tone(349, 0.26, { delay: 0.15, volume: 0.5 });
+    this._tone(294, 0.4, { delay: 0.3, volume: 0.5 });
+  }
+
+  /** The three signatures played together as one chord — the small
+   *  musical culmination once the island goes quiet for the night,
+   *  recognizable because each piece was already heard on its own. */
+  islandChord() {
+    this._tone(261, 0.9, { volume: 0.4 });
+    this._tone(349, 0.9, { volume: 0.35, delay: 0.05 });
+    this._tone(440, 0.9, { volume: 0.3, delay: 0.1 });
+    this._tone(523, 1.1, { volume: 0.4, delay: 0.15 });
+    this._tone(659, 1.1, { volume: 0.3, delay: 0.2 });
   }
 
   /** The chest opening: a warm chord that opens upward. */

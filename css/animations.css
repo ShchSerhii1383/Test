@@ -332,8 +332,9 @@
 }
 
 @keyframes card-rise {
-  from { opacity: 0; transform: translateY(26px) scale(0.92); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  0% { opacity: 0; transform: translateY(180px) scale(0.7) rotate(0deg); }
+  55% { opacity: 1; transform: translateY(-14px) scale(1.04) rotate(var(--card-tilt, 0deg)); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotate(var(--card-tilt, 0deg)); }
 }
 
 /* The gift lands with a little overshoot — squash & stretch, so it arrives
@@ -622,4 +623,158 @@
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-6px); }
   75% { transform: translateX(6px); }
+}
+
+/* ---- Island: a plant sprouting, watched — stem up, then bloom ---- */
+@keyframes growth-sprout {
+  0% { transform: scaleY(0.15) scaleX(0.6) translateY(14px); opacity: 0; }
+  50% { transform: scaleY(1.08) scaleX(0.85) translateY(0); opacity: 1; } /* the stem reaching up */
+  70% { transform: scaleY(0.96) scaleX(1.05) translateY(0); } /* a small settle-back */
+  100% { transform: scaleY(1) scaleX(1) translateY(0); } /* the bloom opening to rest */
+}
+
+/* ---- Island: a shadow foreshadowing the box that's about to appear ---- */
+@keyframes box-foreshadow-pulse {
+  0% { opacity: 0; transform: translateX(-50%) scale(0.7); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.3); }
+  100% { opacity: 0.4; transform: translateX(-50%) scale(1); }
+}
+
+/* ---- Island: the lighthouse's beam sweeping continuously ---- */
+@keyframes lighthouse-beam-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ---- Island: a completed box sinking back into the sand at night ---- */
+@keyframes box-sink-into-sand {
+  0% { transform: translateY(0) scale(1); opacity: 1; filter: brightness(1); }
+  40% { transform: translateY(-6px) scale(1.05); filter: brightness(1.3); }
+  100% { transform: translateY(16px) scale(0.3); opacity: 0; filter: brightness(0.6); }
+}
+
+/* ---- Island: a star that remembers a completed adventure ---- */
+@keyframes star-twinkle-remembered {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+
+/* ---- Reward: ambient gold particles drifting through the scene ---- */
+@keyframes reward-particle-drift {
+  0% { opacity: 0; transform: translateY(0) translateX(0); }
+  15%, 85% { opacity: 0.7; }
+  100% { opacity: 0; transform: translateY(-60px) translateX(var(--particle-drift-x, 10px)); }
+}
+
+/* ---- Reward: gold light growing through the chest's seams ---- */
+@keyframes reward-crack-glow {
+  0% { opacity: 0; box-shadow: 0 0 0 rgba(var(--color-box-glow-rgb), 0); }
+  100% { opacity: 1; box-shadow: 0 0 14px 4px rgba(var(--color-box-glow-rgb), 0.8); }
+}
+
+/* ---- Reward: the chosen card's two-stage flip ---- */
+@keyframes reward-card-flip {
+  0% { transform: rotateY(0deg) scale(1); }
+  50% { transform: rotateY(90deg) scale(1.1); } /* edge-on — the thinnest, most "physical" moment of the flip */
+  100% { transform: rotateY(180deg) scale(1.08); }
+}
+
+/* ---- Constellation: ordinary background stars twinkling ---- */
+@keyframes cst-bg-twinkle {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.7; }
+}
+
+/* ---- Constellation: one of the five announcing itself ---- */
+@keyframes cst-star-hint {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 4px 1px rgba(255,248,237,0.6); }
+  50% { transform: scale(1.6); box-shadow: 0 0 14px 5px rgba(255,248,237,0.95); }
+}
+
+/* ---- Constellation: all five flaring as the shape closes ---- */
+@keyframes cst-star-flare {
+  0% { transform: scale(1.25); }
+  35% { transform: scale(2.1); box-shadow: 0 0 26px 10px rgba(var(--color-box-glow-rgb), 0.95); }
+  100% { transform: scale(1.25); }
+}
+
+/* ---- Mickey: the compass needle spinning, then settling ---- */
+@keyframes mickey-compass-spin {
+  0% { transform: rotate(0deg); }
+  70% { transform: rotate(1080deg); }
+  100% { transform: rotate(1035deg); }
+}
+
+/* ---- Album: a star falling across the night sky ---- */
+@keyframes album-shooting-star {
+  0% { opacity: 0; transform: translate(0, 0) rotate(28deg); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-160px, 90px) rotate(28deg); }
+}
+
+/* ---- Album: each line of the closing letter easing in ---- */
+@keyframes album-letter-line {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Reward: the ancient symbol pulsing as it surfaces ---- */
+@keyframes reward-symbol-breathe {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(var(--color-box-glow-rgb), 0.7)); }
+  50% { filter: drop-shadow(0 0 18px rgba(var(--color-box-glow-rgb), 1)); }
+}
+
+/* ---- Constellation: the flare ring as a star catches light ---- */
+@keyframes cst-star-ignite {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(4.5); }
+}
+
+/* ---- Constellation: the finished shape breathing ---- */
+@keyframes cst-line-breathe {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(var(--color-box-glow-rgb), 0.7)); }
+  50% { filter: drop-shadow(0 0 12px rgba(var(--color-box-glow-rgb), 1)); }
+}
+
+/* ---- Constellation: light running along the completed shape ---- */
+@keyframes cst-line-pulse {
+  0% { stroke-dashoffset: 220; }
+  100% { stroke-dashoffset: -20; }
+}
+
+/* ---- Constellation: thin cloud crossing the night sky, very slowly ---- */
+@keyframes cst-cloud-drift {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(150vw); }
+}
+
+/* ---- Album: the compass needle never quite settling ---- */
+@keyframes album-compass-settle {
+  0%, 100% { transform: rotate(0deg); }
+  30% { transform: rotate(7deg); }
+  62% { transform: rotate(-5deg); }
+}
+
+/* ---- Album: the sea breeze reaching the open page ---- */
+@keyframes album-page-breeze {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  50% { transform: rotate(0.45deg) translateY(-3px); }
+}
+
+/* ---- Island: the moon's reflection breathing on the water ---- */
+@keyframes moonpath-shimmer {
+  0%, 100% { opacity: 1; transform: scaleX(1); }
+  50% { opacity: 0.75; transform: scaleX(1.12); }
+}
+
+/* ---- Night: firelight breathing on the ground, in time with the flame ---- */
+@keyframes firelight-pool {
+  0%, 100% { opacity: 0.85; transform: translateX(-50%) scale(1); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.09); }
+}
+
+/* ---- Constellation: the five puzzle stars idling before anything starts ---- */
+@keyframes cst-star-idle {
+  0%, 100% { opacity: 0.7; box-shadow: 0 0 4px 1px rgba(255, 248, 237, 0.5); }
+  50% { opacity: 1; box-shadow: 0 0 7px 2px rgba(255, 248, 237, 0.8); }
 }

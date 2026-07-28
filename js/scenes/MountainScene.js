@@ -48,8 +48,6 @@ export class MountainScene {
     this.rulesCrystal2El = sceneEl.querySelector('#mountain-rules-crystal-2');
     this.countdownEl = sceneEl.querySelector('#mountain-countdown');
     this.gridEl = sceneEl.querySelector('#mountain-grid');
-    this.hudRoundEl = sceneEl.querySelector('#mountain-hud-round');
-    this.hudProgressEl = sceneEl.querySelector('#mountain-hud-progress');
     this.lightWaveEl = sceneEl.querySelector('#mountain-light-wave');
 
     // No "back to island" escape hatch on purpose — once an adventure
@@ -205,7 +203,6 @@ export class MountainScene {
   async _playRounds(token) {
     for (let i = 0; i < this.config.rounds.length; i++) {
       debugLog(`[Mountain] starting round ${i + 1}/${this.config.rounds.length}`);
-      this._updateHud(i);
 
       const won = await this._playRound(this.config.rounds[i], token);
       debugLog(`[Mountain] round ${i + 1} resolved with won=${won}`);
@@ -240,10 +237,6 @@ export class MountainScene {
     await this._playWinSequence();
   }
 
-  _updateHud(roundIndex) {
-    this.hudRoundEl.textContent = `Round ${roundIndex + 1} / ${this.config.rounds.length}`;
-    this.hudProgressEl.style.width = `${(roundIndex / this.config.rounds.length) * 100}%`;
-  }
 
   /**
    * One round: generate a fresh sequence, show it, then wait for the
@@ -484,11 +477,11 @@ export class MountainScene {
     debugLog('[Mountain] _playWinSequence: started');
     this.state = 'WIN';
     this._setInputBlocked(true);
-    this._hudRoundDone();
     this.mickey.play(MICKEY_STATES.CELEBRATE);
     await wait(400);
 
     this.audio.chest();
+    this.audio.mountainSignature();
     this.lightWaveEl.classList.remove('is-visible');
     void this.lightWaveEl.offsetWidth;
     this.lightWaveEl.classList.add('is-visible');
@@ -502,8 +495,4 @@ export class MountainScene {
     await this._exit(SCENES.REWARD, { adventureId: 'mountain' });
   }
 
-  _hudRoundDone() {
-    this.hudRoundEl.textContent = `Round ${this.config.rounds.length} / ${this.config.rounds.length}`;
-    this.hudProgressEl.style.width = '100%';
-  }
 }

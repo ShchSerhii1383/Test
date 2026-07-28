@@ -3,6 +3,7 @@ import { wait } from '../utils/typewriter.js';
 import { icon } from '../components/icons.js';
 import { renderChest } from '../components/chestSprite.js';
 import { debugLog } from '../utils/debugLog.js';
+import { ANCIENT_SYMBOLS } from '../data/dialogs.js';
 
 /**
  * RewardScene
@@ -35,6 +36,11 @@ export class RewardScene {
     this.audio = audio;
 
     this.countdownEl = sceneEl.querySelector('#reward-countdown');
+    this.symbolEl = sceneEl.querySelector('#reward-symbol');
+    this.symbolPathEl = sceneEl.querySelector('#reward-symbol-path');
+    this.symbolNameEl = sceneEl.querySelector('#reward-symbol-name');
+    this.focusOverlayEl = sceneEl.querySelector('.reward-focus-overlay');
+    this.ambientParticlesEl = sceneEl.querySelector('#reward-ambient-particles');
     this.boxEl = sceneEl.querySelector('#reward-box');
     this.openBtn = sceneEl.querySelector('#reward-open-btn');
     this.rewardArtEl = sceneEl.querySelector('.reward-box__art');
@@ -127,10 +133,14 @@ export class RewardScene {
     debugLog('[Reward] chest theme rendered for', this._adventureId);
 
     this._resetVisualState();
+    this._scatterAmbientParticles(10);
     await this._runCountdown();
     debugLog('5. countdown finished');
     debugLog('[Reward] countdown done');
     if (token !== this._runToken) return; // a newer visit started meanwhile
+
+    await this._revealAncientSymbol(token);
+    if (token !== this._runToken) return;
 
     this.state = 'CHEST';
     this.boxEl.classList.add('is-visible');
@@ -152,16 +162,20 @@ export class RewardScene {
   }
 
   _resetVisualState() {
-    this.boxEl.classList.remove('is-visible', 'is-open', 'is-gone');
+    this.boxEl.classList.remove('is-visible', 'is-open', 'is-gone', 'is-glowing');
     this.openBtn.classList.remove('is-visible');
     this.beamEl.classList.remove('is-shining');
     this.beamLeftEl.classList.remove('is-shining');
     this.beamRightEl.classList.remove('is-shining');
     this.sparklesEl.innerHTML = '';
+    this.ambientParticlesEl.innerHTML = '';
+    this.focusOverlayEl.classList.remove('is-focused');
     this.cardsEl.classList.remove('is-visible');
     this.cardsEl.innerHTML = '';
     this.revealEl.classList.remove('is-visible');
     this.countdownEl.classList.remove('is-visible');
+    this.symbolEl.classList.remove('is-visible');
+    this.continueBtn.classList.remove('is-visible');
     this.continueBtn.style.pointerEvents = '';
 
     // Force the browser to drop the finished animations before we re-add the
@@ -170,6 +184,40 @@ export class RewardScene {
   }
 
   /** 3-2-1. Short on purpose: anticipation, not a wait. */
+  /**
+   * The story beat that ties the three adventures together: before the
+   * chest even appears, the ancient symbol this adventure was guarding
+   * surfaces, and Mickey reads it aloud. By the third one the player
+   * should already suspect they're all pointing at the same thing —
+   * which is exactly what the constellation then turns out to be.
+   */
+  async _revealAncientSymbol(token) {
+    const symbol = ANCIENT_SYMBOLS[this._adventureId];
+    if (!symbol) return; // unknown adventure — skip rather than break the flow
+
+    this.symbolPathEl.setAttribute('d', symbol.path);
+    this.symbolNameEl.textContent = symbol.name;
+    this.symbolEl.classList.add('is-visible');
+
+    // The third sign is the turning point — it's where the player
+    // realizes all three were pointing at one thing. It shouldn't sound
+    // like the first two did: that flattens the story's own climax into
+    // a repeated notification chime.
+    const isFinalSign = this._adventureId === 'bazaar';
+    if (isFinalSign) {
+      this.audio.fanfare();
+    } else {
+      this.audio.crystalTone(523);
+    }
+
+    this.mickey.say(symbol.line, 2600);
+
+    await wait(2600);
+    if (token !== this._runToken) return;
+    this.symbolEl.classList.remove('is-visible');
+    await wait(500);
+  }
+
   async _runCountdown() {
     for (const step of ['3', '2', '1']) {
       this.countdownEl.textContent = step;
@@ -198,23 +246,54 @@ export class RewardScene {
     debugLog('[Reward] _openChest: tapped, starting open sequence');
 
     try {
-      this.audio.chest();
-      this.boxEl.classList.add('is-open');
+      // Stage 1: the "camera" focuses in — the island backdrop stays
+      // visible but the whole scene darkens and blurs toward the chest.
+      this.focusOverlayEl.classList.add('is-focused');
       this.openBtn.classList.remove('is-visible');
-      await wait(260);
-      if (token !== this._runToken) { debugLog('[Reward] _openChest: stale token after lid delay, aborting'); return; }
+      await wait(500);
+      if (token !== this._runToken) return;
 
+      // Stage 2: gold light grows through the chest's own seams before
+      // anything opens — the anticipation beat, not an instant reaction.
+      this.boxEl.classList.add('is-glowing');
+      this.audio.chest();
+      await wait(1100);
+      if (token !== this._runToken) { debugLog('[Reward] _openChest: stale token after glow delay, aborting'); return; }
+
+      // Stage 3: the lid opens — and then everything simply stops.
+      // The chest's idle bobbing is killed here (see .reward-box.is-open)
+      // so this is real stillness, not a pause with something twitching
+      // in it. This held beat is the whole trick: a reward feels
+      // valuable in proportion to how long the game is willing to wait
+      // before showing it.
+      this.boxEl.classList.add('is-open');
+      this.audio.tap();
+      // 1300ms, not 950: the lid itself takes 450ms to swing open, so a
+      // shorter hold would be mostly lid-still-moving rather than the
+      // stillness this beat is for. This way roughly a full second of
+      // genuine quiet lands after it settles.
+      await wait(1300);
+      if (token !== this._runToken) { debugLog('[Reward] _openChest: stale token after lid pause, aborting'); return; }
+
+      // Stage 4: only now does the light come out.
       this.beamEl.classList.add('is-shining');
       this.beamLeftEl.classList.add('is-shining');
       this.beamRightEl.classList.add('is-shining');
       this._scatterSparkles(14);
-      await wait(900);
+      await wait(750);
       if (token !== this._runToken) { debugLog('[Reward] _openChest: stale token after beam delay, aborting'); return; }
+
+      // Stage 5: and the light is allowed to just sit there. Nothing is
+      // asked of the player, nothing is advancing — the second held beat.
+      await wait(850);
+      if (token !== this._runToken) { debugLog('[Reward] _openChest: stale token after light pause, aborting'); return; }
 
       this.boxEl.classList.add('is-gone');
       await wait(400);
       if (token !== this._runToken) { debugLog('[Reward] _openChest: stale token after chest-gone delay, aborting'); return; }
 
+      // Stage 4: the cards don't just appear — they fly up out of the
+      // chest, then settle into their arc. See the card-fly-out keyframe.
       debugLog('7. cards rendered');
       debugLog('[Reward] _openChest: about to render cards');
       this._renderCards();
@@ -254,6 +333,25 @@ export class RewardScene {
     }
   }
 
+  /**
+   * Small gold particles drifting slowly through the whole scene,
+   * independent of the chest's own sparkle burst — part of the
+   * background atmosphere, not a one-off effect tied to a single action.
+   */
+  _scatterAmbientParticles(count) {
+    this.ambientParticlesEl.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('span');
+      el.className = 'reward-ambient-particle';
+      el.style.left = `${10 + Math.random() * 80}%`;
+      el.style.top = `${20 + Math.random() * 65}%`;
+      el.style.setProperty('--particle-drift-x', `${(Math.random() - 0.5) * 40}px`);
+      el.style.animationDuration = `${7 + Math.random() * 5}s`;
+      el.style.animationDelay = `${Math.random() * 6}s`;
+      this.ambientParticlesEl.appendChild(el);
+    }
+  }
+
   /** Three face-down cards. What's on them stays hidden until one is picked. */
   _renderCards() {
     const gifts = this.giftManager.pickGifts(3);
@@ -266,10 +364,17 @@ export class RewardScene {
 
       const cardEl = document.createElement('button');
       cardEl.className = 'reward-card';
+      cardEl.style.setProperty('--card-tilt', ['-5deg', '0deg', '6deg'][i] ?? '0deg');
       cardEl.setAttribute('aria-label', 'Обрати картку');
       cardEl.innerHTML = `
         <span class="reward-card__inner">
-          <span class="reward-card__face reward-card__back">?</span>
+          <span class="reward-card__face reward-card__back">
+            <svg class="reward-card__back-emblem" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M12 6 L14 11 L12 18 L10 11Z" fill="currentColor"/>
+            </svg>
+            <span class="reward-card__back-mark">?</span>
+          </span>
           <span class="reward-card__face reward-card__front">${icon(gift.icon)}</span>
         </span>
       `;
@@ -279,7 +384,8 @@ export class RewardScene {
       // open button above.
       const openBtn = document.createElement('button');
       openBtn.className = 'reward-card-slot__open-btn wooden-button is-visible';
-      openBtn.textContent = 'Відкрити';
+      openBtn.innerHTML = '<svg viewBox="0 0 24 24" class="reward-open-symbol" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2 L14.5 9.5 L22 12 L14.5 14.5 L12 22 L9.5 14.5 L2 12 L9.5 9.5 Z" fill="currentColor"/></svg>';
+      openBtn.setAttribute('aria-label', 'Відкрити картку');
 
       const choose = () => this._chooseGift(gift, cardEl);
       cardEl.addEventListener('click', choose);
@@ -313,6 +419,7 @@ export class RewardScene {
       });
 
       this.audio.tap();
+      this.mickey.play(MICKEY_STATES.POINT); // looking right at the card as it flips
       cardEl.classList.add('is-chosen');
       await wait(700); // let the flip land
       if (token !== this._runToken) { debugLog('[Reward] _chooseGift: stale token after flip, aborting'); return; }
@@ -329,14 +436,13 @@ export class RewardScene {
       this.state = 'REVEAL';
       debugLog('[Reward] _chooseGift: reveal is now visible');
 
-      // The reveal appears at the same screen spot the card grid just
-      // occupied — an impatient rapid double-tap (pick the card, tap
-      // again out of habit) could otherwise land right on "Далі" before
-      // the player has actually registered seeing their gift.
-      this.continueBtn.style.pointerEvents = 'none';
+      // The button doesn't even appear for a full second after the gift
+      // is shown — the pause is the point: let the player actually see
+      // what they got before anything invites them to move on.
       setTimeout(() => {
-        this.continueBtn.style.pointerEvents = '';
-      }, 900);
+        if (token !== this._runToken) return;
+        this.continueBtn.classList.add('is-visible');
+      }, 1000);
     } catch (err) {
       // Same reasoning as _openChest: this is a click-handler call, not
       // part of the enter() chain, so a silent try/finally here would

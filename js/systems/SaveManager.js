@@ -23,6 +23,7 @@ const DEFAULT_STATE = {
   completed: [],
   claimedGifts: [],
   secretBonus: false,
+  boxesSunk: false,
 };
 
 export class SaveManager {
@@ -93,6 +94,18 @@ export class SaveManager {
 
   get hasSecretBonus() {
     return this.state.secretBonus;
+  }
+
+  /** Whether the boxes have already sunk back into the sand for the
+   *  night stage — persisted, not just an in-memory flag, so reloading
+   *  the page after reaching night doesn't replay that animation. */
+  get boxesSunk() {
+    return this.state.boxesSunk;
+  }
+
+  setBoxesSunk(value) {
+    this.state.boxesSunk = value;
+    this._persist();
   }
 
   /** True once every adventure in the given list has been completed. */

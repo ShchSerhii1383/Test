@@ -1,4 +1,5 @@
 import { Box } from '../components/Box.js';
+import { MICKEY_CHEERS, MICKEY_LOCKED_HINTS, MICKEY_DONE_HINTS, pickLine } from '../data/dialogs.js';
 import { Camera } from '../systems/Camera.js';
 import { MICKEY_STATES, SCENES } from '../config/constants.js';
 
@@ -43,12 +44,16 @@ export class IslandScene {
     // Plants that appear one by one as adventures are completed
     this.growthEls = Array.from(sceneEl.querySelectorAll('.growth'));
 
+    this.overcastVeilEl = sceneEl.querySelector('#overcast-veil');
     this.lighthouseEl = sceneEl.querySelector('#lighthouse');
     this.lighthouseEl.addEventListener('click', async () => {
       if (this._isTransitioning) return;
       this._isTransitioning = true;
       this.audio.tap();
-      await this.sceneManager.goTo(SCENES.ALBUM);
+      // Leads into the secret quest, not straight past it — normally the
+      // compass call opens that automatically, so this is the way back
+      // in if the player somehow ends up on the island without it.
+      await this.sceneManager.goTo(SCENES.CONSTELLATION);
       this._isTransitioning = false;
     });
 
@@ -113,7 +118,7 @@ export class IslandScene {
       el.classList.remove('is-active');
     });
 
-    this._syncBoxesWithSave();
+    this._syncBoxesWithSave({ skipDayStageAndGrowth: Boolean(data.returningFrom) });
 
     if (data.fromIntro) {
       // The opening sequence is about to play on this island. It handles
@@ -128,12 +133,52 @@ export class IslandScene {
       // rather than just silently being back where he was.
       this._justReturnedFrom = data.returningFrom;
       this.mickey.play(MICKEY_STATES.RUN);
-      this.mickey.say('Молодці!', 1800);
+      this.mickey.say(pickLine(MICKEY_CHEERS), 1800);
       setTimeout(() => this.mickey.play(MICKEY_STATES.IDLE), 1200);
       this._startWandering();
 
+      // The star for this adventure is marked as earned right now — it
+      // won't actually show until night falls, but by then it's already
+      // brighter than its neighbors, as if the sky remembered. Done here
+      // rather than inside _revealNextBoxIfAny, since that function
+      // returns early once there's no next box left to reveal — which is
+      // exactly the case for the third and final adventure.
+      this.sceneEl.querySelector(`#memory-star-${data.returningFrom}`)?.classList.add('is-remembered');
+
       this._isTransitioning = true;
+      await this._playIslandRespondsBeat();
       await this._revealNextBoxIfAny(data.returningFrom);
+
+      if (data.returningFrom === ADVENTURE_ORDER[ADVENTURE_ORDER.length - 1]) {
+        // The last adventure just finished — the path's final segment
+        // (toward the lighthouse) draws in here, since _revealNextBoxIfAny
+        // never reaches it: that function only draws a segment while
+        // revealing the *next* box, and there is no next box after the
+        // last adventure. Without this, the island's own map of the
+        // journey would silently stop one segment short of the end.
+        const lastSegmentNumber = ADVENTURE_ORDER.length;
+        const lastSegmentEl = this.sceneEl.querySelector(`#path-segment-${lastSegmentNumber}`);
+        lastSegmentEl?.classList.add('is-drawing');
+        setTimeout(() => {
+          lastSegmentEl?.classList.remove('is-drawing');
+          lastSegmentEl?.classList.add('is-revealed');
+        }, 1400);
+
+        // One slow pull-back to take in the whole island at once (three
+        // visited points, the lit plants, the lighthouse) before handing
+        // back normal control. The moment the player will remember most,
+        // so it gets a beat all its own rather than folding into the
+        // usual camera reset.
+        await this._wait(300);
+        this.camera.focus({ scale: 0.92, x: '0%', y: '-3%' });
+        await this._wait(2600);
+        this.camera.reset();
+        await this._wait(400);
+
+        await this._playCompassCall();
+        return; // the secret quest takes over from here
+      }
+
       this._isTransitioning = false;
       return;
     }
@@ -157,6 +202,7 @@ export class IslandScene {
   async exit() {
     clearTimeout(this._wanderTimer);
     clearTimeout(this._gestureTimer);
+    clearTimeout(this._weatherTimer);
   }
 
   /**
@@ -178,7 +224,7 @@ export class IslandScene {
    * A not-yet-materialized box is left completely alone: invisible,
    * locked, no shadow, nothing — exactly as if it doesn't exist yet.
    */
-  _syncBoxesWithSave() {
+  _syncBoxesWithSave({ skipDayStageAndGrowth = false } = {}) {
     this.boxes.forEach((box) => {
       if (this.saveManager.isCompleted(box.adventureId)) {
         box.markCompleted();
@@ -195,8 +241,14 @@ export class IslandScene {
       }
     });
 
-    this._syncGrowth();
-    this._syncDayStage();
+    // Coming back from finishing an adventure gets its own witnessed
+    // "island responds" beat (see _playIslandRespondsBeat) — the day
+    // stage and growth changes happen there, on camera, instead of
+    // silently here before the player has even seen anything.
+    if (!skipDayStageAndGrowth) {
+      this._syncGrowth();
+      this._syncDayStage();
+    }
 
     if (this.saveManager.hasCompletedAll(ADVENTURE_ORDER)) {
       this.lighthouseEl.hidden = false;
@@ -219,6 +271,27 @@ export class IslandScene {
 
     stageNames.forEach((s) => this.sceneEl.classList.remove(`day-stage--${s}`));
     this.sceneEl.classList.add(`day-stage--${stage}`);
+
+    // The boxes have done their job — rather than just disappearing the
+    // instant night falls, they sink back into the sand (the same
+    // materialize animation, run in reverse), exactly once.
+    if (stage === 'night' && !this.saveManager.boxesSunk) {
+      this.saveManager.setBoxesSunk(true);
+      this._sinkBoxesIntoSand();
+      this.audio.islandChord();
+    }
+  }
+
+  /** The reverse of _materializeBox: shrink, light down instead of up, a
+   *  few sparkles — "their role is done, the island takes them back". */
+  _sinkBoxesIntoSand() {
+    this.boxes.forEach((box) => {
+      if (!box.el.classList.contains('box--completed')) return;
+      box.el.classList.add('is-sinking');
+      setTimeout(() => {
+        box.el.classList.add('is-sunk');
+      }, 900);
+    });
   }
 
   /**
@@ -244,9 +317,33 @@ export class IslandScene {
       x: `${(50 - spot.left) * 0.4}%`,
       y: `${(50 - spot.top) * 0.25}%`,
     });
-    await this._wait(1500);
+    await this._wait(1000);
+
+    // A second of "something's about to happen here" before it does.
+    nextBox.el.classList.add('is-foreshadowing');
+    await this._wait(1000);
+    nextBox.el.classList.remove('is-foreshadowing');
 
     this._materializedBoxes.add(nextId);
+    // The just-completed box's flag briefly waves — passing the torch
+    // from one location to the next, rather than three separate events.
+    const previousBox = this.boxes.find((b) => b.adventureId === justCompletedId);
+    if (previousBox) {
+      const flagEl = previousBox.el.querySelector('.box__flag');
+      flagEl?.classList.remove('is-waving');
+      void flagEl?.offsetWidth;
+      flagEl?.classList.add('is-waving');
+    }
+    // The path segment leading to this box draws itself in, right
+    // alongside it appearing — the island's map of the journey, drawn
+    // in real time rather than sitting there fully formed from the start.
+    const segmentNumber = ADVENTURE_ORDER.indexOf(justCompletedId) + 1;
+    const segmentEl = this.sceneEl.querySelector(`#path-segment-${segmentNumber}`);
+    segmentEl?.classList.add('is-drawing');
+    setTimeout(() => {
+      segmentEl?.classList.remove('is-drawing');
+      segmentEl?.classList.add('is-revealed');
+    }, 1400);
     await this._materializeBox(nextBox);
 
     await this._wait(500);
@@ -263,14 +360,70 @@ export class IslandScene {
   }
 
   /**
-   * One more plant for each adventure finished. Called on every entry, so
-   * a plant that appeared earlier simply stays — only the newest one
-   * animates in, which is what makes it feel like the island responding.
+   * The bridge into the secret quest. Deliberately starts with several
+   * seconds of nothing at all — night has fallen, the chests are gone,
+   * only the sea and the fireflies — because that silence is what makes
+   * the compass lighting up register as an event rather than the next
+   * item in a queue.
+   */
+  async _playCompassCall() {
+    clearTimeout(this._wanderTimer); // he stops wandering and stands still for this
+    this.mickey.play(MICKEY_STATES.IDLE);
+    await this._wait(3000);
+
+    this.mickey.el.classList.add('is-compass-glowing');
+    this.audio.crystalTone(392);
+    await this._wait(1400);
+
+    this.mickey.play(MICKEY_STATES.SURPRISE);
+    await this._wait(900);
+    this.mickey.play(MICKEY_STATES.TELESCOPE); // he looks up at the sky
+    await this._wait(1400);
+
+    this.mickey.el.classList.remove('is-compass-glowing');
+    await this.sceneManager.goTo(SCENES.CONSTELLATION);
+  }
+
+   * "Молодці!" lands, then the camera just... holds, wide, for a couple
+   * of seconds — and that's exactly when the sky actually crossfades to
+   * its next stage and the newest plant sprouts. Only after this beat
+   * does the camera go looking for the next box.
+   */
+  async _playIslandRespondsBeat() {
+    await this._wait(1400); // let "Молодці!" land before anything else moves
+    this.camera.reset(); // a calm, wide shot — nothing zoomed, nothing rushing
+    this._syncDayStage();
+    this._growNewestPlant();
+    await this._wait(1700);
+  }
+
+  /**
+   * One more plant for each adventure finished. Used for entry paths
+   * that don't have a witnessed "island responds" beat of their own
+   * (first arrival, a plain revisit) — just an instant sync, no reason
+   * to animate something the player never watched happen.
    */
   _syncGrowth() {
     const finished = this.saveManager.completedCount;
     this.growthEls.forEach((el, i) => {
       el.classList.toggle('is-grown', i < finished);
+    });
+  }
+
+  /**
+   * One more plant for each adventure finished — but the newest one gets
+   * its own short sprout (stem reaching up, then opening) instead of an
+   * instant class toggle, since this is the one moment that's actually
+   * being watched. Earlier plants that already sprouted on a previous
+   * visit just stay as they are.
+   */
+  _growNewestPlant() {
+    const finished = this.saveManager.completedCount;
+    this.growthEls.forEach((el, i) => {
+      if (i < finished && !el.classList.contains('is-grown')) {
+        el.classList.add('is-grown', 'is-sprouting');
+        setTimeout(() => el.classList.remove('is-sprouting'), 700);
+      }
     });
   }
 
@@ -280,13 +433,13 @@ export class IslandScene {
     if (box.isLocked) {
       this.audio.nudge();
       box.shake();
-      this.mickey.say('Спочатку інші пригоди!');
+      this.mickey.say(pickLine(MICKEY_LOCKED_HINTS));
       return;
     }
 
     if (box.el.classList.contains('box--completed')) {
       this.audio.tap();
-      this.mickey.say('Цю пригоду вже пройдено!');
+      this.mickey.say(pickLine(MICKEY_DONE_HINTS));
       return;
     }
 
@@ -384,18 +537,64 @@ export class IslandScene {
     const wander = () => {
       this._dropFootprints(this.mickey.el.style.left, this.mickey.el.style.bottom);
 
+      const isNight = this.sceneEl.classList.contains('day-stage--night');
+
+      // At night, he sometimes goes and sits by the campfire instead of
+      // endlessly wandering — "the journey is done, we can exhale" —
+      // and holds that spot noticeably longer than an ordinary wander.
+      if (isNight && Math.random() < 0.4) {
+        this.mickey.el.style.left = '20%';
+        this.mickey.el.style.bottom = '6%';
+        this.mickey.el.style.top = 'auto';
+        this._wanderTimer = setTimeout(wander, 14000 + Math.random() * 6000);
+        return;
+      }
+
       const spot = this._wanderSpots[Math.floor(Math.random() * this._wanderSpots.length)];
       this.mickey.el.style.left = spot.left;
       this.mickey.el.style.bottom = spot.bottom;
       this.mickey.el.style.top = 'auto';
       this._checkWildlifeReaction();
 
-      this._wanderTimer = setTimeout(wander, 6000 + Math.random() * 4000);
+      // Slower pace once night falls — a calmer island gets a calmer
+      // Mickey, not the same brisk wander regardless of the hour.
+      const nextDelay = isNight ? 9000 + Math.random() * 6000 : 6000 + Math.random() * 4000;
+      this._wanderTimer = setTimeout(wander, nextDelay);
     };
 
     this._wanderTimer = setTimeout(wander, 5000 + Math.random() * 3000);
 
     this._startIdleGestures();
+    this._startWeather();
+  }
+
+  /**
+   * Every so often — rarely, and never on a predictable beat — a cloud
+   * crosses the sun for a few seconds. It's the only weather in the
+   * whole game, and that's the point: a sky that is *always* clear
+   * reads as a painted backdrop, while one that changes even once
+   * reads as somewhere real. Never at night, where there's no sun to
+   * go behind anything.
+   */
+  _startWeather() {
+    clearTimeout(this._weatherTimer);
+
+    const schedule = () => {
+      this._weatherTimer = setTimeout(() => {
+        const isNight = this.sceneEl.classList.contains('day-stage--night');
+        if (!isNight) {
+          this.sceneEl.classList.add('is-overcast');
+          this.overcastVeilEl.classList.add('is-overcast');
+          setTimeout(() => {
+            this.sceneEl.classList.remove('is-overcast');
+            this.overcastVeilEl.classList.remove('is-overcast');
+          }, 7000 + Math.random() * 4000);
+        }
+        schedule();
+      }, 40000 + Math.random() * 40000);
+    };
+
+    schedule();
   }
 
   /**

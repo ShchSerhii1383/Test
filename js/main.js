@@ -11,6 +11,7 @@ import { LagoonScene } from './scenes/LagoonScene.js';
 import { MountainScene } from './scenes/MountainScene.js';
 import { BazaarScene } from './scenes/BazaarScene.js';
 import { RewardScene } from './scenes/RewardScene.js';
+import { ConstellationScene } from './scenes/ConstellationScene.js';
 import { AlbumScene } from './scenes/AlbumScene.js';
 import { FinaleScene } from './scenes/FinaleScene.js';
 import { SCENES } from './config/constants.js';
@@ -26,8 +27,9 @@ import { SCENES } from './config/constants.js';
 function start() {
   const saveManager = new SaveManager();
   const giftManager = new GiftManager(saveManager);
-  const sceneManager = new SceneManager();
   const audio = new AudioManager();
+  // Built after audio, because it now drives the per-scene ambient mix.
+  const sceneManager = new SceneManager(audio);
 
   // Draw Mickey's artwork into every .mickey container (island, finale, ...)
   // from the single sprite module, before anything tries to animate him.
@@ -63,8 +65,12 @@ function start() {
   const rewardScene = new RewardScene(rewardEl, sceneManager, giftManager, saveManager, mickey, audio);
   sceneManager.register(SCENES.REWARD, rewardEl, rewardScene);
 
+  const constellationEl = document.getElementById('scene-constellation');
+  const constellationScene = new ConstellationScene(constellationEl, sceneManager, mickey, audio);
+  sceneManager.register(SCENES.CONSTELLATION, constellationEl, constellationScene);
+
   const albumEl = document.getElementById('scene-album');
-  const albumScene = new AlbumScene(albumEl, sceneManager, saveManager);
+  const albumScene = new AlbumScene(albumEl, sceneManager, saveManager, mickey, audio);
   sceneManager.register(SCENES.ALBUM, albumEl, albumScene);
 
   const finaleEl = document.getElementById('scene-finale');

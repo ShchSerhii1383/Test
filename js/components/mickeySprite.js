@@ -96,9 +96,11 @@ export const MICKEY_SVG = `
     <!-- leather belt, with the golden compass hanging from it -->
     <path d="M 27 92 L 73 92 L 73 96 L 27 96 Z" fill="#6B4A2F" stroke-width="1.6" />
     <rect x="47" y="91.5" width="6" height="5" rx="1" fill="#D9A24B" stroke-width="1.4" />
-    <circle cx="57" cy="100" r="6.5" fill="#FFB25E" stroke-width="2" />
-    <circle cx="57" cy="100" r="3.2" fill="#FFF8ED" stroke="none" />
-    <path d="M 57 97.5 L 58.4 100.2 L 57 102.5 L 55.6 100.2 Z" fill="#E8734A" stroke="none" />
+    <g class="mickey__compass">
+      <circle cx="57" cy="100" r="6.5" fill="#FFB25E" stroke-width="2" />
+      <circle cx="57" cy="100" r="3.2" fill="#FFF8ED" stroke="none" />
+      <path class="mickey__compass-needle" d="M 57 97.5 L 58.4 100.2 L 57 102.5 L 55.6 100.2 Z" fill="#E8734A" stroke="none" />
+    </g>
 
     <!-- arms, with cream explorer gloves on the hands -->
     <g class="mickey__arm mickey__arm--left">

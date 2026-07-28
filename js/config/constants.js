@@ -10,6 +10,7 @@ export const SCENES = {
   MOUNTAIN: 'mountain',
   BAZAAR: 'bazaar',
   REWARD: 'reward',
+  CONSTELLATION: 'constellation',
   ALBUM: 'album',
   FINALE: 'finale',
 };

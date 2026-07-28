@@ -11,6 +11,11 @@
   left: 50%;
   bottom: 6%;
   transform: translateX(-50%);
+  /* Purely decorative — he has no click handler anywhere in the game.
+     Without this he'd still swallow taps: his z-index sits above the
+     boxes, so whenever he wandered over one, tapping that box hit him
+     instead and silently did nothing. */
+  pointer-events: none;
   /* Sized as a fraction of .land's own height (his real positioning
      container) rather than fixed pixels — on a short/wide laptop window
      the island band can be much shorter in px than on a phone, and a
@@ -532,3 +537,19 @@
 .mute-toggle .mute-toggle__cross { display: none; }
 .mute-toggle.is-muted .mute-toggle__waves { display: none; }
 .mute-toggle.is-muted .mute-toggle__cross { display: block; }
+
+/* ---- Mickey's compass, glowing as the final quest calls ---- */
+.mickey__compass {
+  transform-origin: 57px 100px;
+  transition: filter 1.2s ease;
+}
+
+.mickey.is-compass-glowing .mickey__compass {
+  filter: drop-shadow(0 0 6px #FFD98A) drop-shadow(0 0 12px rgba(255, 217, 138, 0.7));
+}
+
+/* The needle spins, then settles — pointing the way. */
+.mickey.is-compass-glowing .mickey__compass-needle {
+  transform-origin: 57px 100px;
+  animation: mickey-compass-spin 2.2s cubic-bezier(0.2, 0, 0.1, 1) forwards;
+}

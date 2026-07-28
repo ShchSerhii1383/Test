@@ -342,7 +342,11 @@ export class LagoonScene {
       // occasional close, natural-looking overlap the design calls for.
       for (let attempt = 0; attempt < 10; attempt++) {
         const left = 12 + Math.random() * 76;
-        const top = 38 + Math.random() * 58;
+        // Capped at 86% (was 96%) — items placed too close to the very
+        // bottom edge were reportedly disappearing off-screen on some
+        // phones, likely from aspect-ratio differences eating into how
+        // much of that lowest strip is actually visible.
+        const top = 38 + Math.random() * 48;
         if (isOnMickey(left, top)) continue;
 
         const rotationMagnitude = 5 + Math.random() * 5; // exactly the requested 5-10°
@@ -453,6 +457,7 @@ export class LagoonScene {
     debugLog('[Lagoon] _playWinSequence: initial wait done');
 
     this.audio.chest();
+    this.audio.lagoonSignature();
     this.camera.focus({ scale: 1.08, x: '0%', y: '-2%' }); // a small pull-back, not a push-in
 
     this.dialogEl.classList.remove('dialog--hidden');
