@@ -43,7 +43,13 @@ export class ConstellationScene {
   static ORDER = [0, 2, 4, 1, 3, 0];
 
   /** How close (in real screen pixels) counts as touching a star. */
-  static TOLERANCE_PX = 30;
+  /**
+   * How close counts as touching a star. Sized for a fingertip, not a
+   * mouse: 30px was tight enough that the line kept refusing to connect
+   * on a real phone. This is forgiving on purpose — the puzzle is about
+   * remembering the shape, never about precision.
+   */
+  static TOLERANCE_PX = 52;
 
   constructor(sceneEl, sceneManager, mickey, audio) {
     this.sceneEl = sceneEl;
@@ -231,39 +237,45 @@ export class ConstellationScene {
   }
 
   _armDrawing() {
-    // `passive: false` on every one of these is what actually makes
-    // preventDefault() legal. Without it iOS Safari treats the listener
-    // as passive, ignores the call, and pans the whole page while the
-    // player is trying to draw — `touch-action: none` alone does NOT
-    // stop that on Safari the way it does in other browsers.
-    //
-    // These also live on the figure rather than window now, because
-    // _onPointerDown captures the pointer: with capture, every later
-    // move/up is routed to the capturing element, so window listeners
-    // would be both redundant and a double-fire risk.
+    // `passive: false` everywhere is what makes preventDefault() legal at
+    // all — without it iOS Safari treats the listener as passive, ignores
+    // the call, and pans the page while the player is trying to draw.
+    // `touch-action: none` alone does NOT stop that on Safari.
     const opts = { passive: false };
     this.figureEl.addEventListener('pointerdown', this._onPointerDown, opts);
-    this.figureEl.addEventListener('pointermove', this._onPointerMove, opts);
-    this.figureEl.addEventListener('pointerup', this._onPointerUp, opts);
-    this.figureEl.addEventListener('pointercancel', this._onPointerUp, opts);
 
-    // Belt and suspenders for Safari specifically: even with all of the
-    // above, a raw touchmove can still scroll the page, so it's
-    // swallowed outright while a stroke is in progress.
+    // move/up live on WINDOW, not on the figure. The constellation's
+    // stars sit right at the figure's edges (the top one at y=8 of 100),
+    // so a finger tracing between them crosses the boundary constantly.
+    // setPointerCapture is requested too, but it can silently fail — and
+    // when it did, every move outside the figure was simply lost, which
+    // is exactly why the line refused to reach the next star.
+    window.addEventListener('pointermove', this._onPointerMove, opts);
+    window.addEventListener('pointerup', this._onPointerUp, opts);
+    window.addEventListener('pointercancel', this._onPointerUp, opts);
+
+    // Swallowed for the whole time the scene is drawable, not just
+    // mid-stroke: otherwise the very first touch — before a stroke has
+    // been recognised — still drags the page out from under the player.
     this.sceneEl.addEventListener('touchmove', this._onTouchMove, opts);
+    this.sceneEl.addEventListener('touchstart', this._onTouchMove, opts);
   }
 
   /** Stops the page itself from moving under the finger mid-stroke. */
   _onTouchMove(event) {
-    if (this._isDrawing && event.cancelable) event.preventDefault();
+    // Gated on DRAW rather than on _isDrawing: the page has to stop
+    // moving from the very first contact, otherwise the screen slides
+    // away before a stroke is ever recognised.
+    if (this.state === 'DRAW' && event.cancelable) event.preventDefault();
   }
 
   _disarmDrawing() {
     this.figureEl.removeEventListener('pointerdown', this._onPointerDown);
-    this.figureEl.removeEventListener('pointermove', this._onPointerMove);
-    this.figureEl.removeEventListener('pointerup', this._onPointerUp);
-    this.figureEl.removeEventListener('pointercancel', this._onPointerUp);
+    window.removeEventListener('pointermove', this._onPointerMove);
+    window.removeEventListener('pointerup', this._onPointerUp);
+    window.removeEventListener('pointercancel', this._onPointerUp);
     this.sceneEl.removeEventListener('touchmove', this._onTouchMove);
+    this.sceneEl.removeEventListener('touchstart', this._onTouchMove);
   }
 
   /** Converts a real pointer event into this figure's 0-100 space. */

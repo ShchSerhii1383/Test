@@ -27,9 +27,12 @@ body {
   position: fixed;
   inset: 0;
   width: 100%;
-  /* Belt and suspenders: nothing in the game is a drag-to-scroll
-     surface, so no touch gesture should ever pan or zoom the page. */
-  touch-action: none;
+  /* NOTE: deliberately no `touch-action: none` here. It looks like the
+     obvious belt-and-suspenders, but touch-action is resolved from the
+     element the touch starts on upward — setting it on body kills
+     scrolling for everything inside, including the closing journal's
+     scrollable page. Each scene that needs the lock declares it itself
+     (see .scene--constellation). */
 }
 
 body {

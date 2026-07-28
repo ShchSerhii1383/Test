@@ -357,6 +357,18 @@ export class RewardScene {
     const gifts = this.giftManager.pickGifts(3);
     this.cardsEl.innerHTML = '';
 
+    // Every candidate's animation starts downloading NOW, while the
+    // cards are still face-down and the player is deciding. They're
+    // 200-600KB each and the card's face appears only 700ms after a
+    // tap — fetching at pick-time meant the animation regularly lost
+    // that race and the drawn fallback icon showed instead. Prefetching
+    // all three costs bandwidth that a full playthrough would spend
+    // anyway, and buys seconds of head start.
+    this._animationCache = new Map();
+    gifts.forEach((gift) => {
+      this._animationCache.set(gift.id, this._fetchGiftAnimation(gift));
+    });
+
     gifts.forEach((gift, i) => {
       const wrapEl = document.createElement('div');
       wrapEl.className = 'reward-card-slot';
@@ -417,29 +429,32 @@ export class RewardScene {
    *
    * @returns {Promise<object|null>} the parsed animation data, or null
    */
-  async _playGiftAnimation(hostEl, gift) {
-    if (!hostEl) return null;
-
+  async _fetchGiftAnimation(gift) {
     const name = this.giftManager.animationFor?.(gift.id);
-    if (!name || typeof window === 'undefined' || !window.lottie) return null;
-
+    if (!name || typeof fetch !== 'function') return null;
     try {
       const res = await fetch(`assets/animations/${name}.json`);
       if (!res.ok) return null;
-      const animationData = await res.json();
-
-      hostEl.innerHTML = '';
-      window.lottie.loadAnimation({
-        container: hostEl,
-        renderer: 'svg',
-        loop: false,
-        autoplay: true,
-        animationData,
-      });
-      return animationData;
+      return await res.json();
     } catch {
-      return null; // the drawn icon stays exactly where it was
+      return null; // offline, blocked, missing — the drawn icon covers it
     }
+  }
+
+  /**
+   * Plays the chosen gift's animation, using the copy already fetched
+   * when the cards were dealt. Returns the data so the reveal panel can
+   * reuse it without a second request.
+   */
+  async _playGiftAnimation(hostEl, gift) {
+    if (!hostEl) return null;
+
+    const pending = this._animationCache?.get(gift.id) ?? this._fetchGiftAnimation(gift);
+    const animationData = await pending;
+    if (!animationData) return null;
+
+    this._replayGiftAnimation(hostEl, animationData);
+    return animationData;
   }
 
   /** Plays already-fetched animation data, without re-requesting it. */

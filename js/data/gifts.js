@@ -2,43 +2,27 @@
  * gifts.js
  * --------
  * The pool of possible gifts. RewardScene shows three of these face-down
- * and the player picks one. Keep the text short — it's a wink, not a novel.
+ * and the player picks one.
  *
- * `icon` refers to a drawing in components/icons.js. It's still the
- * fallback whenever the Lottie animation can't load, so every gift keeps
- * artwork that matches the island.
- */
-
-/**
- * The nine Lottie animations that play inside a card once it's flipped.
- * They are deliberately NOT hard-wired to a particular gift: the list is
- * shuffled once per page load and dealt out, so the same gift text can
- * arrive with a different animation on a different playthrough. That's
- * what keeps the reward from feeling like a fixed lookup table.
+ * Each gift IS its animation now — the name comes from the Lottie file,
+ * so the two can't drift apart. `animation` is therefore the source of
+ * truth and every gift has exactly one, permanently.
  *
- * To pin an animation to a specific gift instead, drop its filename into
- * that gift's `animation` field below and it will be used verbatim.
+ * `icon` is the drawn fallback used whenever the animation can't load
+ * (offline, blocked CDN), so a reward never arrives blank.
+ *
+ * `message` is intentionally still a placeholder — the real wording is
+ * coming from the person this is a gift for.
  */
-export const GIFT_ANIMATIONS = [
-  'Secret',
-  'Fire_Opal',
-  'Burger_Queen',
-  'Justice',
-  'Amethyst',
-  'Ice_Queen',
-  'Plushie',
-  'Rebellion',
-  'Miss_USA',
-];
 
 export const GIFTS = [
-  { id: 'coffee', icon: 'coffee', title: 'Кава без черги', message: 'Хтось інший стоїть у черзі за тебе — сьогодні.' },
-  { id: 'movie-night', icon: 'movie', title: 'Вечір кіно', message: 'Обираєш фільм ти. Без заперечень.' },
-  { id: 'no-dishes', icon: 'dishes', title: 'Вихідний від посуду', message: 'Сьогодні миє хтось інший.' },
-  { id: 'sleep-in', icon: 'sleep', title: 'Ранок без будильника', message: 'Спи, скільки хочеш.' },
-  { id: 'compliment', icon: 'letter', title: 'Чесний комплімент', message: 'Хтось скаже тобі щось дуже приємне.' },
-  { id: 'walk', icon: 'walk', title: 'Прогулянка вдвох', message: 'Просто прогулянка. Без поспіху.' },
-  { id: 'dessert', icon: 'dessert', title: 'Десерт на вибір', message: 'Той самий, який давно хотілось.' },
-  { id: 'playlist', icon: 'music', title: 'Плейлист під настрій', message: 'Хтось збере його спеціально для тебе.' },
-  { id: 'hug', icon: 'hug', title: 'Обійми без причини', message: 'Іноді саме цього і бракує.' },
+  { id: 'secret',       animation: 'Secret',       icon: 'letter',  title: 'Secret',       message: '' },
+  { id: 'fire-opal',    animation: 'Fire_Opal',    icon: 'emerald', title: 'Fire Opal',    message: '' },
+  { id: 'burger-queen', animation: 'Burger_Queen', icon: 'dessert', title: 'Burger Queen', message: '' },
+  { id: 'justice',      animation: 'Justice',      icon: 'compassBody', title: 'Justice',      message: '' },
+  { id: 'amethyst',     animation: 'Amethyst',     icon: 'emerald', title: 'Amethyst',     message: '' },
+  { id: 'ice-queen',    animation: 'Ice_Queen',    icon: 'shell',   title: 'Ice Queen',    message: '' },
+  { id: 'plushie',      animation: 'Plushie',      icon: 'hug',     title: 'Plushie',      message: '' },
+  { id: 'rebellion',    animation: 'Rebellion',    icon: 'goldenKey', title: 'Rebellion',    message: '' },
+  { id: 'miss-usa',     animation: 'Miss_USA',     icon: 'starfish', title: 'Miss USA',     message: '' },
 ];

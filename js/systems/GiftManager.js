@@ -1,11 +1,11 @@
-import { GIFTS, GIFT_ANIMATIONS } from '../data/gifts.js';
+import { GIFTS } from '../data/gifts.js';
 
 /**
  * GiftManager
  * -----------
- * Decides which gift cards to show in the Reward scene. Two rules: never
- * show a gift that's already been claimed, so every reward feels new; and
- * never let a gift arrive with the same animation every time.
+ * Decides which gift cards to show in the Reward scene. The rule that
+ * matters: never offer a gift that's already been claimed, so a reward
+ * can never repeat one the player has already opened.
  */
 export class GiftManager {
   /**
@@ -13,37 +13,21 @@ export class GiftManager {
    */
   constructor(saveManager) {
     this.saveManager = saveManager;
-
-    /**
-     * The animation dealt to each gift, decided ONCE per page load and
-     * then held steady. Shuffling here rather than at pick-time matters:
-     * a player who sees the same gift twice in one session should see
-     * the same animation both times — it's that gift's face for this
-     * visit — while a reload deals a fresh hand.
-     */
-    this._animationByGiftId = this._dealAnimations();
   }
 
-  _dealAnimations() {
-    const shuffled = [...GIFT_ANIMATIONS].sort(() => Math.random() - 0.5);
-    const map = {};
-    GIFTS.forEach((gift, i) => {
-      // An explicit `animation` on the gift always wins, so a specific
-      // pairing can be pinned later without touching this logic.
-      map[gift.id] = gift.animation ?? shuffled[i % shuffled.length];
-    });
-    return map;
-  }
-
-  /** The animation filename (without extension) dealt to this gift. */
+  /** The Lottie file backing this gift. Each gift owns exactly one. */
   animationFor(giftId) {
-    return this._animationByGiftId[giftId] ?? null;
+    return GIFTS.find((g) => g.id === giftId)?.animation ?? null;
   }
 
   /**
    * Pick `count` distinct gifts the player hasn't claimed yet.
-   * Falls back to allowing repeats only if the pool is exhausted,
-   * so the game never breaks even if every gift has been seen.
+   *
+   * Only the gift the player actually opens gets claimed, so the two
+   * they passed over stay in the pool and may well be offered again next
+   * time — that's intended. What must never happen is the same gift
+   * being *awarded* twice, which the claimed filter here guarantees.
+   *
    * @param {number} count
    */
   pickGifts(count = 3) {
