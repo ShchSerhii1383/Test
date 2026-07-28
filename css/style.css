@@ -17,6 +17,21 @@ html, body {
   overscroll-behavior: none; /* no rubber-band bounce or pull-to-refresh leaking through */
 }
 
+/* iOS Safari honours overscroll-behavior far less than other browsers:
+   the document itself still rubber-bands under a drag, which made the
+   constellation impossible to draw — the whole screen moved with the
+   finger. Pinning the body is the one reliable way to stop that. Safe
+   here because the game never scrolls: every scene is absolutely
+   positioned inside a viewport-sized .app. */
+body {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  /* Belt and suspenders: nothing in the game is a drag-to-scroll
+     surface, so no touch gesture should ever pan or zoom the page. */
+  touch-action: none;
+}
+
 body {
   font-family: var(--font-body);
   color: var(--color-text-dark);

@@ -1343,6 +1343,11 @@
 
   </div>
 
+  <!-- lottie-web renders the gift animations. It's the project's only
+       external runtime dependency; everything else is hand-written. If
+       the CDN is ever unreachable the game still works — RewardScene
+       falls back to the original drawn icons (see _playGiftAnimation). -->
+  <script src="https://unpkg.com/lottie-web@5.12.2/build/player/lottie.min.js"></script>
   <script type="module" src="js/main.js"></script>
 
 </body>

@@ -77,6 +77,7 @@ export class ConstellationScene {
     this._onPointerDown = this._onPointerDown.bind(this);
     this._onPointerMove = this._onPointerMove.bind(this);
     this._onPointerUp = this._onPointerUp.bind(this);
+    this._onTouchMove = this._onTouchMove.bind(this);
   }
 
   /** Blocks input before the sky is actually ready to be drawn on. */
@@ -230,17 +231,39 @@ export class ConstellationScene {
   }
 
   _armDrawing() {
-    this.figureEl.addEventListener('pointerdown', this._onPointerDown);
-    window.addEventListener('pointermove', this._onPointerMove);
-    window.addEventListener('pointerup', this._onPointerUp);
-    window.addEventListener('pointercancel', this._onPointerUp);
+    // `passive: false` on every one of these is what actually makes
+    // preventDefault() legal. Without it iOS Safari treats the listener
+    // as passive, ignores the call, and pans the whole page while the
+    // player is trying to draw — `touch-action: none` alone does NOT
+    // stop that on Safari the way it does in other browsers.
+    //
+    // These also live on the figure rather than window now, because
+    // _onPointerDown captures the pointer: with capture, every later
+    // move/up is routed to the capturing element, so window listeners
+    // would be both redundant and a double-fire risk.
+    const opts = { passive: false };
+    this.figureEl.addEventListener('pointerdown', this._onPointerDown, opts);
+    this.figureEl.addEventListener('pointermove', this._onPointerMove, opts);
+    this.figureEl.addEventListener('pointerup', this._onPointerUp, opts);
+    this.figureEl.addEventListener('pointercancel', this._onPointerUp, opts);
+
+    // Belt and suspenders for Safari specifically: even with all of the
+    // above, a raw touchmove can still scroll the page, so it's
+    // swallowed outright while a stroke is in progress.
+    this.sceneEl.addEventListener('touchmove', this._onTouchMove, opts);
+  }
+
+  /** Stops the page itself from moving under the finger mid-stroke. */
+  _onTouchMove(event) {
+    if (this._isDrawing && event.cancelable) event.preventDefault();
   }
 
   _disarmDrawing() {
     this.figureEl.removeEventListener('pointerdown', this._onPointerDown);
-    window.removeEventListener('pointermove', this._onPointerMove);
-    window.removeEventListener('pointerup', this._onPointerUp);
-    window.removeEventListener('pointercancel', this._onPointerUp);
+    this.figureEl.removeEventListener('pointermove', this._onPointerMove);
+    this.figureEl.removeEventListener('pointerup', this._onPointerUp);
+    this.figureEl.removeEventListener('pointercancel', this._onPointerUp);
+    this.sceneEl.removeEventListener('touchmove', this._onTouchMove);
   }
 
   /** Converts a real pointer event into this figure's 0-100 space. */
@@ -279,6 +302,20 @@ export class ConstellationScene {
     const firstStar = ConstellationScene.ORDER[0];
     if (this._starNear(point) !== firstStar) return; // must start at the first star
 
+    // Only now that we know this is a real stroke on the first star do
+    // we claim the gesture — preventing default on every stray tap would
+    // needlessly fight the browser elsewhere in the scene.
+    if (event.cancelable) event.preventDefault();
+    // Capture binds the whole stroke to this element: the finger can
+    // wander outside the figure (and it will — the star at the top sits
+    // near its edge) without the browser reassigning the pointer or
+    // dropping the rest of the gesture.
+    try {
+      this.figureEl.setPointerCapture(event.pointerId);
+    } catch {
+      // Older Safari can refuse; the listeners still work without it.
+    }
+
     this._isDrawing = true;
     this._nextIndex = 1;
     this._igniteStar(this._starEls[firstStar]);
@@ -288,6 +325,9 @@ export class ConstellationScene {
 
   _onPointerMove(event) {
     if (!this._isDrawing) return;
+    // The single most important line for iOS Safari: without it the
+    // page pans under the finger and the stroke is impossible to draw.
+    if (event.cancelable) event.preventDefault();
     const point = this._toFigureSpace(event);
     if (!point) return;
 
@@ -308,7 +348,14 @@ export class ConstellationScene {
     }
   }
 
-  _onPointerUp() {
+  _onPointerUp(event) {
+    try {
+      if (event?.pointerId !== undefined && this.figureEl.hasPointerCapture?.(event.pointerId)) {
+        this.figureEl.releasePointerCapture(event.pointerId);
+      }
+    } catch {
+      // Nothing to release, or the browser already did it.
+    }
     if (!this._isDrawing) return;
     // Let go before finishing: same gentle dissolve, no scolding.
     if (this.state === 'DRAW') this._dissolve();

@@ -375,7 +375,7 @@ export class RewardScene {
             </svg>
             <span class="reward-card__back-mark">?</span>
           </span>
-          <span class="reward-card__face reward-card__front">${icon(gift.icon)}</span>
+          <span class="reward-card__face reward-card__front"><span class="reward-card__anim" data-anim-host>${icon(gift.icon)}</span></span>
         </span>
       `;
 
@@ -402,6 +402,63 @@ export class RewardScene {
    * moment. That silence before the gift appears is doing more work than
    * any animation in this scene.
    */
+  /**
+   * Loads and plays the chosen gift's Lottie animation.
+   *
+   * Deliberately lazy: the nine animations total nearly 4MB, so fetching
+   * them upfront would stall the whole game on a phone. Only the card the
+   * player actually picked is ever fetched, and the parsed data is kept
+   * so the reveal panel can reuse it without a second request.
+   *
+   * Every failure path here is silent by design — a missing file, a
+   * blocked CDN, an offline phone — because the drawn icon is already
+   * sitting underneath as the fallback. A reward that quietly looks
+   * slightly plainer beats a reward that breaks.
+   *
+   * @returns {Promise<object|null>} the parsed animation data, or null
+   */
+  async _playGiftAnimation(hostEl, gift) {
+    if (!hostEl) return null;
+
+    const name = this.giftManager.animationFor?.(gift.id);
+    if (!name || typeof window === 'undefined' || !window.lottie) return null;
+
+    try {
+      const res = await fetch(`assets/animations/${name}.json`);
+      if (!res.ok) return null;
+      const animationData = await res.json();
+
+      hostEl.innerHTML = '';
+      window.lottie.loadAnimation({
+        container: hostEl,
+        renderer: 'svg',
+        loop: false,
+        autoplay: true,
+        animationData,
+      });
+      return animationData;
+    } catch {
+      return null; // the drawn icon stays exactly where it was
+    }
+  }
+
+  /** Plays already-fetched animation data, without re-requesting it. */
+  _replayGiftAnimation(hostEl, animationData) {
+    if (!hostEl || !animationData || !window.lottie) return;
+    try {
+      hostEl.innerHTML = '';
+      window.lottie.loadAnimation({
+        container: hostEl,
+        renderer: 'svg',
+        loop: false,
+        autoplay: true,
+        animationData,
+      });
+    } catch {
+      // Same reasoning as above — never let decoration break the reward.
+    }
+  }
+
   async _chooseGift(gift, cardEl) {
     // Same reasoning as _openChest — the state check is the real gate,
     // CSS pointer-events is just the presentation layer on top of it.
@@ -421,6 +478,13 @@ export class RewardScene {
       this.audio.tap();
       this.mickey.play(MICKEY_STATES.POINT); // looking right at the card as it flips
       cardEl.classList.add('is-chosen');
+
+      // Started here rather than after the flip: the fetch and the
+      // 700ms flip overlap, so by the time the card's face is showing
+      // the animation is usually already running on it.
+      const animHost = cardEl.querySelector('[data-anim-host]');
+      const animPromise = this._playGiftAnimation(animHost, gift);
+
       await wait(700); // let the flip land
       if (token !== this._runToken) { debugLog('[Reward] _chooseGift: stale token after flip, aborting'); return; }
 
@@ -428,7 +492,11 @@ export class RewardScene {
       await wait(900); // the cinematic pause
       if (token !== this._runToken) { debugLog('[Reward] _chooseGift: stale token after pause, aborting'); return; }
 
-      this.revealIconEl.innerHTML = icon(gift.icon);
+      // The card's animation carries over into the reveal, reusing the
+      // data already fetched above rather than asking for it again.
+      const animationData = await animPromise;
+      this.revealIconEl.innerHTML = icon(gift.icon); // fallback, replaced below if the animation loaded
+      if (animationData) this._replayGiftAnimation(this.revealIconEl, animationData);
       this.revealTitleEl.textContent = gift.title;
       this.revealMessageEl.textContent = gift.message;
       this.revealEl.classList.add('is-visible');
