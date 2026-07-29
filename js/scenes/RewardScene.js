@@ -67,6 +67,10 @@ export class RewardScene {
     // refusing to open, with nothing on screen explaining why.
     this._isBusy = false;
 
+    /** Live Lottie instances, so they can be torn down rather than left
+     *  spinning invisibly. */
+    this._liveAnimations = [];
+
     // Bumped on every enter(). A stray timer from a previous visit compares
     // its token and bows out instead of touching the new run's state.
     this._runToken = 0;
@@ -154,6 +158,7 @@ export class RewardScene {
   async exit() {
     this._runToken += 1;
     this._isBusy = false;
+    this._destroyAnimations(); // nothing should keep animating off-screen
     this._resetVisualState();
   }
 
@@ -429,6 +434,22 @@ export class RewardScene {
    *
    * @returns {Promise<object|null>} the parsed animation data, or null
    */
+  /**
+   * Tears down every Lottie instance this scene created. Called before
+   * making a new one and again on exit — an instance whose container was
+   * emptied is invisible but still running, and they accumulate.
+   */
+  _destroyAnimations() {
+    this._liveAnimations.forEach((anim) => {
+      try {
+        anim.destroy();
+      } catch {
+        // Already gone, or a version without destroy — nothing to do.
+      }
+    });
+    this._liveAnimations = [];
+  }
+
   async _fetchGiftAnimation(gift) {
     const name = this.giftManager.animationFor?.(gift.id);
     if (!name) {
@@ -477,14 +498,22 @@ export class RewardScene {
       return;
     }
     try {
+      // Clearing innerHTML removes the SVG but NOT the animation driving
+      // it: the instance keeps its requestAnimationFrame loop running
+      // forever. Three rewards used to leave six of those alive, and the
+      // heaviest animation (Ice Queen, 86 layers vs Secret's 17) is
+      // exactly the one that then can't get enough frames to play. Every
+      // instance is tracked and destroyed from here on.
+      this._destroyAnimations();
       hostEl.innerHTML = '';
-      window.lottie.loadAnimation({
+      const anim = window.lottie.loadAnimation({
         container: hostEl,
         renderer: 'svg',
         loop: false,
         autoplay: true,
         animationData,
       });
+      this._liveAnimations.push(anim);
     } catch (err) {
       // Never let decoration break the reward — but do say why.
       console.warn('[Reward] lottie failed to render the gift animation:', err.message);

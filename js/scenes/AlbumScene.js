@@ -122,6 +122,10 @@ export class AlbumScene {
 
   async exit() {
     this._runToken += 1;
+    // An emptied container hides a Lottie but doesn't stop it — without
+    // this its animation loop runs for the rest of the session.
+    (this._liveAnimations ?? []).forEach((a) => { try { a.destroy(); } catch { /* already gone */ } });
+    this._liveAnimations = [];
     clearTimeout(this._mickeyMoodTimer);
     clearTimeout(this._shootingStarTimer);
   }
@@ -252,13 +256,14 @@ export class AlbumScene {
       if (!window.lottie) return; // already warned about by RewardScene
 
       hostEl.innerHTML = '';
-      window.lottie.loadAnimation({
+      const anim = window.lottie.loadAnimation({
         container: hostEl,
         renderer: 'svg',
         loop: true, // it's a photo on a page now, not a one-off reveal
         autoplay: true,
         animationData,
       });
+      (this._liveAnimations ||= []).push(anim);
     } catch (err) {
       console.warn(`[Album] animation "${name}.json" failed:`, err.message);
     }

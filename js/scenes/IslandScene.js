@@ -46,6 +46,8 @@ export class IslandScene {
 
     this.overcastVeilEl = sceneEl.querySelector('#overcast-veil');
     this.pineapplesEl = sceneEl.querySelector('#lagoon-pineapples');
+    this.hatsEl = sceneEl.querySelector('#mountain-hats');
+    this.dollEl = sceneEl.querySelector('#bazaar-doll');
     // Scenery, not a control. It used to be a way into the secret quest,
     // but that now opens on its own when Mickey's compass lights up —
     // leaving a tappable tower on screen meant offering a second route
@@ -245,7 +247,7 @@ export class IslandScene {
       this._syncDayStage();
     }
 
-    this._syncPineapples();
+    this._syncKeepsakes();
 
     if (this.saveManager.hasCompletedAll(ADVENTURE_ORDER)) {
       this.lighthouseEl.hidden = false;
@@ -387,13 +389,27 @@ export class IslandScene {
    * stay put afterwards — arriving with a flourish on every later visit
    * would turn a quiet detail into an event.
    */
-  _syncPineapples() {
-    if (!this.pineapplesEl) return;
-    if (!this.saveManager.isCompleted('lagoon')) return;
-    if (this.pineapplesEl.classList.contains('is-visible')) return;
+  _syncKeepsakes() {
+    // One path for all three keepsakes rather than three near-identical
+    // methods: each adventure leaves something beside its own chest, and
+    // the only difference is which element and which adventure.
+    this._showKeepsake(this.pineapplesEl, 'lagoon');
+    this._showKeepsake(this.hatsEl, 'mountain');
+    this._showKeepsake(this.dollEl, 'bazaar');
+  }
 
-    this.pineapplesEl.classList.add('is-visible', 'is-arriving');
-    setTimeout(() => this.pineapplesEl.classList.remove('is-arriving'), 1000);
+  /**
+   * Reveals a keepsake once its adventure is done. The arrival animation
+   * plays only the first time it's seen — repeating it on every later
+   * visit would turn a quiet detail into an event.
+   */
+  _showKeepsake(el, adventureId) {
+    if (!el) return;
+    if (!this.saveManager.isCompleted(adventureId)) return;
+    if (el.classList.contains('is-visible')) return;
+
+    el.classList.add('is-visible', 'is-arriving');
+    setTimeout(() => el.classList.remove('is-arriving'), 1000);
   }
 
   /**

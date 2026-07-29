@@ -42,12 +42,23 @@ export class ConstellationScene {
    */
   static ORDER = [0, 2, 4, 1, 3, 0];
 
-  /** How close (in real screen pixels) counts as touching a star. */
   /**
-   * How close counts as touching a star. Sized for a fingertip, not a
-   * mouse: 30px was tight enough that the line kept refusing to connect
-   * on a real phone. This is forgiving on purpose — the puzzle is about
-   * remembering the shape, never about precision.
+   * The finished shape's clean outline. The path the player traces
+   * crosses itself, so the moment it's complete the middle is a tangle
+   * of construction lines — which is exactly where Rose Quartz needs to
+   * bloom. This is the same star with those crossings resolved into the
+   * five inner vertices where the lines actually meet (inner radius is
+   * R/phi², the exact pentagram ratio).
+   */
+  static OUTLINE_PATH =
+    'M 50.0 8.0 L 59.4 37.0 L 89.9 37.0 L 65.3 55.0 L 74.7 84.0 ' +
+    'L 50.0 66.0 L 25.3 84.0 L 34.7 55.0 L 10.1 37.0 L 40.6 37.0 Z';
+
+  /**
+   * How close (in real screen pixels) counts as touching a star. Sized
+   * for a fingertip, not a mouse: 30px was tight enough that the line
+   * kept refusing to connect on a real phone. Forgiving on purpose —
+   * the puzzle is remembering the shape, never precision.
    */
   static TOLERANCE_PX = 52;
 
@@ -170,6 +181,10 @@ export class ConstellationScene {
 
   async exit() {
     this._runToken += 1;
+    // An emptied container hides a Lottie but doesn't stop it — without
+    // this its animation loop runs for the rest of the session.
+    (this._liveAnimations ?? []).forEach((a) => { try { a.destroy(); } catch { /* already gone */ } });
+    this._liveAnimations = [];
     this._disarmDrawing();
     clearTimeout(this._hintTimer);
   }
@@ -515,13 +530,14 @@ export class ConstellationScene {
       if (!window.lottie) return;
 
       this.heartEl.innerHTML = '';
-      window.lottie.loadAnimation({
+      const anim = window.lottie.loadAnimation({
         container: this.heartEl,
         renderer: 'svg',
         loop: true,
         autoplay: true,
         animationData,
       });
+      (this._liveAnimations ||= []).push(anim);
       this.heartEl.classList.add('is-visible');
     } catch (err) {
       console.warn('[Constellation] Rose_Quartz.json failed:', err.message);
@@ -576,6 +592,13 @@ export class ConstellationScene {
   async _playCompletionSequence(token) {
     this.audio.islandChord();
     this.figureEl.classList.add('is-complete');
+
+    // The traced line resolves into the clean silhouette. Without this
+    // the centre keeps the crossings the stroke left behind, and Rose
+    // Quartz has to compete with them for attention.
+    this.drawnPathEl.setAttribute('d', ConstellationScene.OUTLINE_PATH);
+    this.livePathEl.setAttribute('d', '');
+
     await wait(700);
     if (token !== this._runToken) return;
 

@@ -42,6 +42,7 @@ export class IntroSequence {
     this.titleEl = document.getElementById('scroll-title');
     this.inputEl = document.getElementById('team-name-input');
     this.registeredEl = document.getElementById('scroll-registered');
+    this.photoEl = document.getElementById('scroll-photo');
     this.stampEl = document.getElementById('stamp');
     this.buttonEl = document.getElementById('start-adventure');
     this.buttonLabelEl = document.getElementById('start-adventure-label');
@@ -212,6 +213,13 @@ export class IntroSequence {
     this.audio.stamp();
     this.stampEl.classList.add('is-stamped');
     await wait(1200);
+
+    // The team's own photo appears inside the scroll before the game
+    // starts. This is the one moment that isn't about the island at all
+    // — it's the people the whole thing is for — so it gets held for a
+    // full five seconds with nothing else competing for attention.
+    this.photoEl?.classList.add('is-visible');
+    await wait(5000);
 
     this.scrollWrapEl.classList.remove('is-visible');
     await wait(700);

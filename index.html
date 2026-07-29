@@ -414,6 +414,18 @@
             </svg>
           </div>
 
+          <!-- Three pink bucket hats beside the second chest once the
+               Mountain is done. Decoration, never interactive — the same
+               "someone was here" mark the pineapples make for the Lagoon. -->
+          <div class="mountain-hats" id="mountain-hats">
+            <img class="mountain-hat mountain-hat--1" src="assets/images/pink-hat.png" alt="" aria-hidden="true" />
+            <img class="mountain-hat mountain-hat--2" src="assets/images/pink-hat.png" alt="" aria-hidden="true" />
+            <img class="mountain-hat mountain-hat--3" src="assets/images/pink-hat.png" alt="" aria-hidden="true" />
+          </div>
+
+          <!-- A small personal nod beside the third chest after the Bazaar -->
+          <img class="bazaar-doll" id="bazaar-doll" src="assets/images/monster-high.png" alt="" aria-hidden="true" />
+
           <!-- Gift boxes, scattered around the island, not lined up -->
           <div class="boxes">
             <button class="box box--available box--pos-1" data-adventure="lagoon" aria-label="Лагуна">
@@ -1334,6 +1346,15 @@
               aria-label="Назва команди" />
 
             <p class="scroll__registered" id="scroll-registered"></p>
+
+            <!-- The team's own photo, shown inside the scroll once the
+                 name is registered. Sized as a share of the scroll
+                 rather than in pixels, so it stays proportionate on a
+                 laptop and a phone alike. -->
+            <div class="scroll__photo" id="scroll-photo">
+              <img src="assets/images/dream-team.png" alt="Команда" />
+              <p class="scroll__photo-caption">Команда готова до пригод!</p>
+            </div>
 
             <!-- Gold stamp, thumped down once the name is confirmed -->
             <div class="stamp" id="stamp">
