@@ -49,6 +49,7 @@ export class MountainScene {
     this.countdownEl = sceneEl.querySelector('#mountain-countdown');
     this.gridEl = sceneEl.querySelector('#mountain-grid');
     this.lightWaveEl = sceneEl.querySelector('#mountain-light-wave');
+    this.rainEl = sceneEl.querySelector('#mountain-rain');
 
     // No "back to island" escape hatch on purpose — once an adventure
     // starts, the only way out is finishing it.
@@ -138,6 +139,7 @@ export class MountainScene {
   _resetState() {
     this.state = 'INTRO';
     this._setInputBlocked(true);
+    this._scatterRain();
     this.gridEl.innerHTML = '';
     this._cellEls = null;
     this.dialogEl.classList.add('dialog--hidden');
@@ -149,6 +151,27 @@ export class MountainScene {
 
   _setInputBlocked(blocked) {
     this.inputGuardEl.classList.toggle('is-active', blocked);
+  }
+
+  /**
+   * Scatters the rain. Built in JS rather than as fixed markup so the
+   * drops differ every visit — a hand-placed set reads as a repeating
+   * pattern the moment anyone looks twice. Speeds and delays vary too,
+   * so the fall never pulses in sync.
+   */
+  _scatterRain(count = 46) {
+    if (!this.rainEl) return;
+    this.rainEl.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      const drop = document.createElement('span');
+      drop.className = 'mtn-raindrop';
+      drop.style.left = `${Math.random() * 106 - 3}%`;
+      drop.style.animationDuration = `${0.7 + Math.random() * 0.7}s`;
+      drop.style.animationDelay = `${Math.random() * 2.5}s`;
+      drop.style.opacity = `${0.35 + Math.random() * 0.5}`;
+      drop.style.height = `${12 + Math.random() * 12}px`;
+      this.rainEl.appendChild(drop);
+    }
   }
 
   async _stageReveal() {

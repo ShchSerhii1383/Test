@@ -31,42 +31,51 @@ export const ADVENTURE_CONFIG = {
     roundWinLines: ['Чудовий початок!', 'Залишився останній список!'],
     winLine: 'Колекція зібрана!',
 
-    // Decorative clutter the targets hide among — same pool for every round.
+    /**
+     * Everything that can wash up on this beach. Rounds no longer name
+     * their own targets: they say how many to find, and the scene draws
+     * that many at random from here, never reusing one already found in
+     * an earlier round. Two playthroughs are therefore never the same
+     * hunt — and the coconut can't turn up twice the way it used to.
+     */
+    findableItems: [
+      { id: 'coconut', icon: 'coconut', label: 'Кокос' },
+      { id: 'shell', icon: 'shell', label: 'Мушля' },
+      { id: 'map', icon: 'miniMap', label: 'Карта' },
+      { id: 'crab', icon: 'crabIcon', label: 'Краб' },
+      { id: 'anchor', icon: 'anchorIcon', label: 'Якір' },
+      { id: 'compass', icon: 'compassBody', label: 'Компас' },
+      { id: 'fish', icon: 'fishItem', label: 'Рибка' },
+      { id: 'feather', icon: 'featherIcon', label: 'Перо' },
+      { id: 'scroll', icon: 'scroll', label: 'Сувій' },
+      { id: 'crystal', icon: 'emerald', label: 'Кристал' },
+      { id: 'golden-key', icon: 'goldenKey', label: 'Золотий ключ' },
+      { id: 'starfish', icon: 'starfish', label: 'Морська зірка' },
+      { id: 'bottle', icon: 'bottle', label: 'Пляшка' },
+      { id: 'lantern', icon: 'lanternItem', label: 'Ліхтар' },
+      { id: 'turtle', icon: 'turtle', label: 'Черепаха' },
+      { id: 'pineapple', icon: 'pineapple', label: 'Ананас' },
+      { id: 'mango', icon: 'mango', label: 'Манго' },
+      { id: 'banana', icon: 'banana', label: 'Банан' },
+      { id: 'hat', icon: 'hat', label: 'Капелюх' },
+      { id: 'oar', icon: 'oar', label: 'Весло' },
+      { id: 'rope', icon: 'rope', label: 'Мотузка' },
+      { id: 'plank', icon: 'plank', label: 'Дошка' },
+      { id: 'pebble', icon: 'pebble', label: 'Камінець' },
+      { id: 'life-ring', icon: 'lifeRingMini', label: 'Рятівне коло' },
+    ],
+
+    // Decorative clutter the targets hide among — same pool every round.
     clutterTypes: ['shell', 'starfish', 'bottle', 'rope', 'oar', 'pebble', 'lifeRingMini', 'plank'],
 
-    // Three rounds, each pulling its own set of target items and adding
-    // more decoy clutter, so the beach gets a little busier (and the
-    // items sit a little closer together) each time.
+    // Three rounds: more to find each time, and more clutter to hide it in.
     rounds: [
-      {
-        targets: [
-          { id: 'coconut', icon: 'coconut', label: 'Кокос' },
-          { id: 'shell-find', icon: 'shell', label: 'Мушля' },
-          { id: 'map', icon: 'miniMap', label: 'Карта' },
-        ],
-        clutterCount: 16,
-      },
-      {
-        targets: [
-          { id: 'crab', icon: 'crabIcon', label: 'Краб' },
-          { id: 'anchor', icon: 'anchorIcon', label: 'Якір' },
-          { id: 'compass', icon: 'compassBody', label: 'Компас' },
-          { id: 'coconut-2', icon: 'coconut', label: 'Кокос' },
-        ],
-        clutterCount: 20,
-      },
-      {
-        targets: [
-          { id: 'fish', icon: 'fishItem', label: 'Рибка' },
-          { id: 'feather', icon: 'featherIcon', label: 'Перо' },
-          { id: 'scroll', icon: 'scroll', label: 'Сувій' },
-          { id: 'crystal', icon: 'emerald', label: 'Кристал' },
-          { id: 'golden-key', icon: 'goldenKey', label: 'Золотий ключ' },
-        ],
-        clutterCount: 24,
-      },
+      { targetCount: 3, clutterCount: 16 },
+      { targetCount: 4, clutterCount: 20 },
+      { targetCount: 5, clutterCount: 24 },
     ],
   },
+
   mountain: {
     title: 'Mountain of Crystals',
 
@@ -100,11 +109,15 @@ export const ADVENTURE_CONFIG = {
 
     story: [
       'Дивись, що я знайшов — стародавній Атлас Мандрівників!',
-      '"Лише той, хто уважно дивиться на світ, зможе знайти останній ключ."',
-      'Спробуємо пройти п\'ять випробувань?',
+      '"Лише той, хто уважно читає, зможе знайти останній ключ."',
+      'На кожній сторінці — запис дослідника й питання до нього.',
     ],
 
-    rulesLine: 'Уважно роздивись малюнок — відповідь завжди на ньому.',
+    // The old line told the player to study a drawing. There is no
+    // drawing in this scene and never was one: each page is a written
+    // note plus a question with four answers. Sending someone looking
+    // for a picture that doesn't exist is worse than saying nothing.
+    rulesLine: 'Прочитай запис у журналі й обери одну з чотирьох відповідей.',
     winLine: 'Останній ключ у нас!',
   },
 };

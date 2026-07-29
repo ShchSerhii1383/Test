@@ -57,6 +57,13 @@ export class LagoonScene {
     this._talkHintTimer = null;
     this._shimmerHintTimer = null;
     this._pendingResolve = null;
+
+    /**
+     * Items already used as targets this playthrough. Reset in
+     * _resetState so replaying the adventure deals a genuinely new hunt
+     * rather than continuing to exclude everything from last time.
+     */
+    this._usedItemIds = new Set();
   }
 
   /** Runs before the scene becomes visible/tappable at all — blocks
@@ -137,6 +144,7 @@ export class LagoonScene {
 
   _resetState() {
     this.state = 'INTRO';
+    this._usedItemIds = new Set(); // a replay is a fresh hunt, not a continuation
     this._setInputBlocked(true); // stays blocked through reveal/story/rules/countdown
     this.fieldEl.innerHTML = '';
     this.panelCardsEl.innerHTML = '';
@@ -240,9 +248,28 @@ export class LagoonScene {
       this._pendingResolve = resolve;
 
       const found = new Set();
-      this._renderPanelCards(round.targets);
-      this._scatterField(round, found, token, resolve);
+      const targets = this._drawTargets(round.targetCount);
+      this._renderPanelCards(targets);
+      this._scatterField(round, targets, found, token, resolve);
     });
+  }
+
+  /**
+   * Draws this round's targets at random from the findable pool, never
+   * reusing one already found earlier in the same playthrough. That
+   * exclusion is the point: with fixed lists the hunt was identical
+   * every time, and the coconut actually appeared in two rounds running.
+   */
+  _drawTargets(count) {
+    const pool = this.config.findableItems.filter((item) => !this._usedItemIds.has(item.id));
+
+    // The pool is far larger than the twelve targets a playthrough needs,
+    // so this is only a guard against someone shrinking it later.
+    const source = pool.length >= count ? pool : this.config.findableItems;
+
+    const drawn = this._shuffle([...source]).slice(0, count);
+    drawn.forEach((item) => this._usedItemIds.add(item.id));
+    return drawn;
   }
 
   /** The panel cards for the current round — dimmed until found. */
@@ -258,16 +285,16 @@ export class LagoonScene {
     });
   }
 
-  _scatterField(round, found, token, resolve) {
+  _scatterField(round, roundTargets, found, token, resolve) {
     this.fieldEl.innerHTML = '';
     this.fieldEl.style.pointerEvents = '';
 
-    const targets = round.targets.map((t) => ({ ...t, isTarget: true }));
+    const targets = roundTargets.map((t) => ({ ...t, isTarget: true }));
 
     // Never let a decoy share an icon with one of this round's real
     // targets — otherwise the player sees two identical-looking shells,
     // say, and can't tell which one actually counts.
-    const targetIcons = new Set(round.targets.map((t) => t.icon));
+    const targetIcons = new Set(roundTargets.map((t) => t.icon));
     const decoyPool = this.config.clutterTypes.filter((type) => !targetIcons.has(type));
     const decoys = Array.from({ length: round.clutterCount }, (_, i) => ({
       icon: decoyPool[i % decoyPool.length],
@@ -322,56 +349,87 @@ export class LagoonScene {
    *  Mickey; a soft minimum-distance check keeps most items readable
    *  while still letting some sit close enough to overlap a neighbor,
    *  the way real washed-up clutter does. */
+  /**
+   * Places every item so that all of them are genuinely tappable.
+   *
+   * Two things were wrong before. The spacing test mixed percent-of-width
+   * with percent-of-height, which are different numbers of pixels — so
+   * "distance" meant nothing consistent. And it was only a bias: it kept
+   * the best of ten tries even when the best was still overlapping, so
+   * items really could end up buried under one another.
+   *
+   * Now the whole test runs in real pixels against the field's measured
+   * size, and the spacing is a hard floor. If a spot can't be found the
+   * requirement relaxes step by step rather than giving up — so the
+   * field always fills, but only ever loosens as much as it must.
+   */
   _generatePositions(count) {
-    const placed = [];
-    // Mickey's own spot (left:10%, bottom:30%, 90x150px) — items keep
-    // clear of this box entirely, with a little breathing room besides.
-    const mickeyZone = { left: 6, right: 30, top: 44, bottom: 96 };
+    const rect = this.fieldEl.getBoundingClientRect();
+    const fieldW = rect.width || 390;
+    const fieldH = rect.height || 780;
 
-    const isOnMickey = (x, y) =>
-      x > mickeyZone.left && x < mickeyZone.right && y > mickeyZone.top && y < mickeyZone.bottom;
+    // One tap target plus breathing room. Below this, two items start
+    // covering each other's hit area rather than just sitting close.
+    const MIN_GAP_PX = 50;
+
+    // Keep clear of anything that would sit on top of an item: the
+    // targets panel along the top and Mickey down the left. Measured
+    // rather than guessed, so moving either in CSS can't silently start
+    // burying items again.
+    const blocked = [];
+    const addZone = (el, padPx = 8) => {
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      blocked.push({
+        left: ((r.left - rect.left - padPx) / fieldW) * 100,
+        right: ((r.right - rect.left + padPx) / fieldW) * 100,
+        top: ((r.top - rect.top - padPx) / fieldH) * 100,
+        bottom: ((r.bottom - rect.top + padPx) / fieldH) * 100,
+      });
+    };
+    addZone(this.panelEl);
+    addZone(this.sceneEl.querySelector('.lagoon-mickey-spot'));
+
+    const inBlockedZone = (x, y) =>
+      blocked.some((z) => x > z.left && x < z.right && y > z.top && y < z.bottom);
+
+    const distPx = (a, b) =>
+      Math.hypot(((a.left - b.left) / 100) * fieldW, ((a.top - b.top) / 100) * fieldH);
+
+    const placed = [];
 
     for (let i = 0; i < count; i++) {
-      let best = null;
-      let bestMinDist = -1;
+      let chosen = null;
 
-      // A handful of random tries; keep whichever candidate ended up
-      // furthest from everything already placed. This isn't a hard
-      // "never overlap" rule — it just biases away from stacking
-      // directly on top of another item, while still allowing the
-      // occasional close, natural-looking overlap the design calls for.
-      for (let attempt = 0; attempt < 10; attempt++) {
-        const left = 12 + Math.random() * 76;
-        // Capped at 86% (was 96%) — items placed too close to the very
-        // bottom edge were reportedly disappearing off-screen on some
-        // phones, likely from aspect-ratio differences eating into how
-        // much of that lowest strip is actually visible.
-        const top = 38 + Math.random() * 48;
-        if (isOnMickey(left, top)) continue;
-
-        const rotationMagnitude = 5 + Math.random() * 5; // exactly the requested 5-10°
-        const candidate = {
-          left,
-          top,
-          rotation: Math.random() < 0.5 ? -rotationMagnitude : rotationMagnitude,
-          scale: 0.95 + Math.random() * 0.1, // a subtle 95-105%, not a dramatic size difference
-        };
-        const minDist = placed.reduce((min, p) => {
-          const d = Math.hypot(p.left - candidate.left, (p.top - candidate.top) * 0.6);
-          return Math.min(min, d);
-        }, Infinity);
-
-        if (minDist > bestMinDist) {
-          bestMinDist = minDist;
-          best = candidate;
+      // Start strict, then ease off only as far as needed. Even the
+      // loosest pass keeps items far enough apart to tap.
+      for (let relax = 0; relax < 6 && !chosen; relax++) {
+        const required = MIN_GAP_PX * (1 - relax * 0.12); // 50px down to ~20px
+        for (let attempt = 0; attempt < 120; attempt++) {
+          const rotationMagnitude = 5 + Math.random() * 5;
+          const candidate = {
+            // Reaches higher up the beach than before — the panel no
+            // longer eats that space, so the scatter can use it.
+            left: 10 + Math.random() * 80,
+            top: 22 + Math.random() * 68,
+            rotation: Math.random() < 0.5 ? -rotationMagnitude : rotationMagnitude,
+            scale: 0.95 + Math.random() * 0.1,
+          };
+          if (inBlockedZone(candidate.left, candidate.top)) continue;
+          if (placed.every((p) => distPx(p, candidate) >= required)) {
+            chosen = candidate;
+            break;
+          }
         }
-        if (minDist > 14) break; // good enough, stop trying
       }
 
-      // Every attempt landed on Mickey (astronomically unlikely, but
-      // never leave an item unplaced) — fall back to a safe corner.
-      if (!best) best = { left: 70, top: 45, rotation: 6, scale: 1 };
-      placed.push(best);
+      // Nothing fit even at the loosest spacing — extremely unlikely, but
+      // an unplaced item would be worse than a slightly close one.
+      if (!chosen) {
+        chosen = { left: 12 + Math.random() * 76, top: 24 + Math.random() * 64, rotation: 6, scale: 1 };
+      }
+      placed.push(chosen);
     }
 
     return this._shuffle(placed);
@@ -407,7 +465,7 @@ export class LagoonScene {
     clearTimeout(this._talkHintTimer);
     clearTimeout(this._shimmerHintTimer);
 
-    if (found.size === round.targets.length) {
+    if (found.size === round.targetCount) {
       this.fieldEl.style.pointerEvents = 'none';
       this._pendingResolve = null;
       resolve(true);

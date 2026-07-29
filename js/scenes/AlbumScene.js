@@ -199,7 +199,7 @@ export class AlbumScene {
       el.setAttribute('aria-label', gift.title);
       el.innerHTML = `
         <span class="album-photo__frame">
-          <span class="album-photo__image">${icon(gift.icon)}</span>
+          <span class="album-photo__image" data-anim-host>${icon(gift.icon)}</span>
           <span class="album-photo__caption">${gift.title}</span>
         </span>
       `;
@@ -219,7 +219,48 @@ export class AlbumScene {
       el.classList.add('is-landed');
       this.audio.tap();
 
+      // The polaroid shows the same animation the player watched when
+      // they opened this gift, not a flat stand-in for it — otherwise
+      // the closing page quietly contradicts what they remember. Fire
+      // and forget: the drawn icon is already in place underneath, so a
+      // slow or failed load just leaves the page as it was.
+      this._playPhotoAnimation(el.querySelector('[data-anim-host]'), gift);
+
       await wait(400);
+    }
+  }
+
+  /**
+   * Plays a gift's Lottie inside its polaroid. Deliberately its own
+   * small copy of the logic rather than a shared module: RewardScene's
+   * version is entangled with prefetching and the reveal panel, and one
+   * abstraction serving two quite different moments would be worse than
+   * these few lines.
+   */
+  async _playPhotoAnimation(hostEl, gift) {
+    if (!hostEl || typeof fetch !== 'function') return;
+    const name = gift.animation;
+    if (!name) return; // e.g. the secret bonus, which has no animation
+
+    try {
+      const res = await fetch(`assets/animations/${name}.json`);
+      if (!res.ok) {
+        console.warn(`[Album] animation "${name}.json" returned ${res.status} — keeping the drawn icon.`);
+        return;
+      }
+      const animationData = await res.json();
+      if (!window.lottie) return; // already warned about by RewardScene
+
+      hostEl.innerHTML = '';
+      window.lottie.loadAnimation({
+        container: hostEl,
+        renderer: 'svg',
+        loop: true, // it's a photo on a page now, not a one-off reveal
+        autoplay: true,
+        animationData,
+      });
+    } catch (err) {
+      console.warn(`[Album] animation "${name}.json" failed:`, err.message);
     }
   }
 

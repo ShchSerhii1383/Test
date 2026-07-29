@@ -65,6 +65,7 @@ export class ConstellationScene {
     this.drawnPathEl = sceneEl.querySelector('#cst-lines-drawn');
     this.livePathEl = sceneEl.querySelector('#cst-lines-live');
     this.glowEl = sceneEl.querySelector('#cst-glow');
+    this.heartEl = sceneEl.querySelector('#cst-heart');
     this.beamEl = sceneEl.querySelector('#cst-beam');
     this.mickeySpotEl = sceneEl.querySelector('#cst-mickey-spot');
     this.legendEl = sceneEl.querySelector('#cst-legend');
@@ -79,6 +80,7 @@ export class ConstellationScene {
     /** Index into ORDER of the next star the player needs to reach. */
     this._nextIndex = 0;
     this._isDrawing = false;
+    this._hintTimer = null;
 
     this._onPointerDown = this._onPointerDown.bind(this);
     this._onPointerMove = this._onPointerMove.bind(this);
@@ -127,7 +129,15 @@ export class ConstellationScene {
     this.worldEl.classList.add('is-risen');
 
     this.legendEl.classList.remove('dialog--hidden');
-    await typeText(this.legendTextEl, 'Хвиля, гора, пам\'ять... три знаки вказували не на місце. Вони вказували на небо. З\'єднай їх — і шлях додому засвітиться.');
+    await typeText(this.legendTextEl, 'Хвиля, гора, пам\'ять... три знаки вказували не на місце. Вони вказували на небо.');
+    if (token !== this._runToken) return;
+    await wait(1600);
+    if (token !== this._runToken) return;
+
+    // Said plainly, and only once — the demonstration right after this
+    // is what actually teaches the gesture. The words are here so the
+    // player knows to watch, not to explain the mechanics in prose.
+    await typeText(this.legendTextEl, 'Дивись уважно — і проведи пальцем той самий шлях, не відриваючи його.');
     if (token !== this._runToken) return;
     await wait(2200);
     if (token !== this._runToken) return;
@@ -143,14 +153,25 @@ export class ConstellationScene {
     await this._twinkleTheFiveInTurn(token);
     if (token !== this._runToken) return;
 
+    // Blinking the five says WHICH stars matter. It doesn't say what to
+    // do with them — and this is the only place in the game where the
+    // interaction isn't a tap. So the shape now draws itself once,
+    // slowly, in front of the player: a demonstration rather than an
+    // instruction, since a line being traced is self-explanatory in a
+    // way that any sentence about "swiping" would not be.
+    await this._demonstrateStroke(token);
+    if (token !== this._runToken) return;
+
     this.state = 'DRAW';
     this._armDrawing();
+    this._startHintTimer();
     debugLog('[Constellation] ready for input');
   }
 
   async exit() {
     this._runToken += 1;
     this._disarmDrawing();
+    clearTimeout(this._hintTimer);
   }
 
   _resetVisualState() {
@@ -166,6 +187,9 @@ export class ConstellationScene {
     this.figureEl.classList.remove('is-complete', 'is-dissolving', 'is-alive');
     this.drawnPathEl.classList.remove('is-pulsing');
     this.glowEl.classList.remove('is-visible');
+    this.heartEl.classList.remove('is-visible');
+    this.heartEl.innerHTML = '';
+    clearTimeout(this._hintTimer);
     this.beamEl.classList.remove('is-visible');
     this.legendEl.classList.add('dialog--hidden');
     this.legendTextEl.textContent = '';
@@ -234,6 +258,63 @@ export class ConstellationScene {
       el.classList.remove('is-hinting');
       await wait(140);
     }
+  }
+
+  /**
+   * If the player stalls, the next required star glows. Only ever that
+   * one — the whole puzzle is remembering an order, so pointing at
+   * "somewhere over there" would be no help, and pointing at all of them
+   * would give the answer away. Restarts on every successful connection,
+   * so a player who's moving never sees it.
+   */
+  _startHintTimer() {
+    clearTimeout(this._hintTimer);
+    this._hintTimer = setTimeout(() => {
+      if (this.state !== 'DRAW') return;
+      const next = ConstellationScene.ORDER[this._nextIndex];
+      const el = this._starEls[next];
+      if (!el || el.classList.contains('is-lit')) return;
+      el.classList.add('is-hinting');
+      setTimeout(() => el.classList.remove('is-hinting'), 2400);
+      this._startHintTimer(); // keep offering it, patiently
+    }, 9000);
+  }
+
+  /**
+   * Draws the whole shape once as a ghost, then wipes it, leaving the
+   * player to do it for real. Deliberately a full pass rather than a
+   * hint of the first move: the puzzle is remembering an order, and
+   * showing only the beginning would make the demo itself a memory test.
+   */
+  async _demonstrateStroke(token) {
+    const order = ConstellationScene.ORDER;
+    this.figureEl.classList.add('is-demonstrating');
+
+    for (let i = 1; i < order.length; i++) {
+      if (token !== this._runToken) return;
+      const pts = order.slice(0, i + 1).map((s) => ConstellationScene.STARS[s]);
+      this.drawnPathEl.setAttribute(
+        'd',
+        pts.map((p, n) => `${n === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' '),
+      );
+      this._starEls[order[i]].classList.add('is-hinting');
+      this.audio.crystalTone(392 + i * 45);
+      await wait(420);
+      this._starEls[order[i]].classList.remove('is-hinting');
+    }
+
+    if (token !== this._runToken) return;
+    await wait(700); // let the finished shape register before it clears
+
+    // Wipe it: what follows has to be the player's own line, not a
+    // half-finished one they're completing.
+    this.figureEl.classList.add('is-dissolving');
+    await wait(600);
+    if (token !== this._runToken) return;
+    this.drawnPathEl.setAttribute('d', '');
+    this.figureEl.classList.remove('is-dissolving', 'is-demonstrating');
+    this._starEls.forEach((el) => el.classList.remove('is-lit'));
+    await wait(400);
   }
 
   _armDrawing() {
@@ -374,6 +455,7 @@ export class ConstellationScene {
   }
 
   _connectNext() {
+    this._startHintTimer(); // they're moving — no need to nudge
     const starIndex = ConstellationScene.ORDER[this._nextIndex];
     this._igniteStar(this._starEls[starIndex]);
     this.audio.crystalTone(523 + this._nextIndex * 60);
@@ -415,6 +497,37 @@ export class ConstellationScene {
     this.drawnPathEl.setAttribute('d', d);
   }
 
+  /**
+   * Blooms the Rose Quartz at the centre of the finished constellation.
+   * Silent on failure, like every other animation in the game — the
+   * shape the player drew is the payoff on its own, this is the flourish
+   * on top of it.
+   */
+  async _revealHeart() {
+    if (!this.heartEl || typeof fetch !== 'function') return;
+    try {
+      const res = await fetch('assets/animations/Rose_Quartz.json');
+      if (!res.ok) {
+        console.warn(`[Constellation] Rose_Quartz.json returned ${res.status}.`);
+        return;
+      }
+      const animationData = await res.json();
+      if (!window.lottie) return;
+
+      this.heartEl.innerHTML = '';
+      window.lottie.loadAnimation({
+        container: this.heartEl,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        animationData,
+      });
+      this.heartEl.classList.add('is-visible');
+    } catch (err) {
+      console.warn('[Constellation] Rose_Quartz.json failed:', err.message);
+    }
+  }
+
   /** A wrong move: everything fades back to white, and it can be retried. */
   _dissolve() {
     this._isDrawing = false;
@@ -427,6 +540,7 @@ export class ConstellationScene {
       this.drawnPathEl.setAttribute('d', '');
       this._starEls.forEach((el) => el.classList.remove('is-lit'));
       this.figureEl.classList.remove('is-dissolving');
+      this._startHintTimer();
     }, 900);
   }
 
@@ -440,6 +554,7 @@ export class ConstellationScene {
     if (this.state !== 'DRAW') return;
     this.state = 'LIT';
     this._disarmDrawing();
+    clearTimeout(this._hintTimer);
     const token = this._runToken;
     debugLog('[Constellation] complete');
 
@@ -478,6 +593,11 @@ export class ConstellationScene {
     this.glowEl.classList.add('is-visible');
     this.confetti.burst(70);
     await wait(900);
+    if (token !== this._runToken) return;
+
+    // The heart of the constellation opens. Loaded only now, at the one
+    // moment it's needed — same reasoning as the gift animations.
+    await this._revealHeart();
     if (token !== this._runToken) return;
 
     // The deliberate pause: nothing moves, nothing is announced.

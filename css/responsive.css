@@ -41,8 +41,8 @@
   /* Lagoon: the expedition panel should never compete with the beach for
      attention — capped well under a fifth of the screen height. */
   .lagoon-panel {
-    top: 2%;
-    max-height: 20vh;
+    top: 1%;
+    max-height: 17vh;
     overflow: visible;
   }
   .lagoon-panel__title { font-size: var(--text-base); }

@@ -389,6 +389,31 @@
             <div class="mickey__shadow"></div>
           </div>
 
+          <!-- Three pineapples that appear beside the first chest once
+               the Lagoon is finished — a small "someone was here and
+               left something behind" mark on the island, shown by
+               IslandScene once that adventure is complete. -->
+          <div class="lagoon-pineapples" id="lagoon-pineapples">
+            <svg class="lagoon-pineapple lagoon-pineapple--1" viewBox="0 0 24 38" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M12 11 L8 2 M12 11 L12 1 M12 11 L16 2" stroke="#3A8067" stroke-width="2.2" stroke-linecap="round" fill="none" />
+              <ellipse cx="12" cy="23" rx="8" ry="12" fill="#E8B23C" stroke="#B0894C" stroke-width="1.6" />
+              <path d="M6 17 L18 27 M6 23 L18 33 M6 29 L14 36 M18 17 L6 27 M18 23 L6 33 M18 29 L10 36"
+                    stroke="#B0894C" stroke-width="0.9" opacity="0.55" fill="none" />
+            </svg>
+            <svg class="lagoon-pineapple lagoon-pineapple--2" viewBox="0 0 24 38" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M12 11 L8 2 M12 11 L12 1 M12 11 L16 2" stroke="#3A8067" stroke-width="2.2" stroke-linecap="round" fill="none" />
+              <ellipse cx="12" cy="23" rx="8" ry="12" fill="#E8B23C" stroke="#B0894C" stroke-width="1.6" />
+              <path d="M6 17 L18 27 M6 23 L18 33 M6 29 L14 36 M18 17 L6 27 M18 23 L6 33 M18 29 L10 36"
+                    stroke="#B0894C" stroke-width="0.9" opacity="0.55" fill="none" />
+            </svg>
+            <svg class="lagoon-pineapple lagoon-pineapple--3" viewBox="0 0 24 38" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M12 11 L8 2 M12 11 L12 1 M12 11 L16 2" stroke="#3A8067" stroke-width="2.2" stroke-linecap="round" fill="none" />
+              <ellipse cx="12" cy="23" rx="8" ry="12" fill="#E8B23C" stroke="#B0894C" stroke-width="1.6" />
+              <path d="M6 17 L18 27 M6 23 L18 33 M6 29 L14 36 M18 17 L6 27 M18 23 L6 33 M18 29 L10 36"
+                    stroke="#B0894C" stroke-width="0.9" opacity="0.55" fill="none" />
+            </svg>
+          </div>
+
           <!-- Gift boxes, scattered around the island, not lined up -->
           <div class="boxes">
             <button class="box box--available box--pos-1" data-adventure="lagoon" aria-label="Лагуна">
@@ -413,11 +438,11 @@
           </div>
 
           <!-- Appears only once all three adventures are complete; leads to the Album -->
-          <button class="lighthouse" id="lighthouse" aria-label="Альбом пригод" hidden>
+          <div class="lighthouse" id="lighthouse" aria-hidden="true" hidden>
             <span class="lighthouse__tower"></span>
             <span class="lighthouse__light"></span>
             <span class="lighthouse__beam"></span>
-          </button>
+          </div>
 
           <!-- Two torches — just poles by day, lit and flickering once night falls -->
           <svg class="island-torch island-torch--1" viewBox="0 0 20 50" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -781,13 +806,15 @@
     <!-- ================= MOUNTAIN SCENE ================= -->
     <section id="scene-mountain" class="scene scene--mountain" aria-label="Гора кристалів">
 
-      <!-- LAYER 1: cold sky, thin clouds -->
+      <!-- LAYER 1: overcast sky and rain. No sun up here — the whole
+           point of this scene is that it isn't the beach, and a bright
+           sun over wet rock was the loudest thing contradicting that. -->
       <div class="mtn-layer mtn-layer--sky">
-        <div class="sun"></div>
-        <span class="sky-dust sky-dust--1"></span>
-        <span class="sky-dust sky-dust--2"></span>
+        <div class="mtn-overcast"></div>
         <div class="cloud cloud--1"></div>
         <div class="cloud cloud--2"></div>
+        <!-- Filled by MountainScene.js so the drops differ every visit -->
+        <div class="mtn-rain" id="mountain-rain"></div>
       </div>
 
       <!-- LAYER 2: far peaks + fog -->
@@ -1118,6 +1145,10 @@
             </svg>
             <div class="cst-stars" id="cst-stars"></div>
             <div class="cst-glow" id="cst-glow"></div>
+
+            <!-- The reward at the heart of the constellation, revealed
+                 only once the shape is closed. -->
+            <div class="cst-heart" id="cst-heart"></div>
           </div>
 
           <!-- The soft beam that descends onto the island once the
@@ -1343,11 +1374,22 @@
 
   </div>
 
-  <!-- lottie-web renders the gift animations. It's the project's only
-       external runtime dependency; everything else is hand-written. If
-       the CDN is ever unreachable the game still works — RewardScene
-       falls back to the original drawn icons (see _playGiftAnimation). -->
-  <script src="https://unpkg.com/lottie-web@5.12.2/build/player/lottie.min.js"></script>
+  <!-- lottie-web renders the gift animations — the only third-party code
+       in the project. Local copy FIRST: a gift shouldn't depend on
+       someone else's server still being up years from now, and a phone
+       on patchy mobile data shouldn't lose the animations to a CDN
+       timeout. See assets/vendor/README.md for the one file to drop in.
+       The CDN below is only a fallback for when that file isn't there. -->
+  <script src="assets/vendor/lottie.min.js"></script>
+  <script>
+    if (!window.lottie) {
+      console.warn('[Secret Island] No local lottie at assets/vendor/lottie.min.js — falling back to the CDN. See assets/vendor/README.md.');
+      const s = document.createElement('script');
+      s.src = 'https://unpkg.com/lottie-web@5.12.2/build/player/lottie.min.js';
+      s.onerror = () => console.warn('[Secret Island] CDN lottie failed too — gifts will show their drawn icons instead.');
+      document.head.appendChild(s);
+    }
+  </script>
   <script type="module" src="js/main.js"></script>
 
 </body>

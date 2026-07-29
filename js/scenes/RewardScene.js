@@ -431,13 +431,25 @@ export class RewardScene {
    */
   async _fetchGiftAnimation(gift) {
     const name = this.giftManager.animationFor?.(gift.id);
-    if (!name || typeof fetch !== 'function') return null;
+    if (!name) {
+      console.warn(`[Reward] gift "${gift.id}" has no animation assigned — using its drawn icon.`);
+      return null;
+    }
+    if (typeof fetch !== 'function') return null;
+
     try {
       const res = await fetch(`assets/animations/${name}.json`);
-      if (!res.ok) return null;
+      if (!res.ok) {
+        // Silent fallbacks are right for the player and wrong for us —
+        // this is the difference between "the animation didn't show" and
+        // knowing it was a 404 on a specific file.
+        console.warn(`[Reward] animation "${name}.json" returned ${res.status} — using the drawn icon.`);
+        return null;
+      }
       return await res.json();
-    } catch {
-      return null; // offline, blocked, missing — the drawn icon covers it
+    } catch (err) {
+      console.warn(`[Reward] animation "${name}.json" failed to load:`, err.message);
+      return null;
     }
   }
 
@@ -459,7 +471,11 @@ export class RewardScene {
 
   /** Plays already-fetched animation data, without re-requesting it. */
   _replayGiftAnimation(hostEl, animationData) {
-    if (!hostEl || !animationData || !window.lottie) return;
+    if (!hostEl || !animationData) return;
+    if (!window.lottie) {
+      console.warn('[Reward] lottie-web is not loaded — see assets/vendor/README.md.');
+      return;
+    }
     try {
       hostEl.innerHTML = '';
       window.lottie.loadAnimation({
@@ -469,8 +485,9 @@ export class RewardScene {
         autoplay: true,
         animationData,
       });
-    } catch {
-      // Same reasoning as above — never let decoration break the reward.
+    } catch (err) {
+      // Never let decoration break the reward — but do say why.
+      console.warn('[Reward] lottie failed to render the gift animation:', err.message);
     }
   }
 

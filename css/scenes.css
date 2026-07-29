@@ -709,22 +709,34 @@
 
 .lighthouse {
   position: absolute;
-  left: 8%;
-  bottom: 26%;
-  width: 26px;
-  height: 70px;
+  /* Sits on the tall mid ridge rather than down on the beach. These
+     aren't guessed: the mountains SVG is 400x130 in a 112%-wide,
+     26%-tall box with xMidYMax slice, and its peak (viewBox 150,30)
+     works out to almost exactly here on a phone-shaped screen.
+     translateX centres the tower on the summit instead of starting at it. */
+  left: 28.3%;
+  bottom: 47%;
+  transform: translateX(-50%);
+  /* Smaller than before — it's on a distant ridge now, not a few paces
+     away, and a full-size tower up there would read as a giant. */
+  width: 17px;
+  height: 46px;
   opacity: 0;
-  transition: opacity var(--duration-medium) var(--ease-soft), transform var(--duration-fast) var(--ease-soft);
+  /* Purely part of the scenery now: it no longer opens anything, so it
+     shouldn't invite a tap it can't answer. The secret quest starts on
+     its own when Mickey's compass lights up. */
+  pointer-events: none;
+  transition: opacity var(--duration-medium) var(--ease-soft);
 }
 
 .lighthouse.is-visible {
   opacity: 1;
-  animation: lighthouse-invite var(--duration-ambient) var(--ease-soft) infinite;
+  /* No more `lighthouse-invite` pulse: that animation existed to say
+     "tap me", and it also overwrote the translateX that centres the
+     tower on the summit. It's scenery now — the beam does the work. */
 }
 
-.lighthouse:active {
-  transform: scale(0.94);
-}
+/* The press state is gone with the interactivity that justified it. */
 
 .lighthouse__tower {
   position: absolute;
@@ -1927,13 +1939,18 @@
   font-family: var(--font-display);
   font-size: var(--text-display);
   margin-bottom: var(--space-sm);
-  color: var(--color-text-dark);
+  /* Light, not dark: this scene's background was redesigned to a near
+     black blue-green, and the text was left behind on the old assumption
+     of pale parchment. #2A2A2A on #0D2430 is effectively invisible. */
+  color: var(--color-text-light);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
 }
 
 .reward-reveal p {
   font-size: var(--text-base);
-  color: var(--color-text-dark);
-  opacity: 0.85;
+  color: var(--color-text-light);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
+  opacity: 0.9;
   margin-bottom: var(--space-lg);
   line-height: 1.45;
 }
@@ -2457,7 +2474,11 @@
 
 .lagoon-panel {
   position: absolute;
-  top: 3%;
+  /* Pinned as high as the safe area allows and kept tight: every
+     percent this panel gives back is beach the items can scatter
+     across, and the scatter now measures this box directly, so raising
+     it genuinely widens the play area rather than just looking neater. */
+  top: 1%;
   left: 50%;
   transform: translateX(-50%);
   width: 86%;
@@ -2471,7 +2492,7 @@
   background: linear-gradient(to bottom, rgba(247,230,196,0.88) 0%, rgba(235,213,166,0.88) 100%);
   border: 3px solid rgba(176,137,79,0.85);
   border-radius: 4px;
-  padding: var(--space-sm) var(--space-md) var(--space-md);
+  padding: var(--space-xs) var(--space-md) var(--space-sm);
   box-shadow: var(--shadow-md);
   /* worn corners: a rougher, uneven edge rather than a clean rectangle */
   clip-path: polygon(2% 4%, 98% 0%, 100% 92%, 96% 100%, 3% 98%, 0% 8%);
@@ -3580,4 +3601,109 @@
 .album-journal__page {
   touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
+}
+
+/* A Lottie inside a polaroid fills the same box the drawn icon did */
+.album-photo__image > svg { width: 100%; height: 100%; }
+
+/* ---- Constellation: the animation at the heart of the finished shape ---- */
+.cst-heart {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%) scale(0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.4s var(--ease-soft), transform 1.4s var(--ease-soft);
+}
+
+.cst-heart.is-visible {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.cst-heart > svg { width: 100%; height: 100%; }
+
+/* ---- Mountain: overcast sky and rain ---- */
+.mtn-overcast {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom,
+    rgba(70, 88, 104, 0.55) 0%,
+    rgba(96, 112, 128, 0.30) 55%,
+    transparent 100%);
+  pointer-events: none;
+}
+
+/* Clouds up here are heavy and grey, not the island's bright white ones */
+.scene--mountain .cloud {
+  filter: brightness(0.62) saturate(0.4);
+  opacity: 0.75;
+}
+
+.mtn-rain {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.mtn-raindrop {
+  position: absolute;
+  top: -12%;
+  width: 1.5px;
+  height: 16px;
+  border-radius: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(190, 214, 232, 0.55));
+  animation: mtn-rain-fall linear infinite;
+}
+
+/* ---- Island: pineapples left beside the first chest once it's done ---- */
+.lagoon-pineapples {
+  position: absolute;
+  /* Beside .box--pos-1 (left 22%, bottom 12%), just to its right so it
+     reads as something set down next to the chest rather than replacing
+     it. Non-interactive: purely a mark that this place was visited. */
+  left: 31%;
+  bottom: 11%;
+  z-index: var(--z-land);
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.2s var(--ease-soft);
+}
+
+.lagoon-pineapples.is-visible { opacity: 1; }
+
+.lagoon-pineapple {
+  width: 17px;
+  transform-origin: bottom center;
+  /* Each sits a little differently — three identical uprights would
+     read as placed by a level, not left by someone. */
+  animation: pineapple-settle 5.5s ease-in-out infinite;
+}
+
+/* The tilt goes through a custom property, not `transform` — the settle
+   animation animates transform too, and a static one here would simply
+   be overwritten the moment it started. */
+.lagoon-pineapple--1 { --tilt: -7deg; }
+.lagoon-pineapple--2 { --tilt: 0deg; width: 20px; animation-delay: 1.4s; }
+.lagoon-pineapple--3 { --tilt: 6deg; width: 15px; animation-delay: 2.9s; }
+
+/* They arrive with a small drop rather than blinking into existence */
+.lagoon-pineapples.is-arriving .lagoon-pineapple {
+  animation: pineapple-drop 0.6s var(--ease-soft) backwards;
+}
+.lagoon-pineapples.is-arriving .lagoon-pineapple--2 { animation-delay: 0.12s; }
+.lagoon-pineapples.is-arriving .lagoon-pineapple--3 { animation-delay: 0.24s; }
+
+/* While the shape demonstrates itself, the line is a fainter "ghost" so
+   it never gets mistaken for progress the player already made. */
+.cst-figure.is-demonstrating .cst-lines__drawn {
+  opacity: 0.55;
+  stroke-dasharray: 4 5;
 }

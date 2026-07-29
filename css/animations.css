@@ -259,12 +259,6 @@
 
 /* ---- Bazaar: correct stall pick ---- */
 
-/* ---- Lighthouse: invites a tap once every adventure is done ---- */
-
-@keyframes lighthouse-invite {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
-}
 
 @keyframes lighthouse-glow {
   0%, 100% { opacity: 0.7; }
@@ -777,4 +771,25 @@
 @keyframes cst-star-idle {
   0%, 100% { opacity: 0.7; box-shadow: 0 0 4px 1px rgba(255, 248, 237, 0.5); }
   50% { opacity: 1; box-shadow: 0 0 7px 2px rgba(255, 248, 237, 0.8); }
+}
+
+/* ---- Mountain: rain falling past the rock face ---- */
+@keyframes mtn-rain-fall {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(115vh) translateX(-18px); opacity: 0; }
+}
+
+/* ---- Island: pineapples breathing very slightly in the sea air ---- */
+@keyframes pineapple-settle {
+  0%, 100% { transform: rotate(var(--tilt, 0deg)) translateY(0); }
+  50% { transform: rotate(var(--tilt, 0deg)) translateY(-1.5px); }
+}
+
+/* ---- Island: pineapples being set down ---- */
+@keyframes pineapple-drop {
+  0% { opacity: 0; transform: translateY(-14px) scale(0.8); }
+  70% { opacity: 1; transform: translateY(2px) scale(1.04); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }

@@ -45,17 +45,12 @@ export class IslandScene {
     this.growthEls = Array.from(sceneEl.querySelectorAll('.growth'));
 
     this.overcastVeilEl = sceneEl.querySelector('#overcast-veil');
+    this.pineapplesEl = sceneEl.querySelector('#lagoon-pineapples');
+    // Scenery, not a control. It used to be a way into the secret quest,
+    // but that now opens on its own when Mickey's compass lights up —
+    // leaving a tappable tower on screen meant offering a second route
+    // that fires at the wrong moment in the story.
     this.lighthouseEl = sceneEl.querySelector('#lighthouse');
-    this.lighthouseEl.addEventListener('click', async () => {
-      if (this._isTransitioning) return;
-      this._isTransitioning = true;
-      this.audio.tap();
-      // Leads into the secret quest, not straight past it — normally the
-      // compass call opens that automatically, so this is the way back
-      // in if the player somehow ends up on the island without it.
-      await this.sceneManager.goTo(SCENES.CONSTELLATION);
-      this._isTransitioning = false;
-    });
 
     this.camera = new Camera(sceneEl);
     this.landEl = sceneEl.querySelector('.land');
@@ -250,6 +245,8 @@ export class IslandScene {
       this._syncDayStage();
     }
 
+    this._syncPineapples();
+
     if (this.saveManager.hasCompletedAll(ADVENTURE_ORDER)) {
       this.lighthouseEl.hidden = false;
       // Small delay so it doesn't pop in the instant the box marks complete.
@@ -382,6 +379,21 @@ export class IslandScene {
 
     this.mickey.el.classList.remove('is-compass-glowing');
     await this.sceneManager.goTo(SCENES.CONSTELLATION);
+  }
+
+  /**
+   * Three pineapples appear beside the first chest once the Lagoon is
+   * done. They drop in the first time the player sees them and simply
+   * stay put afterwards — arriving with a flourish on every later visit
+   * would turn a quiet detail into an event.
+   */
+  _syncPineapples() {
+    if (!this.pineapplesEl) return;
+    if (!this.saveManager.isCompleted('lagoon')) return;
+    if (this.pineapplesEl.classList.contains('is-visible')) return;
+
+    this.pineapplesEl.classList.add('is-visible', 'is-arriving');
+    setTimeout(() => this.pineapplesEl.classList.remove('is-arriving'), 1000);
   }
 
   /**
