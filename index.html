@@ -1270,23 +1270,47 @@
 
 
     <!-- ================= FINALE SCENE ================= -->
-    <!-- The little scene after the screen has already gone dark -->
-    <section id="scene-finale" class="scene scene--finale" aria-label="Фінал">
+    <!-- ================= SKY OF MEMORIES (the closing scene) ================= -->
+    <section id="scene-finale" class="scene scene--finale" aria-label="Небо спогадів">
 
-      <!-- The night island one last time, small and far away -->
       <div class="finale-world" id="finale-world">
         <div class="finale-starfield" id="finale-starfield"></div>
 
-        <!-- The same constellation the player drew, flaring once in the sky -->
-        <svg class="finale-constellation" id="finale-constellation" viewBox="0 0 100 100" aria-hidden="true">
-          <path d="M 50 8 L 74.7 84 L 10.1 37 L 89.9 37 L 25.3 84 L 50 8"
-                fill="none" stroke="var(--color-box-glow)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
-          <circle cx="50" cy="8" r="1.6" fill="var(--color-box-glow)" />
-          <circle cx="89.9" cy="37" r="1.6" fill="var(--color-box-glow)" />
-          <circle cx="74.7" cy="84" r="1.6" fill="var(--color-box-glow)" />
-          <circle cx="25.3" cy="84" r="1.6" fill="var(--color-box-glow)" />
-          <circle cx="10.1" cy="37" r="1.6" fill="var(--color-box-glow)" />
+        <!-- The golden route the compass plots between the memories.
+             Drawn by light rather than simply appearing — see
+             .finale-route__line's stroke-dashoffset animation. -->
+        <svg class="finale-route" id="finale-route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <path class="finale-route__line" id="finale-route-line" fill="none" />
         </svg>
+
+        <!-- Thin golden rays joining all four photos for one moment at
+             the very end: the constellation the memories make themselves. -->
+        <svg class="finale-links" id="finale-links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <path class="finale-links__line" id="finale-links-line" fill="none" />
+        </svg>
+
+        <!-- Four stars that each become a photograph. The star is what's
+             visible first; the photo replaces it. -->
+        <div class="memory-slot memory-slot--1" id="memory-slot-1">
+          <span class="memory-star"></span>
+          <span class="memory-burst"></span>
+          <img class="memory-photo" src="assets/images/memory-1.png" alt="" aria-hidden="true" />
+        </div>
+        <div class="memory-slot memory-slot--2" id="memory-slot-2">
+          <span class="memory-star"></span>
+          <span class="memory-burst"></span>
+          <img class="memory-photo" src="assets/images/memory-2.png" alt="" aria-hidden="true" />
+        </div>
+        <div class="memory-slot memory-slot--3" id="memory-slot-3">
+          <span class="memory-star"></span>
+          <span class="memory-burst"></span>
+          <img class="memory-photo" src="assets/images/memory-3.png" alt="" aria-hidden="true" />
+        </div>
+        <div class="memory-slot memory-slot--4" id="memory-slot-4">
+          <span class="memory-star"></span>
+          <span class="memory-burst"></span>
+          <img class="memory-photo" src="assets/images/memory-4.png" alt="" aria-hidden="true" />
+        </div>
 
         <div class="finale-sea">
           <span class="finale-wave finale-wave--1"></span>
@@ -1297,11 +1321,22 @@
           <svg class="finale-island__art" viewBox="0 0 200 50" preserveAspectRatio="none" aria-hidden="true">
             <path d="M0 50 L0 30 Q40 16 80 24 Q120 12 160 22 Q182 18 200 28 L200 50Z" fill="#0A1E28" />
           </svg>
-          <div id="finale-mickey" class="mickey mickey--wave finale-mickey"></div>
+          <div id="finale-mickey" class="mickey mickey--idle finale-mickey"></div>
         </div>
       </div>
 
-      <p class="finale-last-line" id="finale-last-line"></p>
+      <!-- The handwritten dedication. The pen is the LAST inline element
+           after the text, so it follows the writing naturally — including
+           across line breaks — instead of needing its position computed. -->
+      <div class="finale-letter" id="finale-letter">
+        <p class="finale-letter__body">
+          <span id="finale-letter-text"></span><svg class="finale-pen" id="finale-pen" viewBox="0 0 20 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M14 1 L19 6 L7 18 L2 19 L3 14 Z" fill="var(--color-gold)" stroke="#8A5A3B" stroke-width="1" stroke-linejoin="round"/><path d="M3 14 L7 18" stroke="#8A5A3B" stroke-width="1"/><path d="M2 19 L4.5 16.5" stroke="#4B382A" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </p>
+        <svg class="finale-flourish" id="finale-flourish" viewBox="0 0 60 24" aria-hidden="true">
+          <path id="finale-flourish-line" d="M2 18 Q14 4 26 14 Q36 22 44 12 Q50 5 58 9" fill="none"
+                stroke="var(--color-gold)" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+      </div>
     </section>
 
     <!-- ============ OPENING SEQUENCE OVERLAY ============ -->

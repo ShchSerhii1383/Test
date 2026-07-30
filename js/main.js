@@ -74,7 +74,7 @@ function start() {
   sceneManager.register(SCENES.ALBUM, albumEl, albumScene);
 
   const finaleEl = document.getElementById('scene-finale');
-  const finaleScene = new FinaleScene(finaleEl, audio);
+  const finaleScene = new FinaleScene(finaleEl, audio, mickey);
   sceneManager.register(SCENES.FINALE, finaleEl, finaleScene);
 
   // The island comes up first but stays quiet: the opening sequence plays

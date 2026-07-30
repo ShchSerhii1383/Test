@@ -72,6 +72,7 @@ export class AlbumScene {
 
     this.mickeySpotEl.appendChild(this.mickey.el);
     this._scatterStars(46);
+    this._preloadMemoryPhotos();
     this._startShootingStars();
 
     // Stage 1: the camera settles back down onto the island after the
@@ -141,6 +142,24 @@ export class AlbumScene {
     this.starfieldEl.innerHTML = '';
     clearTimeout(this._mickeyMoodTimer);
     clearTimeout(this._shootingStarTimer);
+  }
+
+  /**
+   * Starts the four closing photographs downloading now, while the
+   * player is still reading this page.
+   *
+   * They total nearly 7MB, and the scene that shows them has no loading
+   * state by design — a star is supposed to become a photo instantly.
+   * Fetching them here buys the better part of a minute of head start,
+   * and the browser cache means the finale's <img> tags then resolve
+   * immediately. Failures are ignored: the finale would just show them
+   * a moment later.
+   */
+  _preloadMemoryPhotos() {
+    for (let i = 1; i <= 4; i++) {
+      const img = new Image();
+      img.src = `assets/images/memory-${i}.png`;
+    }
   }
 
   _scatterStars(count) {

@@ -2252,10 +2252,10 @@
   padding: var(--space-xs) var(--space-lg);
 }
 
-/* ---------------- Finale: the scene after the screen went dark ---------------- */
+/* ---------------- Finale: "Sky of Memories" ---------------- */
 
 .scene--finale {
-  background: #040B12;
+  background: radial-gradient(ellipse at 50% 120%, #0A2130 0%, #050D18 60%, #03080F 100%);
   overflow: hidden;
 }
 
@@ -2279,21 +2279,130 @@
   animation: cst-bg-twinkle 4s ease-in-out infinite;
 }
 
-.finale-constellation {
+/* ---- The route the compass plots ---- */
+
+.finale-route,
+.finale-links {
   position: absolute;
-  top: 12%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(46vw, 200px);
-  aspect-ratio: 1;
-  opacity: 0;
-  filter: drop-shadow(0 0 6px rgba(var(--color-box-glow-rgb), 0.8));
-  transition: opacity 1.8s ease;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
 }
 
-.finale-constellation.is-visible { opacity: 0.95; }
+.finale-route__line,
+.finale-links__line {
+  stroke: var(--color-box-glow);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 4px rgba(var(--color-box-glow-rgb), 0.85));
+}
 
-.finale-sea { position: absolute; bottom: 0; left: 0; right: 0; height: 22%; }
+/* Drawn BY light: the dash offset retreats, so the line appears to be
+   travelling rather than fading in all at once. */
+.finale-route__line {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  transition: stroke-dashoffset 2.4s cubic-bezier(0.4, 0, 0.3, 1);
+}
+
+.finale-links__line {
+  opacity: 0;
+  stroke-width: 1;
+  transition: opacity 0.9s ease;
+}
+
+.finale-links__line.is-visible { opacity: 0.85; }
+
+/* ---- Each memory: a star that becomes a photograph ---- */
+
+.memory-slot {
+  position: absolute;
+  /* Sized against the smaller viewport axis so four portrait photos
+     always fit the sky, on a tall phone and a wide laptop alike. */
+  width: min(31vw, 22vh);
+  aspect-ratio: 0.67;
+  transform: translate(-50%, -50%) rotate(var(--tilt, 0deg));
+}
+
+/* A route across the sky rather than a grid — the shape of a journey. */
+.memory-slot--1 { --tilt: -4deg; left: 24%; top: 17%; }
+.memory-slot--2 { --tilt: 3.5deg; left: 71%; top: 30%; }
+.memory-slot--3 { --tilt: -3deg; left: 27%; top: 52%; }
+.memory-slot--4 { --tilt: 4deg;  left: 70%; top: 64%; }
+
+/* The star: all that's visible before the route reaches it */
+.memory-star {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border-radius: 50%;
+  background: var(--color-starlight);
+  box-shadow: 0 0 8px 2px rgba(var(--color-box-glow-rgb), 0.7);
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+.memory-slot.is-star .memory-star {
+  opacity: 1;
+  animation: memory-star-pulse 2s ease-in-out infinite;
+}
+
+/* The star doesn't just switch off — it flares, and the photo is what's
+   left behind. That flare is the whole "a star became a memory" idea. */
+.memory-burst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 50%;
+  border: 2px solid var(--color-box-glow);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.memory-slot.is-becoming .memory-burst {
+  animation: memory-burst 0.9s var(--ease-soft) forwards;
+}
+
+.memory-slot.is-becoming .memory-star {
+  opacity: 0;
+}
+
+/* The photograph itself. These PNGs already carry their own white
+   polaroid border and sparkle, so nothing here adds a frame — only the
+   depth and warmth that makes them sit in a night sky. */
+.memory-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transform: scale(0.82);
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
+  transition: opacity 1.3s var(--ease-soft), transform 1.3s var(--ease-soft), filter 1.3s ease;
+}
+
+.memory-slot.is-photo .memory-photo {
+  opacity: 1;
+  transform: scale(1);
+  /* A soft warm halo so it reads as lit by the sky it's hanging in */
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55))
+          drop-shadow(0 0 12px rgba(var(--color-box-glow-rgb), 0.45));
+}
+
+/* ---- Sea, island, Mickey ---- */
+
+.finale-sea { position: absolute; bottom: 0; left: 0; right: 0; height: 18%; }
 
 .finale-wave {
   position: absolute;
@@ -2310,43 +2419,81 @@
 
 .finale-island {
   position: absolute;
-  bottom: 18%;
+  bottom: 14%;
   left: 50%;
   transform: translateX(-50%);
   width: min(60vw, 260px);
-  height: 60px;
+  height: 54px;
 }
 
 .finale-island__art { position: absolute; inset: 0; width: 100%; height: 100%; }
 
-/* Small and far away — this is the horizon, not a close-up */
 .finale-mickey {
   position: absolute;
   left: 50%;
-  bottom: 46%;
+  bottom: 44%;
   transform: translateX(-50%);
-  width: 22px;
-  height: 36px;
+  width: 26px;
+  height: 42px;
 }
 
-.finale-last-line {
+/* ---- The handwritten dedication ---- */
+
+.finale-letter {
   position: absolute;
-  bottom: 8%;
+  bottom: 5%;
   left: 50%;
   transform: translateX(-50%);
   width: 86%;
   max-width: 440px;
   text-align: center;
-  font-family: var(--font-display);
-  font-size: var(--text-sm);
-  line-height: 1.6;
-  color: #FFE9C2;
   opacity: 0;
-  transition: opacity 2s ease;
+  pointer-events: none;
   z-index: 5;
+  transition: opacity 1.2s ease;
 }
 
-.finale-last-line.is-visible { opacity: 0.92; }
+.finale-letter.is-visible { opacity: 1; }
+
+.finale-letter__body {
+  font-family: var(--font-hand, var(--font-display));
+  font-size: var(--text-lg);
+  line-height: 1.65;
+  color: #FFE9C2;
+  text-shadow: 0 0 10px rgba(var(--color-box-glow-rgb), 0.35);
+}
+
+/* Inline, so it simply sits after the last written character and moves
+   with the text — including onto the next line — with no maths. */
+.finale-pen {
+  display: inline-block;
+  width: 15px;
+  height: 18px;
+  margin-left: 2px;
+  vertical-align: -3px;
+  opacity: 0;
+  filter: drop-shadow(0 0 5px rgba(var(--color-box-glow-rgb), 0.8));
+}
+
+.finale-pen.is-writing {
+  opacity: 1;
+  animation: pen-nib 0.42s ease-in-out infinite;
+}
+
+.finale-flourish {
+  display: block;
+  width: 60px;
+  margin: var(--space-xs) auto 0;
+  opacity: 0;
+}
+
+.finale-flourish.is-visible { opacity: 1; }
+
+/* The flourish draws itself, then the pen is gone */
+.finale-flourish.is-visible #finale-flourish-line {
+  stroke-dasharray: 120;
+  animation: flourish-draw 0.9s ease-out forwards;
+}
 
 .confetti-canvas {
   position: absolute;
@@ -3736,11 +3883,16 @@
 
 /* ---- Registration: the team's photo, shown once the name is stamped ---- */
 .scroll__photo {
-  /* 70% of the scroll's width — the brief asked for roughly 30% smaller
-     than the frame, and a share rather than a pixel size is what keeps
-     that true on both a laptop and a phone. */
-  width: 70%;
-  margin: var(--space-sm) auto 0;
+  /* 77%: the previous 70% plus the 10% increase asked for. Still a share
+     of the scroll rather than a pixel size, so it holds on a laptop and
+     a phone alike. */
+  width: 77%;
+  /* Pulled upward and given almost nothing below it — the photo is the
+     point of this moment, so it shouldn't sit in the middle of empty
+     parchment with the frame's padding hanging under it. */
+  margin: 0 auto calc(var(--space-md) * -1);
+  position: relative;
+  top: calc(var(--space-md) * -1);
   opacity: 0;
   transform: rotate(-2.5deg) scale(1);
   pointer-events: none;
@@ -3749,8 +3901,9 @@
 
 .scroll__photo.is-visible {
   opacity: 1;
-  /* Fades in while easing 1 -> 1.05, so it settles rather than pops. */
-  animation: photo-settle 5s var(--ease-soft) forwards;
+  /* 10s, matching the hold in IntroSequence — if this stayed at 5s the
+     photo would fade out while the game was still waiting on it. */
+  animation: photo-settle 10s var(--ease-soft) forwards;
 }
 
 .scroll__photo img {
@@ -3780,10 +3933,6 @@
   animation: photo-glint 1.9s ease-in-out 0.7s;
 }
 
-.scroll__photo {
-  position: relative; /* so ::after can sit over the image */
-}
-
 .scroll__photo-caption {
   margin-top: var(--space-xs);
   font-family: var(--font-display);
@@ -3797,7 +3946,13 @@
    than in fixed pixels — that's what keeps the proportions identical on
    a laptop and an iPhone instead of "correct on one and wrong on the
    other". None of it is interactive. */
-.boxes { --box-w: 64px; }
+/* Declared on the SCENE, not on .boxes. The keepsakes sit alongside
+   .boxes rather than inside it, and custom properties only inherit
+   downward — so scoping this to .boxes left var(--box-w) undefined for
+   them, which invalidated their calc() widths, dropped the declaration
+   and let the PNGs render at their natural size (768px wide). That's the
+   "full screen" bug. Keep it here so every child of the scene can use it. */
+.scene--island { --box-w: 64px; }
 
 .mountain-hats,
 .bazaar-doll {
@@ -3823,7 +3978,9 @@
 .mountain-hats.is-visible { opacity: 1; }
 
 .mountain-hat {
-  /* ~28% of the chest's width, per the brief's 25-30%. */
+  /* 28% of the chest's width lands at ~18px, right in the range the
+     pineapples already proved readable on a phone. Still a share of the
+     chest rather than a pixel value, so it scales the same everywhere. */
   width: calc(var(--box-w) * 0.28);
   height: auto;
   transform-origin: bottom center;
@@ -3847,7 +4004,12 @@
 .bazaar-doll {
   right: 6%;
   bottom: 21%;
-  height: calc(var(--box-w) * 0.94 * 0.35 * 3); /* chest height x 35%, scaled for a readable figure */
+  /* A standing figure needs height, not width, to read. ~52% of the
+     chest's width puts it at about 33px tall — the same visual weight as
+     a pineapple, which is the scale that works on this island. The old
+     formula multiplied by 3 to compensate for a variable that was never
+     resolving in the first place. */
+  height: calc(var(--box-w) * 0.52);
   width: auto;
   transform-origin: bottom center;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.32));

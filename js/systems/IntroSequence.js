@@ -217,9 +217,9 @@ export class IntroSequence {
     // The team's own photo appears inside the scroll before the game
     // starts. This is the one moment that isn't about the island at all
     // — it's the people the whole thing is for — so it gets held for a
-    // full five seconds with nothing else competing for attention.
+    // full ten seconds with nothing else competing for attention.
     this.photoEl?.classList.add('is-visible');
-    await wait(5000);
+    await wait(10000);
 
     this.scrollWrapEl.classList.remove('is-visible');
     await wait(700);

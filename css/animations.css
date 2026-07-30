@@ -816,9 +816,12 @@
 
 /* ---- Registration: the photo easing in and settling ---- */
 @keyframes photo-settle {
+  /* Retimed for a 10s hold: the ease-in and the fade-out keep the same
+     real duration they had at 5s, so the extra time all goes into the
+     part that matters — the photo simply being there. */
   0% { opacity: 0; transform: rotate(-2.5deg) scale(1); }
-  25% { opacity: 1; transform: rotate(-2.5deg) scale(1.05); }
-  85% { opacity: 1; transform: rotate(-2.5deg) scale(1.05); }
+  12% { opacity: 1; transform: rotate(-2.5deg) scale(1.05); }
+  92% { opacity: 1; transform: rotate(-2.5deg) scale(1.05); }
   100% { opacity: 0; transform: rotate(-2.5deg) scale(1.02); }
 }
 
@@ -844,4 +847,29 @@
 @keyframes doll-sway {
   0%, 100% { transform: rotate(-1.6deg); }
   50% { transform: rotate(1.6deg); }
+}
+
+/* ---- Sky of Memories: a star waiting to become a memory ---- */
+@keyframes memory-star-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 8px 2px rgba(var(--color-box-glow-rgb), 0.6); }
+  50% { transform: scale(1.35); box-shadow: 0 0 16px 5px rgba(var(--color-box-glow-rgb), 0.95); }
+}
+
+/* ---- The flare as a star turns into a photograph ---- */
+@keyframes memory-burst {
+  0% { opacity: 1; transform: scale(0.6); }
+  55% { opacity: 1; transform: scale(5); }
+  100% { opacity: 0; transform: scale(9); }
+}
+
+/* ---- The pen's nib working, while it writes ---- */
+@keyframes pen-nib {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-1.5px) rotate(-4deg); }
+}
+
+/* ---- The closing flourish drawing itself ---- */
+@keyframes flourish-draw {
+  from { stroke-dashoffset: 120; }
+  to { stroke-dashoffset: 0; }
 }
