@@ -278,6 +278,10 @@ export class IslandScene {
       this.saveManager.setBoxesSunk(true);
       this._sinkBoxesIntoSand();
       this.audio.islandChord();
+      // The day playlist (Music1/Music2) hands off to the night track
+      // here, the same one-time gate the boxes use — night falls once,
+      // and the music should change with it exactly once too.
+      this.audio.switchToNightMusic('assets/audio/music3.mp3');
     }
   }
 

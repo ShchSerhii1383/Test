@@ -2441,15 +2441,22 @@
 
 .finale-letter {
   position: absolute;
-  bottom: 5%;
+  /* Centred over the photographs, not down by the sea — the brief asks
+     for the writing to appear ON TOP of the four memories, not after
+     they've gone. A solid backing keeps it legible against four bright
+     photos rather than only the plain night sky. */
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
-  width: 86%;
-  max-width: 440px;
+  transform: translate(-50%, -50%);
+  width: 84%;
+  max-width: 420px;
   text-align: center;
+  padding: var(--space-md) var(--space-lg);
+  background: radial-gradient(ellipse at center, rgba(5, 12, 20, 0.82) 0%, rgba(5, 12, 20, 0.55) 70%, transparent 100%);
+  border-radius: 12px;
   opacity: 0;
   pointer-events: none;
-  z-index: 5;
+  z-index: 6; /* above the photos (they carry no z-index of their own) */
   transition: opacity 1.2s ease;
 }
 
@@ -2459,8 +2466,11 @@
   font-family: var(--font-hand, var(--font-display));
   font-size: var(--text-lg);
   line-height: 1.65;
-  color: #FFE9C2;
-  text-shadow: 0 0 10px rgba(var(--color-box-glow-rgb), 0.35);
+  /* Actually golden, not cream — "буква за буквою золотим кольором" —
+     the game's own gold token, so it's the same gold as everything else
+     that glows in this scene. */
+  color: var(--color-gold);
+  text-shadow: 0 0 12px rgba(var(--color-box-glow-rgb), 0.55);
 }
 
 /* Inline, so it simply sits after the last written character and moves
@@ -3883,10 +3893,9 @@
 
 /* ---- Registration: the team's photo, shown once the name is stamped ---- */
 .scroll__photo {
-  /* 77%: the previous 70% plus the 10% increase asked for. Still a share
-     of the scroll rather than a pixel size, so it holds on a laptop and
-     a phone alike. */
-  width: 77%;
+  /* 85%, the size asked for. Still a share of the scroll rather than a
+     pixel size, so it holds on a laptop and a phone alike. */
+  width: 85%;
   /* Pulled upward and given almost nothing below it — the photo is the
      point of this moment, so it shouldn't sit in the middle of empty
      parchment with the frame's padding hanging under it. */
@@ -3901,9 +3910,10 @@
 
 .scroll__photo.is-visible {
   opacity: 1;
-  /* 10s, matching the hold in IntroSequence — if this stayed at 5s the
-     photo would fade out while the game was still waiting on it. */
-  animation: photo-settle 10s var(--ease-soft) forwards;
+  /* 8s, matching the hold in IntroSequence — if this drifted out of sync
+     the photo would fade out (or still be fading in) while the game was
+     on a different beat entirely. */
+  animation: photo-settle 8s var(--ease-soft) forwards;
 }
 
 .scroll__photo img {
@@ -4002,14 +4012,17 @@
 /* To the RIGHT of the third chest (right 14%), clear of Mickey down the
    left and of the palms. ~35% of the chest's height, per the brief. */
 .bazaar-doll {
-  right: 6%;
+  /* To the LEFT of the third chest now (chest sits at right:14%, ~64px
+     wide, so its own left edge lands around right:30%) — right:35% gives
+     a clean gap before it. This also sidesteps a real overlap risk the
+     old right:6% had: .palm--right sits at right:8%, almost the same
+     spot, so the doll and that palm were nearly stacked on each other. */
+  right: 35%;
   bottom: 21%;
-  /* A standing figure needs height, not width, to read. ~52% of the
-     chest's width puts it at about 33px tall — the same visual weight as
-     a pineapple, which is the scale that works on this island. The old
-     formula multiplied by 3 to compensate for a variable that was never
-     resolving in the first place. */
-  height: calc(var(--box-w) * 0.52);
+  /* A standing figure needs height, not width, to read. ~62% of the
+     chest's width (up from 52%, per "трохи збільшити") puts it at about
+     40px tall — still the pineapples' scale, just a touch bigger. */
+  height: calc(var(--box-w) * 0.62);
   width: auto;
   transform-origin: bottom center;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.32));

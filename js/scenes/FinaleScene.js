@@ -8,22 +8,26 @@ import { debugLog } from '../utils/debugLog.js';
  * The last scene. The game is over and nothing is asked of the player
  * again: a golden route draws itself across the night sky, and each star
  * it reaches turns into a photograph of the people this was made for.
- *
- * The constellation idea from the secret quest returns here, but made
- * personal — at the very end the four photos join with thin golden rays
- * and become their own constellation. After all the adventures, what's
- * left in the sky isn't geometry, it's moments.
+ * All four stay lit together, the dedication is written by hand right
+ * over them, and once it's read the four photos join with thin golden
+ * rays for a moment — the constellation the whole game built toward,
+ * made of the memories themselves rather than abstract geometry.
  *
  * There is no button and no exit. The scene simply plays, and then the
  * island is left there.
  */
 export class FinaleScene {
-  /** How long each memory is held once it has appeared. */
-  static HOLDS_MS = [5000, 5000, 5000, 10000];
+  /** The pause after each photo lands, before the route moves on. */
+  static STEP_PAUSE_MS = 2000;
 
-  /** The dedication, written out by hand. */
+  /** How long the joined constellation of photos is held before the end. */
+  static JOINED_HOLD_MS = 5000;
+
+  /** The dedication, written out by hand, over the photographs. */
   static DEDICATION =
-    'Дорогі мандрівниці, кожна подорож закінчується… але кожен спогад стає початком нової.';
+    'Дорогі мандрівниці, пригоди ніколи не закінчуються. Вони лише змінюють сторінку. ' +
+    'Нехай ваш компас завжди веде до місць, де народжуються найтепліші спогади, ' +
+    'а кожна нова дорога відкриває ще одну маленьку мрію. До нових пригод!';
 
   constructor(sceneEl, audio, mickey = null) {
     this.sceneEl = sceneEl;
@@ -75,63 +79,60 @@ export class FinaleScene {
     await wait(1400);
     if (token !== this._runToken) return;
 
+    // Star -> photo -> a short pause, four times over. Nothing else
+    // happens in between: the sequence IS the four memories arriving,
+    // one at a time, with room to actually look at each.
     for (let i = 0; i < this.slotEls.length; i++) {
       if (token !== this._runToken) return;
 
-      // The route reaches this memory before the memory exists — the
-      // light arriving is what causes the star, not the other way round.
       this._drawRouteThrough(i + 1);
       this.audio.crystalTone(392 + i * 55);
-      await wait(i === 0 ? 900 : 2400); // the first star is already lit
+      await wait(i === 0 ? 900 : 1400); // the first star is already lit
       if (token !== this._runToken) return;
 
       if (i > 0) {
         this.slotEls[i].classList.add('is-star');
-        await wait(1000);
+        await wait(900);
         if (token !== this._runToken) return;
       }
 
       await this._becomeMemory(this.slotEls[i], token);
       if (token !== this._runToken) return;
 
-      // Mickey looks at whichever memory just arrived.
-      this._playMickey(MICKEY_STATES.TELESCOPE);
+      this._playMickey(MICKEY_STATES.TELESCOPE); // looking at whichever just arrived
 
-      // On the last one the first two come back, so all four can join.
-      if (i === this.slotEls.length - 1) {
-        this.slotEls.slice(0, 2).forEach((el) => el.classList.add('is-photo'));
-        await wait(1200);
-        if (token !== this._runToken) return;
-        await this._joinAllFour(token);
-        if (token !== this._runToken) return;
-      }
-
-      // Nothing happens while a memory is held. That's deliberate: the
-      // whole point of this scene is the pause, not the transition.
-      await wait(FinaleScene.HOLDS_MS[i]);
-      if (token !== this._runToken) return;
-
-      // After the second, the first two step aside to make room.
-      if (i === 1) {
-        this.slotEls.slice(0, 2).forEach((el) => el.classList.remove('is-photo'));
-        await wait(1400);
+      // The 2s pause sits BETWEEN photos, per the brief — not after the
+      // fourth, where the dedication is meant to begin right away.
+      if (i < this.slotEls.length - 1) {
+        await wait(FinaleScene.STEP_PAUSE_MS);
         if (token !== this._runToken) return;
       }
     }
 
-    // Every photo fades, and the sky is just a sky again.
-    this.slotEls.forEach((el) => el.classList.remove('is-photo'));
-    this.linksLineEl?.classList.remove('is-visible');
-    await wait(2000);
-    if (token !== this._runToken) return;
-
+    // All four stay exactly as they are — the dedication is written
+    // right over them, not after they've gone.
+    this._playMickey(MICKEY_STATES.READING);
     await this._writeDedication(token);
     if (token !== this._runToken) return;
 
-    // Mickey has read it too. Only now does he look at the player.
+    // Text done and gone — Mickey has read it, and smiles before he
+    // looks back at the player.
     this._playMickey(MICKEY_STATES.HAPPY);
+
+    // Now, and only now, the four join: thin golden rays for a moment,
+    // the constellation the memories make of themselves.
+    await this._joinAllFour(token);
+    if (token !== this._runToken) return;
+
+    await wait(FinaleScene.JOINED_HOLD_MS);
+    if (token !== this._runToken) return;
+
+    // Everything fades, and the sky is just a sky again.
+    this.slotEls.forEach((el) => el.classList.remove('is-photo'));
+    this.linksLineEl?.classList.remove('is-visible');
     await wait(1400);
     if (token !== this._runToken) return;
+
     this.mickeyEl?.classList.add('is-waving');
     this._playMickey(MICKEY_STATES.WAVE);
     await wait(1600);
@@ -146,21 +147,6 @@ export class FinaleScene {
     this._playMickey(MICKEY_STATES.IDLE);
 
     debugLog('[Finale] the sky is the player\'s to sit with');
-  }
-
-  /**
-   * Drives THIS scene's own Mickey element.
-   *
-   * The shared Mickey instance can't be used here: `#finale-mickey` is a
-   * separate element with its own copy of the sprite, and the roaming
-   * Mickey is still parented to the previous scene. Calling
-   * `mickey.play()` would animate an off-screen character while the one
-   * the player is actually looking at stood perfectly still.
-   */
-  _playMickey(state) {
-    if (!this.mickeyEl) return;
-    Object.values(MICKEY_STATES).forEach((s) => this.mickeyEl.classList.remove(`mickey--${s}`));
-    this.mickeyEl.classList.add(`mickey--${state}`);
   }
 
   async exit() {
@@ -233,7 +219,8 @@ export class FinaleScene {
   /**
    * For one moment the four photos are joined by thin golden rays. This
    * is the constellation idea from the secret quest, made personal: the
-   * shape in the sky is now the memories themselves.
+   * shape in the sky is now the memories themselves. Happens once the
+   * dedication has been read, not right after the fourth photo lands.
    */
   async _joinAllFour(token) {
     if (!this.linksLineEl) return;
@@ -244,17 +231,14 @@ export class FinaleScene {
     );
     this.linksLineEl.classList.add('is-visible');
     this.audio.islandChord();
-    await wait(1800);
-    if (token !== this._runToken) return;
-    this.linksLineEl.classList.remove('is-visible');
-    await wait(700);
+    await wait(900);
   }
 
   /**
-   * Writes the dedication by hand. The pen is an inline element sitting
-   * after the text, so it advances with the writing on its own — no
-   * position tracking, and it follows the text onto the next line
-   * exactly the way a real hand would.
+   * Writes the dedication by hand, centred over the photographs. The pen
+   * is an inline element sitting after the text, so it advances with the
+   * writing on its own — no position tracking, and it follows the text
+   * onto the next line exactly the way a real hand would.
    */
   async _writeDedication(token) {
     this.letterEl.classList.add('is-visible');
@@ -266,10 +250,10 @@ export class FinaleScene {
       if (token !== this._runToken) return;
       this.letterTextEl.textContent = text.slice(0, i + 1);
       // Slower than the game's usual typing, and slower still after a
-      // comma or a pause — it should read as someone writing, not a
+      // comma or a full stop — it should read as someone writing, not a
       // machine printing.
       const ch = text[i];
-      await wait(ch === ' ' ? 40 : ch === ',' || ch === '…' ? 260 : 62);
+      await wait(ch === ' ' ? 34 : ch === ',' ? 220 : ch === '.' || ch === '!' ? 300 : 52);
     }
 
     if (token !== this._runToken) return;
@@ -280,5 +264,28 @@ export class FinaleScene {
     await wait(900);
     if (token !== this._runToken) return;
     this.penEl?.classList.remove('is-writing');
+
+    // The whole letter fades — pen's curl, then the text itself, per the
+    // brief: "перо зникає" then "текст зникає" as two distinct beats.
+    await wait(700);
+    if (token !== this._runToken) return;
+    this.letterEl.classList.remove('is-visible');
+    this.flourishEl?.classList.remove('is-visible');
+    await wait(1000);
+  }
+
+  /**
+   * Drives THIS scene's own Mickey element.
+   *
+   * The shared Mickey instance can't be used here: `#finale-mickey` is a
+   * separate element with its own copy of the sprite, and the roaming
+   * Mickey is still parented to the previous scene. Calling
+   * `mickey.play()` would animate an off-screen character while the one
+   * the player is actually looking at stood perfectly still.
+   */
+  _playMickey(state) {
+    if (!this.mickeyEl) return;
+    Object.values(MICKEY_STATES).forEach((s) => this.mickeyEl.classList.remove(`mickey--${s}`));
+    this.mickeyEl.classList.add(`mickey--${state}`);
   }
 }

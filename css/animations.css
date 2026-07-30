@@ -816,9 +816,9 @@
 
 /* ---- Registration: the photo easing in and settling ---- */
 @keyframes photo-settle {
-  /* Retimed for a 10s hold: the ease-in and the fade-out keep the same
-     real duration they had at 5s, so the extra time all goes into the
-     part that matters — the photo simply being there. */
+  /* Percentage-based on purpose: whatever the hold duration in
+     IntroSequence is (currently 8s), the ease-in and fade-out keep the
+     same real proportion of it automatically. */
   0% { opacity: 0; transform: rotate(-2.5deg) scale(1); }
   12% { opacity: 1; transform: rotate(-2.5deg) scale(1.05); }
   92% { opacity: 1; transform: rotate(-2.5deg) scale(1.05); }

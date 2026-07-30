@@ -199,6 +199,13 @@ export class IntroSequence {
     const teamName = this.inputEl.value.trim();
     this.saveManager.setTeamName(teamName);
 
+    // Background music starts the moment the name is entered — the
+    // literal cue in the brief, not tied to any later beat.
+    this.audio.playDayMusic([
+      'assets/audio/music1.mp3',
+      'assets/audio/music2.mp3',
+    ]);
+
     // He reads it back, so it feels like he actually looked at the scroll.
     const reaction = TEAM_NAME_REACTIONS[Math.floor(Math.random() * TEAM_NAME_REACTIONS.length)];
     await this.mickey.sayTyped(`«${teamName}»?`, 600);
@@ -214,12 +221,16 @@ export class IntroSequence {
     this.stampEl.classList.add('is-stamped');
     await wait(1200);
 
+    // The stamp already did its job; fading it out is what actually
+    // clears the space the photo needs — see .stamp.is-fading.
+    this.stampEl.classList.add('is-fading');
+
     // The team's own photo appears inside the scroll before the game
     // starts. This is the one moment that isn't about the island at all
     // — it's the people the whole thing is for — so it gets held for a
-    // full ten seconds with nothing else competing for attention.
+    // full eight seconds with nothing else competing for attention.
     this.photoEl?.classList.add('is-visible');
-    await wait(10000);
+    await wait(8000);
 
     this.scrollWrapEl.classList.remove('is-visible');
     await wait(700);

@@ -418,6 +418,16 @@
   animation: stamp-thump 0.45s cubic-bezier(0.3, 1.4, 0.5, 1) forwards;
 }
 
+/* Its job — marking the registration official — is done the moment it
+   lands. Left at opacity 0.9 forever, this 108px graphic sat centred in
+   almost the exact spot the team photo needs, covering it. Fading it out
+   as the photo arrives is the actual fix, not just moving the photo in
+   front of it — the stamp still occupied the same physical space. */
+.stamp.is-fading {
+  transition: opacity 1s ease;
+  opacity: 0;
+}
+
 /* ---- Wooden sign button ---- */
 /* Part of the world, not a browser button. */
 

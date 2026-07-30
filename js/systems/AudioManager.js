@@ -23,7 +23,7 @@
 
 const VOLUMES = {
   sea: 0.05,      // barely there, as asked
-  music: 0.16,
+  music: 0.13,    // 10-15% asked for — just a background presence
   effects: 0.13,
   wind: 0.045,
 };
@@ -398,25 +398,96 @@ export class AudioManager {
     });
   }
 
-  /* ---- Optional music from a file ---- */
+  /* ---- Background music: a day playlist, then a night track ---- */
 
   /**
-   * Play a looping music track, if the file exists. Missing file is not an
-   * error — see assets/audio/README.md for what to drop in.
-   * @param {string} url
+   * Starts the "daytime" music: Music1 and Music2 alternate, one after
+   * the other, cycling for as long as the player is still on their first
+   * three adventures. Called once, right after the team's name is
+   * registered.
+   *
+   * A missing file is not an error — this degrades to silence exactly
+   * like the old single-track version did, so the game never depends on
+   * these being present.
    */
-  playMusic(url) {
-    if (this.musicEl) return;
+  playDayMusic(urls) {
+    if (this.musicEl || this._musicPhase) return; // already running
+    this._musicPhase = 'day';
+    this._dayPlaylist = urls;
+    this._dayTrackIndex = 0;
+    this._playPlaylistTrack();
+  }
+
+  _playPlaylistTrack() {
+    if (this._musicPhase !== 'day') return; // switchToNightMusic beat us to it
+    const url = this._dayPlaylist[this._dayTrackIndex % this._dayPlaylist.length];
+    this._setMusicElement(url, () => {
+      // One track ended — the next one takes over. Two tracks alternating
+      // reads as "playlist", not "the same song looping twice".
+      this._dayTrackIndex += 1;
+      this._playPlaylistTrack();
+    });
+  }
+
+  /**
+   * Crosses over to the night track (Music3), which then loops on its
+   * own for the rest of the game. Called once, the moment night falls
+   * for the first time — see IslandScene._syncDayStage().
+   */
+  switchToNightMusic(url) {
+    if (this._musicPhase === 'night') return;
+    this._musicPhase = 'night';
+    this._setMusicElement(url, null, { loop: true, fadeOutPrevious: true });
+  }
+
+  /**
+   * Swaps in a new <audio> element, fading the old one out underneath it
+   * rather than cutting it — day and night should feel like the music
+   * changed with the light, not like a track skipped.
+   * @param {string} url
+   * @param {(() => void)|null} onEnded - called when the track finishes,
+   *   unless `loop` is set (a looping track never ends).
+   */
+  _setMusicElement(url, onEnded, { loop = false, fadeOutPrevious = false } = {}) {
+    const previous = this.musicEl;
 
     const audio = new Audio(url);
-    audio.loop = true;
-    audio.volume = this.isMuted ? 0 : VOLUMES.music;
+    audio.loop = loop;
+    audio.volume = 0;
+    if (onEnded) audio.addEventListener('ended', onEnded, { once: true });
 
     audio.play().catch(() => {
-      // No file, or the browser blocked it. The sea is enough on its own.
+      // Missing file, or the browser blocked autoplay before the game's
+      // own unlock — the sea and the ambient layers carry the scene fine
+      // on their own either way.
     });
 
     this.musicEl = audio;
+    this._fadeAudioTo(audio, this.isMuted ? 0 : VOLUMES.music, 1.5);
+
+    if (previous) {
+      if (fadeOutPrevious) {
+        this._fadeAudioTo(previous, 0, 1.5);
+        setTimeout(() => previous.pause(), 1700);
+      } else {
+        previous.pause();
+      }
+    }
+  }
+
+  /** A plain <audio> element has no Web Audio gain node to ramp, so this
+   *  fades its .volume by hand in small steps instead. */
+  _fadeAudioTo(audioEl, target, seconds) {
+    const start = audioEl.volume;
+    const steps = 20;
+    const stepMs = (seconds * 1000) / steps;
+    let i = 0;
+    const tick = () => {
+      i += 1;
+      audioEl.volume = start + (target - start) * (i / steps);
+      if (i < steps) setTimeout(tick, stepMs);
+    };
+    tick();
   }
 
   /* ---- Mute ---- */
